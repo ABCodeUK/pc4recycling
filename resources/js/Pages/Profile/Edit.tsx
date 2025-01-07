@@ -1,4 +1,18 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { AppSidebar } from '@/components/app-sidebar';
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+
+} from '@/components/ui/breadcrumb';
+import { Separator } from '@/components/ui/separator';
 import { PageProps } from '@/types';
 import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
@@ -6,38 +20,63 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 
 export default function Edit({
-    mustVerifyEmail,
-    status,
+  mustVerifyEmail,
+  status,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
-    return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Profile
-                </h2>
-            }
-        >
-            <Head title="Profile" />
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Head title="My Account" />
+<header
+  className="flex h-16 items-center gap-2 px-4 bg-white border-b"
+  style={{
+    borderBottomColor: "hsl(var(--breadcrumb-border))",
+  }}
+>
+  <SidebarTrigger className="-ml-1" />
+  <Separator orientation="vertical" className="h-4 mx-2" />
+  <Breadcrumb>
+    <BreadcrumbList>
+      <BreadcrumbItem>
+        <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+      </BreadcrumbItem>
+      <BreadcrumbSeparator className="hidden md:block" />
+      <BreadcrumbItem>
+        <BreadcrumbLink href="/my-account" isCurrent>
+          My Account
+        </BreadcrumbLink>
+      </BreadcrumbItem>
+    </BreadcrumbList>
+  </Breadcrumb>
+</header>
+<div className="flex flex-1 flex-col gap-6 p-8">
+  {/* Page Title */}
+  <div className="text-3xl font-semibold text-gray-800">My Account</div>
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdateProfileInformationForm
-                            mustVerifyEmail={mustVerifyEmail}
-                            status={status}
-                            className="max-w-xl"
-                        />
-                    </div>
+  {/* Page Content Grid */}
+  <div className="grid gap-6 md:grid-cols-2 items-start">
+    {/* Left Column: Profile Information */}
+    <div className="bg-white shadow rounded-lg p-6">
+      <UpdateProfileInformationForm
+        mustVerifyEmail={mustVerifyEmail}
+        status={status}
+      />
+    </div>
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdatePasswordForm className="max-w-xl" />
-                    </div>
+    {/* Right Column: Password Reset and Delete Account */}
+    <div className="space-y-6">
+      <div className="bg-white shadow rounded-lg p-6">
+        <UpdatePasswordForm />
+      </div>
+      <div className="bg-white shadow rounded-lg p-6">
+        <DeleteUserForm />
+      </div>
+    </div>
+  </div>
+</div>
+</SidebarInset>
+</SidebarProvider>
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <DeleteUserForm className="max-w-xl" />
-                    </div>
-                </div>
-            </div>
-        </AuthenticatedLayout>
-    );
+  );
 }

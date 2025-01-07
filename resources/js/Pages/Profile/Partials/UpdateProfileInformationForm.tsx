@@ -1,118 +1,112 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { Transition } from '@headlessui/react';
-import { Link, useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator"
+import { useForm, usePage } from "@inertiajs/react";
+import { FormEventHandler } from "react";
 
 export default function UpdateProfileInformation({
-    mustVerifyEmail,
-    status,
-    className = '',
+  mustVerifyEmail,
+  status,
+  className = "",
 }: {
-    mustVerifyEmail: boolean;
-    status?: string;
-    className?: string;
+  mustVerifyEmail: boolean;
+  status?: string;
+  className?: string;
 }) {
-    const user = usePage().props.auth.user;
+  const user = usePage().props.auth.user;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
-        useForm({
-            name: user.name,
-            email: user.email,
-        });
+  const { data, setData, patch, errors, processing, recentlySuccessful } =
+    useForm({
+      name: user.name,
+      email: user.email,
+      position: user.position || "",
+      landline: user.landline || "",
+      mobile: user.mobile || "",
+    });
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
+  const submit: FormEventHandler = (e) => {
+    e.preventDefault();
+    patch(route("profile.update"));
+  };
 
-        patch(route('profile.update'));
-    };
+  return (
+    <section className={className}>
+      <header className="space-y-1">
+        <h2 className="text-xl font-semibold leading-7 text-gray-900">
+          Your Details
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Keep your contact details up to date.
+        </p>
+      </header>
+      <Separator className="my-4" />
 
-    return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Profile Information
-                </h2>
+      <form onSubmit={submit} className="mt-6 space-y-6">
+        {/* Form Field */}
+        {[
+          { label: "Your Name", id: "name", value: data.name, onChange: (v) => setData("name", v) },
+          { label: "Email Address", id: "email", type: "email", value: data.email, onChange: (v) => setData("email", v) },
+          { label: "Position", id: "position", value: data.position, onChange: (v) => setData("position", v) },
+          { label: "Landline", id: "landline", value: data.landline, onChange: (v) => setData("landline", v) },
+          { label: "Mobile", id: "mobile", value: data.mobile, onChange: (v) => setData("mobile", v) },
+        ].map(({ label, id, type = "text", value, onChange }) => (
+          <div key={id} className="flex items-center gap-4">
+            <Label htmlFor={id} className="w-1/4 text-left">
+              {label}
+            </Label>
+            <div className="flex-1">
+              <Input
+                id={id}
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={`Your ${label}`}
+                disabled={processing}
+              />
+              {errors[id] && <Alert variant="destructive">{errors[id]}</Alert>}
+            </div>
+          </div>
+        ))}
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Update your account's profile information and email address.
+        {/* Verification Section */}
+        {mustVerifyEmail && user.email_verified_at === null && (
+          <div className="space-y-2">
+            <Alert variant="default">
+              <p className="text-sm">
+                Your email address is unverified.{" "}
+                <button
+                  type="button"
+                  className="underline text-primary"
+                  onClick={() =>
+                    Inertia.post(route("verification.send"), {}, { method: "post" })
+                  }
+                >
+                  Click here to re-send the verification email.
+                </button>
+              </p>
+            </Alert>
+            {status === "verification-link-sent" && (
+              <Alert variant="success">
+                <p className="text-sm">
+                  A new verification link has been sent to your email address.
                 </p>
-            </header>
+              </Alert>
+            )}
+          </div>
+        )}
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
-
-                    <TextInput
-                        id="name"
-                        className="mt-1 block w-full"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                        isFocused
-                        autoComplete="name"
-                    />
-
-                    <InputError className="mt-2" message={errors.name} />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
-                    />
-
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
-
-                {mustVerifyEmail && user.email_verified_at === null && (
-                    <div>
-                        <p className="mt-2 text-sm text-gray-800">
-                            Your email address is unverified.
-                            <Link
-                                href={route('verification.send')}
-                                method="post"
-                                as="button"
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            >
-                                Click here to re-send the verification email.
-                            </Link>
-                        </p>
-
-                        {status === 'verification-link-sent' && (
-                            <div className="mt-2 text-sm font-medium text-green-600">
-                                A new verification link has been sent to your
-                                email address.
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
-
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-gray-600">
-                            Saved.
-                        </p>
-                    </Transition>
-                </div>
-            </form>
-        </section>
-    );
+        {/* Save Button */}
+        <div className="flex items-center gap-4">
+          <Button type="submit" disabled={processing}>
+            Save
+          </Button>
+          {recentlySuccessful && (
+            <p className="text-sm text-muted-foreground">Saved.</p>
+          )}
+        </div>
+      </form>
+    </section>
+  );
 }

@@ -16,9 +16,20 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import axios from "axios";
 import { toast } from "sonner";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Trash2 } from "lucide-react";
 
 export default function StaffAccountsEdit({
   user_edit,
@@ -87,6 +98,20 @@ export default function StaffAccountsEdit({
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      const response = await axios.delete(`/settings/staff/delete/${user_edit.id}`);
+      if (response.status === 200) {
+        toast.success("Staff account successfully deleted!");
+        window.location.href = "/settings/staff";
+      } else {
+        toast.error("Failed to delete account. Please try again.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while deleting the account.");
+    }
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -109,108 +134,142 @@ export default function StaffAccountsEdit({
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">
-                  Edit Staff Account
-                </BreadcrumbLink>
+                <BreadcrumbLink href="#">Edit Staff Account</BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
-          <div className="text-3xl font-semibold text-gray-800">
+          <h1 className="text-3xl font-semibold text-gray-800">
             Settings: Edit Staff Account
-          </div>
-          <section className="bg-white border shadow rounded-lg p-6">
-            <div className="grid gap-4">
-              <div>
-                <Label htmlFor="name">Name*</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-                {formErrors.name && (
-                  <p className="text-red-600 text-sm">{formErrors.name}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="email">Email*</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-                {formErrors.email && (
-                  <p className="text-red-600 text-sm">{formErrors.email}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="landline">Landline</Label>
-                <Input
-                  id="landline"
-                  name="landline"
-                  value={formData.landline}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="mobile">Mobile</Label>
-                <Input
-                  id="mobile"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  name="position"
-                  value={formData.position}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="active"
-                  name="active"
-                  type="checkbox"
-                  checked={formData.active}
-                  onChange={handleCheckboxChange}
-                />
-                <Label htmlFor="active">Active</Label>
-              </div>
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => (window.location.href = "/settings/staff")}
-                >
-                  <ArrowLeft className="h-5 w-5 mr-2" />
-                  Back to List
-                </Button>
-                <Button
-                  className="bg-green-500 text-white hover:bg-green-600 focus:ring-2 focus:ring-green-400"
-                  onClick={handleSaveChanges}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <span>Saving...</span>
-                  ) : (
-                    <>
-                      <Save className="h-5 w-5 mr-2" />
-                      Save Changes
-                    </>
+          </h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Card: Staff Details */}
+            <section className="bg-white border shadow rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Staff Details</h2>
+              <div className="grid gap-4">
+                <div>
+                  <Label htmlFor="name">Name*</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                  {formErrors.name && (
+                    <p className="text-red-600 text-sm">{formErrors.name}</p>
                   )}
-                </Button>
+                </div>
+                <div>
+                  <Label htmlFor="email">Email*</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                  {formErrors.email && (
+                    <p className="text-red-600 text-sm">{formErrors.email}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="position">Role*</Label>
+                  <Input
+                    id="position"
+                    name="position"
+                    value={formData.position}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <Separator />
+                <div>
+                  <Label htmlFor="landline">Landline</Label>
+                  <Input
+                    id="landline"
+                    name="landline"
+                    value={formData.landline}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="mobile">Mobile</Label>
+                  <Input
+                    id="mobile"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleInputChange}
+                  />
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+
+            {/* Right Card: Account Settings */}
+            <section className="bg-white border shadow rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
+              <div className="grid gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="active"
+                    name="active"
+                    type="checkbox"
+                    checked={formData.active}
+                    onChange={handleCheckboxChange}
+                  />
+                  <Label htmlFor="active">Active</Label>
+                </div>
+                <Separator />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      <Trash2 className="h-5 w-5 mr-2" />
+                      Delete Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this account? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteAccount}>
+                        Confirm
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </section>
+          </div>
+          <div className="flex justify-end gap-4 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => (window.location.href = "/settings/staff")}
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Back to List
+            </Button>
+            <Button
+              className="bg-green-500 text-white hover:bg-green-600 focus:ring-2 focus:ring-green-400"
+              onClick={handleSaveChanges}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span>Saving...</span>
+              ) : (
+                <>
+                  <Save className="h-5 w-5 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -6,15 +6,15 @@ use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
-class StaffAccountsController extends Controller
+class ClientAccountsController extends Controller
 {
     public function index()
     {
-        $staff = User::where('type', 'Staff')->get(); // Fetch staff accounts
+        $clients = User::where('type', 'Client')->get(); // Fetch client accounts
         $currentUserId = auth()->id(); // Get logged-in user's ID
 
-        return Inertia::render('Settings/StaffAccounts/StaffAccounts', [
-            'staff' => $staff,
+        return Inertia::render('ClientAccounts/ClientAccounts', [
+            'clients' => $clients,
             'currentUserId' => $currentUserId,
         ]);
     }
@@ -23,13 +23,13 @@ class StaffAccountsController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Redirect to client edit if user type is 'Client'
-        if ($user->type === 'Client') {
-            return redirect()->route('client.edit', ['id' => $user->id]);
+        // Redirect to staff edit if user type is 'Staff'
+        if ($user->type === 'Staff') {
+            return redirect()->route('client.index', ['id' => $user->id]);
         }
 
-        // Handle staff types normally
-        return Inertia::render('Settings/StaffAccounts/StaffAccountsEdit', [
+        // Handle client types normally
+        return Inertia::render('ClientAccounts/ClientAccountsEdit', [
             'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active']),
         ]);
     }
@@ -68,7 +68,7 @@ class StaffAccountsController extends Controller
             'email' => 'required|email|unique:users,email',
         ]);
 
-        $validated['type'] = 'Staff';
+        $validated['type'] = 'Client';
         $validated['active'] = true;
         $validated['password'] = bcrypt('defaultPassword'); // Add a default password
 

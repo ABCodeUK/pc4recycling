@@ -46,7 +46,6 @@ import { toast } from "sonner";
 
 export default function SpecFields({ specFields }: { specFields: SpecField[] }) {
   const [data, setData] = useState<SpecField[]>(() => {
-    // Ensure default items are pinned to the top and sorted by order
     return [...specFields].sort((a, b) =>
       b.spec_default - a.spec_default || a.spec_order - b.spec_order
     );
@@ -270,7 +269,7 @@ export default function SpecFields({ specFields }: { specFields: SpecField[] }) 
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href="/settings/variables/spec-fields" isCurrent>
+                <BreadcrumbLink href="/settings/variables/spec-fields" >
                   Spec Fields
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -278,8 +277,9 @@ export default function SpecFields({ specFields }: { specFields: SpecField[] }) 
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
+        <div className="text-3xl font-semibold text-gray-800">Settings: Variables</div>
           <VariablesNavigation currentTab="spec-fields" />
-          <section className="bg-white shadow rounded-lg p-6">
+          <section className="bg-white border shadow rounded-lg p-6">
             <header className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold leading-7 text-gray-900">
@@ -313,38 +313,46 @@ export default function SpecFields({ specFields }: { specFields: SpecField[] }) 
                         Fill in the details for the new Spec Field below.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div>
-                        <Label htmlFor="spec_name">
-                          Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="spec_name"
-                          name="spec_name"
-                          value={addFormData.spec_name}
-                          onChange={(e) => handleInputChange(e, "add")}
-                        />
-                        {formErrors.spec_name && (
-                          <p className="text-red-600 text-sm">{formErrors.spec_name}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="spec_order">
-                          Order <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="spec_order"
-                          name="spec_order"
-                          value={addFormData.spec_order}
-                          onChange={(e) => handleInputChange(e, "add")}
-                        />
-                        {formErrors.spec_order && (
-                          <p className="text-red-600 text-sm">{formErrors.spec_order}</p>
-                        )}
+                    <div className="bg-white border rounded-lg p-6"> {/* Card Wrapper */}
+                      <div className="grid gap-4">
+                        <div>
+                          <Label htmlFor="spec_name">
+                            Name <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="spec_name"
+                            name="spec_name"
+                            value={addFormData.spec_name}
+                            onChange={(e) => handleInputChange(e, "add")}
+                          />
+                          {formErrors.spec_name && (
+                            <p className="text-red-600 text-sm">{formErrors.spec_name}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="spec_order">
+                            Order <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="spec_order"
+                            name="spec_order"
+                            value={addFormData.spec_order}
+                            onChange={(e) => handleInputChange(e, "add")}
+                          />
+                          {formErrors.spec_order && (
+                            <p className="text-red-600 text-sm">{formErrors.spec_order}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          resetAddForm(); // Clear form on Cancel
+                          setIsAddDialogOpen(false);
+                        }}
+                      >
                         Cancel
                       </Button>
                       <Button onClick={handleAddSubmit}>Create Spec Field</Button>
@@ -364,38 +372,45 @@ export default function SpecFields({ specFields }: { specFields: SpecField[] }) 
                   Update the details for the Spec Field below.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="spec_name_edit">
-                    Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="spec_name_edit"
-                    name="spec_name"
-                    value={editFormData.spec_name}
-                    onChange={(e) => handleInputChange(e, "edit")}
-                  />
-                  {formErrors.spec_name && (
-                    <p className="text-red-600 text-sm">{formErrors.spec_name}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="spec_order_edit">
-                    Order <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="spec_order_edit"
-                    name="spec_order"
-                    value={editFormData.spec_order}
-                    onChange={(e) => handleInputChange(e, "edit")}
-                  />
-                  {formErrors.spec_order && (
-                    <p className="text-red-600 text-sm">{formErrors.spec_order}</p>
-                  )}
+              <div className="bg-white border rounded-lg p-6"> {/* Card Wrapper */}
+                <div className="grid gap-4">
+                  <div>
+                    <Label htmlFor="spec_name_edit">
+                      Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="spec_name_edit"
+                      name="spec_name"
+                      value={editFormData.spec_name}
+                      onChange={(e) => handleInputChange(e, "edit")}
+                    />
+                    {formErrors.spec_name && (
+                      <p className="text-red-600 text-sm">{formErrors.spec_name}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="spec_order_edit">
+                      Order <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="spec_order_edit"
+                      name="spec_order"
+                      value={editFormData.spec_order}
+                      onChange={(e) => handleInputChange(e, "edit")}
+                    />
+                    {formErrors.spec_order && (
+                      <p className="text-red-600 text-sm">{formErrors.spec_order}</p>
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                  }}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleEditSubmit}>Save Changes</Button>

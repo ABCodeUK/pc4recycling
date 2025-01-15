@@ -265,7 +265,7 @@ export default function HPCodes({ hpCodes }: { hpCodes: HPCode[] }) {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbLink href="/settings/variables/hp-codes" isCurrent>
+                <BreadcrumbLink href="/settings/variables/hp-codes" >
                   HP Codes
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -273,8 +273,9 @@ export default function HPCodes({ hpCodes }: { hpCodes: HPCode[] }) {
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
+        <div className="text-3xl font-semibold text-gray-800">Settings: Variables</div>
           <VariablesNavigation currentTab="hp-codes" />
-          <section className="bg-white shadow rounded-lg p-6">
+          <section className="bg-white border shadow rounded-lg p-6">
             <header className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold leading-7 text-gray-900">
@@ -291,138 +292,148 @@ export default function HPCodes({ hpCodes }: { hpCodes: HPCode[] }) {
                   onChange={handleSearchChange}
                   className="max-w-sm"
                 />
-                <Dialog
-                  open={isAddDialogOpen}
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) resetAddForm();
-                    setIsAddDialogOpen(isOpen);
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setIsAddDialogOpen(true)}>Add HP Code</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px] bg-white">
-                    <DialogHeader>
-                      <DialogTitle>Add HP Code</DialogTitle>
-                      <DialogDescription>
-                        Fill in the details for the new HP Code below.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div>
-                        <Label htmlFor="hp_code">
-                          HP Code <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="hp_code"
-                          name="hp_code"
-                          value={addFormData.hp_code}
-                          onChange={(e) => handleInputChange(e, "add")}
-                        />
-                        {formErrors.hp_code && (
-                          <p className="text-red-600 text-sm">{formErrors.hp_code}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="hp_type">
-                          Type <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="hp_type"
-                          name="hp_type"
-                          value={addFormData.hp_type}
-                          onChange={(e) => handleInputChange(e, "add")}
-                        />
-                        {formErrors.hp_type && (
-                          <p className="text-red-600 text-sm">{formErrors.hp_type}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="hp_description">Description</Label>
-                        <textarea
-                          id="hp_description"
-                          name="hp_description"
-                          value={addFormData.hp_description}
-                          onChange={(e) => handleInputChange(e, "add")}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                        {formErrors.hp_description && (
-                          <p className="text-red-600 text-sm">{formErrors.hp_description}</p>
-                        )}
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleAddSubmit}>Create HP Code</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+<Dialog
+  open={isAddDialogOpen}
+  onOpenChange={(isOpen) => {
+    if (!isOpen) resetAddForm(); // Reset the form when the dialog is closed
+    setIsAddDialogOpen(isOpen);
+  }}
+>
+  <DialogTrigger asChild>
+    <Button onClick={() => setIsAddDialogOpen(true)}>Add HP Code</Button>
+  </DialogTrigger>
+  <DialogContent className="sm:max-w-[425px] bg-white">
+    <DialogHeader>
+      <DialogTitle>Add HP Code</DialogTitle>
+      <DialogDescription>
+        Fill in the details for the new HP Code below.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="bg-white border rounded-lg p-6"> {/* Card Wrapper for Add Form */}
+      <div className="grid gap-4 py-4">
+        <div>
+          <Label htmlFor="hp_code">
+            HP Code <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="hp_code"
+            name="hp_code"
+            value={addFormData.hp_code}
+            onChange={(e) => handleInputChange(e, "add")}
+          />
+          {formErrors.hp_code && (
+            <p className="text-red-600 text-sm">{formErrors.hp_code}</p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="hp_type">
+            Type <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="hp_type"
+            name="hp_type"
+            value={addFormData.hp_type}
+            onChange={(e) => handleInputChange(e, "add")}
+          />
+          {formErrors.hp_type && (
+            <p className="text-red-600 text-sm">{formErrors.hp_type}</p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="hp_description">Description</Label>
+          <textarea
+            id="hp_description"
+            name="hp_description"
+            value={addFormData.hp_description}
+            onChange={(e) => handleInputChange(e, "add")}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {formErrors.hp_description && (
+            <p className="text-red-600 text-sm">{formErrors.hp_description}</p>
+          )}
+        </div>
+      </div>
+    </div>
+    <DialogFooter>
+      <Button
+        variant="outline"
+        onClick={() => {
+          resetAddForm(); // Reset the form when "Cancel" is clicked
+          setIsAddDialogOpen(false);
+        }}
+      >
+        Cancel
+      </Button>
+      <Button onClick={handleAddSubmit}>Create HP Code</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
               </div>
             </header>
             <Separator className="my-4" />
             <DataTable columns={columnsWithActions} data={filteredData} />
           </section>
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="sm:max-w-[425px] bg-white">
-              <DialogHeader>
-                <DialogTitle>Edit HP Code</DialogTitle>
-                <DialogDescription>
-                  Update the details for the HP Code below.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="hp_code_edit">
-                    HP Code <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="hp_code_edit"
-                    name="hp_code"
-                    value={editFormData.hp_code}
-                    onChange={(e) => handleInputChange(e, "edit")}
-                  />
-                  {formErrors.hp_code && (
-                    <p className="text-red-600 text-sm">{formErrors.hp_code}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="hp_type_edit">
-                    Type <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="hp_type_edit"
-                    name="hp_type"
-                    value={editFormData.hp_type}
-                    onChange={(e) => handleInputChange(e, "edit")}
-                  />
-                  {formErrors.hp_type && (
-                    <p className="text-red-600 text-sm">{formErrors.hp_type}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="hp_description_edit">Description</Label>
-                  <textarea
-                    id="hp_description_edit"
-                    name="hp_description"
-                    value={editFormData.hp_description}
-                    onChange={(e) => handleInputChange(e, "edit")}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                  {formErrors.hp_description && (
-                    <p className="text-red-600 text-sm">{formErrors.hp_description}</p>
-                  )}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleEditSubmit}>Save Changes</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+  <DialogContent className="sm:max-w-[425px] bg-white">
+    <DialogHeader>
+      <DialogTitle>Edit HP Code</DialogTitle>
+      <DialogDescription>
+        Update the details for the HP Code below.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="bg-white border rounded-lg p-6"> {/* Card Wrapper for Edit Form */}
+      <div className="grid gap-4 py-4">
+        <div>
+          <Label htmlFor="hp_code_edit">
+            HP Code <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="hp_code_edit"
+            name="hp_code"
+            value={editFormData.hp_code}
+            onChange={(e) => handleInputChange(e, "edit")}
+          />
+          {formErrors.hp_code && (
+            <p className="text-red-600 text-sm">{formErrors.hp_code}</p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="hp_type_edit">
+            Type <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="hp_type_edit"
+            name="hp_type"
+            value={editFormData.hp_type}
+            onChange={(e) => handleInputChange(e, "edit")}
+          />
+          {formErrors.hp_type && (
+            <p className="text-red-600 text-sm">{formErrors.hp_type}</p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="hp_description_edit">Description</Label>
+          <textarea
+            id="hp_description_edit"
+            name="hp_description"
+            value={editFormData.hp_description}
+            onChange={(e) => handleInputChange(e, "edit")}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {formErrors.hp_description && (
+            <p className="text-red-600 text-sm">{formErrors.hp_description}</p>
+          )}
+        </div>
+      </div>
+    </div>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+        Cancel
+      </Button>
+      <Button onClick={handleEditSubmit}>Save Changes</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
         </div>
       </SidebarInset>
     </SidebarProvider>

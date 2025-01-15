@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use function Laravel\Prompts\clear;
+
 class VariableHPCode extends Model
 {
     use HasFactory;
@@ -16,4 +18,13 @@ class VariableHPCode extends Model
         'hp_type',
         'hp_description',
     ];
+
+    /**
+     * Relationship with the Category model.
+     * Defines a many-to-many relationship.
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_hp_code');
+    }
 }

@@ -7,7 +7,7 @@ export default function VariablesNavigation({
 }) {
   return (
     <Tabs defaultValue={currentTab} className="w-full">
-      <TabsList>
+      <TabsList className="border bg-white p-6">
         <TabsTrigger value="ewc-codes" asChild>
           <a href="/settings/variables/ewc-codes">EWC Codes</a>
         </TabsTrigger>

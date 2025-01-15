@@ -43,7 +43,7 @@ export default function Edit({
       </BreadcrumbItem>
       <BreadcrumbSeparator className="hidden md:block" />
       <BreadcrumbItem>
-        <BreadcrumbLink href="/my-account" isCurrent>
+        <BreadcrumbLink href="/my-account" >
           My Account
         </BreadcrumbLink>
       </BreadcrumbItem>
@@ -57,7 +57,7 @@ export default function Edit({
   {/* Page Content Grid */}
   <div className="grid gap-6 md:grid-cols-2 items-start">
     {/* Left Column: Profile Information */}
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="bg-white border shadow rounded-lg p-6">
       <UpdateProfileInformationForm
         mustVerifyEmail={mustVerifyEmail}
         status={status}
@@ -66,10 +66,10 @@ export default function Edit({
 
     {/* Right Column: Password Reset and Delete Account */}
     <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-white border shadow rounded-lg p-6">
         <UpdatePasswordForm />
       </div>
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-white border shadow rounded-lg p-6">
         <DeleteUserForm />
       </div>
     </div>

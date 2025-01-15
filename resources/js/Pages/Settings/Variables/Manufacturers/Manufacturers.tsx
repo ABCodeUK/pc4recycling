@@ -149,55 +149,53 @@ export default function Manufacturers({ manufacturers }: { manufacturers: Manufa
     }
   };
 
- const handleEditSubmit = async () => {
-  if (!editingId) return;
+  const handleEditSubmit = async () => {
+    if (!editingId) return;
 
-  resetFormErrors();
-  const formData = new FormData();
-  formData.append("manufacturer_name", editFormData.manufacturer_name);
+    resetFormErrors();
+    const formData = new FormData();
+    formData.append("manufacturer_name", editFormData.manufacturer_name);
 
-  // Handle the image
-  if (editFormData.manufacturer_logo) {
-    formData.append("manufacturer_logo", editFormData.manufacturer_logo);
-  }
-  if (!editFormData.existing_logo && !editFormData.manufacturer_logo) {
-    formData.append("remove_logo", "true");
-  }
+    if (editFormData.manufacturer_logo) {
+      formData.append("manufacturer_logo", editFormData.manufacturer_logo);
+    }
+    if (!editFormData.existing_logo && !editFormData.manufacturer_logo) {
+      formData.append("remove_logo", "true");
+    }
 
-  formData.append("manufacturer_url", editFormData.manufacturer_url || "");
+    formData.append("manufacturer_url", editFormData.manufacturer_url || "");
 
-  try {
-    setIsSubmitting(true);
-    const response = await axios.post(
-      `/settings/variables/manufacturers/${editingId}`,
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
-
-    if (response.status === 200) {
-      const updatedManufacturer = response.data;
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editingId ? updatedManufacturer : item
-        )
+    try {
+      setIsSubmitting(true);
+      const response = await axios.post(
+        `/settings/variables/manufacturers/${editingId}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
-      setEditingId(null);
-      setIsEditDialogOpen(false);
-      toast.success("Manufacturer successfully updated!");
-    } else {
-      toast.error("Failed to update Manufacturer. Please try again.");
-    }
-  } catch (error: any) {
-    if (error.response && error.response.data.errors) {
-      setFormErrors(error.response.data.errors);
-    } else {
-      toast.error("Error updating Manufacturer. Please check the logs.");
-    }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 
+      if (response.status === 200) {
+        const updatedManufacturer = response.data;
+        setData((prev) =>
+          prev.map((item) =>
+            item.id === editingId ? updatedManufacturer : item
+          )
+        );
+        setEditingId(null);
+        setIsEditDialogOpen(false);
+        toast.success("Manufacturer successfully updated!");
+      } else {
+        toast.error("Failed to update Manufacturer. Please try again.");
+      }
+    } catch (error: any) {
+      if (error.response && error.response.data.errors) {
+        setFormErrors(error.response.data.errors);
+      } else {
+        toast.error("Error updating Manufacturer. Please check the logs.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -220,74 +218,74 @@ export default function Manufacturers({ manufacturers }: { manufacturers: Manufa
       item.manufacturer_url.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
- const columnsWithActions = [
-  ...columns.filter((col) => col.id !== "manufacturer_url"), // Avoid duplicate
-  {
-    id: "manufacturer_url",
-    header: "Website",
-    accessorKey: "manufacturer_url",
-    cell: ({ row }: { row: any }) => (
-      <a
-        href={row.original.manufacturer_url || "#"}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={row.original.manufacturer_url ? "text-blue-500 underline" : "text-gray-500"}
-      >
-        {row.original.manufacturer_url || ""}
-      </a>
-    ),
-  },
-  {
-    id: "actions",
-    header: () => <div className="text-right">Actions</div>,
-    cell: ({ row }: { row: any }) => {
-      const manufacturer = row.original;
-
-      return (
-        <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setEditFormData({
-                manufacturer_name: manufacturer.manufacturer_name,
-                manufacturer_logo: null,
-                manufacturer_url: manufacturer.manufacturer_url || "",
-                existing_logo: manufacturer.manufacturer_logo || DEFAULT_LOGO_PLACEHOLDER,
-              });
-              setEditingId(manufacturer.id);
-              setIsEditDialogOpen(true);
-            }}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete Manufacturer{" "}
-                  <b>{manufacturer.manufacturer_name}</b>?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDelete(manufacturer.id)}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      );
+  const columnsWithActions = [
+    ...columns.filter((col) => col.id !== "manufacturer_url"),
+    {
+      id: "manufacturer_url",
+      header: "Website",
+      accessorKey: "manufacturer_url",
+      cell: ({ row }: { row: any }) => (
+        <a
+          href={row.original.manufacturer_url || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={row.original.manufacturer_url ? "text-blue-500 underline" : "text-gray-500"}
+        >
+          {row.original.manufacturer_url || ""}
+        </a>
+      ),
     },
-  },
-];
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }: { row: any }) => {
+        const manufacturer = row.original;
+
+        return (
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditFormData({
+                  manufacturer_name: manufacturer.manufacturer_name,
+                  manufacturer_logo: null,
+                  manufacturer_url: manufacturer.manufacturer_url || "",
+                  existing_logo: manufacturer.manufacturer_logo || DEFAULT_LOGO_PLACEHOLDER,
+                });
+                setEditingId(manufacturer.id);
+                setIsEditDialogOpen(true);
+              }}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete Manufacturer{" "}
+                    <b>{manufacturer.manufacturer_name}</b>?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(manufacturer.id)}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <SidebarProvider>
@@ -313,7 +311,7 @@ export default function Manufacturers({ manufacturers }: { manufacturers: Manufa
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href="/settings/variables/manufacturers" isCurrent>
+                <BreadcrumbLink href="/settings/variables/manufacturers" >
                   Manufacturers
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -321,8 +319,9 @@ export default function Manufacturers({ manufacturers }: { manufacturers: Manufa
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
+          <div className="text-3xl font-semibold text-gray-800">Settings: Variables</div>
           <VariablesNavigation currentTab="manufacturers" />
-          <section className="bg-white shadow rounded-lg p-6">
+          <section className="bg-white border shadow rounded-lg p-6">
             <header className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold leading-7 text-gray-900">
@@ -353,8 +352,7 @@ export default function Manufacturers({ manufacturers }: { manufacturers: Manufa
                     <DialogHeader>
                       <DialogTitle>Add Manufacturer</DialogTitle>
                       <DialogDescription>
-                        Recommended logo size: 100x100 pixels. Logos will be resized to fit if
-                        necessary.
+                        Recommended logo size: 100x100 pixels.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -415,7 +413,7 @@ export default function Manufacturers({ manufacturers }: { manufacturers: Manufa
               <DialogHeader>
                 <DialogTitle>Edit Manufacturer</DialogTitle>
                 <DialogDescription>
-                  Recommended logo size: 100x100 pixels. Logos will be resized to fit if necessary.
+                  Recommended logo size: 100x100 pixels.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">

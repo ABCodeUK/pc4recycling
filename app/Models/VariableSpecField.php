@@ -16,4 +16,13 @@ class VariableSpecField extends Model
         'spec_order',        
         'spec_default',
     ];
+
+    /**
+     * Relationship with the Category model.
+     * Defines a many-to-many relationship.
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_spec_field');
+    }
 }

@@ -68,6 +68,11 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
     setFormErrors({ ewc_code: "", ea_description: "" });
   };
 
+  const resetAddForm = () => {
+    setAddFormData({ ewc_code: "", ea_description: "" });
+    resetFormErrors();
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     type: "add" | "edit"
@@ -94,10 +99,9 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
       if (response.status === 200) {
         const newCode = response.data;
         setData((prev) => [...prev, newCode]);
-        setAddFormData({ ewc_code: "", ea_description: "" });
+        resetAddForm();
         setIsAddDialogOpen(false);
-        toast.success("EWC Code successfully created!", {
-        });
+        toast.success("EWC Code successfully created!");
       } else {
         toast.error("Failed to create EWC Code. Please try again.");
       }
@@ -127,8 +131,7 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
         );
         setEditingId(null);
         setIsEditDialogOpen(false);
-        toast.success("EWC Code successfully updated!", {
-        });
+        toast.success("EWC Code successfully updated!");
       } else {
         toast.error("Failed to update EWC Code. Please try again.");
       }
@@ -240,7 +243,7 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbLink href="/settings/variables/ewc-codes" isCurrent>
+                <BreadcrumbLink href="/settings/variables/ewc-codes" >
                   EWC Codes
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -248,8 +251,9 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
+          <div className="text-3xl font-semibold text-gray-800">Settings: Variables</div>
           <VariablesNavigation currentTab="ewc-codes" />
-          <section className="bg-white shadow rounded-lg p-6">
+          <section className="bg-white border shadow rounded-lg p-6">
             <header className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold leading-7 text-gray-900">
@@ -269,15 +273,12 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
                 <Dialog
                   open={isAddDialogOpen}
                   onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      resetFormErrors();
-                      setAddFormData({ ewc_code: "", ea_description: "" });
-                    }
+                    if (!isOpen) resetAddForm();
                     setIsAddDialogOpen(isOpen);
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button onClick={() => setIsAddDialogOpen(true)}>Add EWC Code</Button>
+                    <Button>Add EWC Code</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px] bg-white">
                     <DialogHeader>
@@ -286,37 +287,45 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
                         Fill in the details for the new EWC Code below.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div>
-                        <Label htmlFor="ewc_code">EWC Code</Label>
-                        <Input
-                          id="ewc_code"
-                          name="ewc_code"
-                          value={addFormData.ewc_code}
-                          onChange={(e) => handleInputChange(e, "add")}
-                        />
-                        {formErrors.ewc_code && (
-                          <p className="text-red-600 text-sm">{formErrors.ewc_code}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="ea_description">EA Description</Label>
-                        <textarea
-                          id="ea_description"
-                          name="ea_description"
-                          value={addFormData.ea_description}
-                          onChange={(e) => handleInputChange(e, "add")}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                        {formErrors.ea_description && (
-                          <p className="text-red-600 text-sm">{formErrors.ea_description}</p>
-                        )}
+                    <div className="bg-white border rounded-lg p-6">
+                      <div className="grid gap-4 py-4">
+                        <div>
+                          <Label htmlFor="ewc_code">EWC Code</Label>
+                          <Input
+                            id="ewc_code"
+                            name="ewc_code"
+                            value={addFormData.ewc_code}
+                            onChange={(e) => handleInputChange(e, "add")}
+                          />
+                          {formErrors.ewc_code && (
+                            <p className="text-red-600 text-sm">{formErrors.ewc_code}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="ea_description">EA Description</Label>
+                          <textarea
+                            id="ea_description"
+                            name="ea_description"
+                            value={addFormData.ea_description}
+                            onChange={(e) => handleInputChange(e, "add")}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          />
+                          {formErrors.ea_description && (
+                            <p className="text-red-600 text-sm">{formErrors.ea_description}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                        Cancel
-                      </Button>
+                    <Button
+        variant="outline"
+        onClick={() => {
+          resetAddForm(); // Reset the form when "Cancel" is clicked
+          setIsAddDialogOpen(false);
+        }}
+      >
+        Cancel
+      </Button>
                       <Button onClick={handleAddSubmit}>Create EWC Code</Button>
                     </DialogFooter>
                   </DialogContent>
@@ -334,31 +343,33 @@ export default function EwcCodes({ ewcCodes }: { ewcCodes: EwcCode[] }) {
                   Update the details for the EWC Code below.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="ewc_code_edit">EWC Code</Label>
-                  <Input
-                    id="ewc_code_edit"
-                    name="ewc_code"
-                    value={editFormData.ewc_code}
-                    onChange={(e) => handleInputChange(e, "edit")}
-                  />
-                  {formErrors.ewc_code && (
-                    <p className="text-red-600 text-sm">{formErrors.ewc_code}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="ea_description_edit">EA Description</Label>
-                  <textarea
-                    id="ea_description_edit"
-                    name="ea_description"
-                    value={editFormData.ea_description}
-                    onChange={(e) => handleInputChange(e, "edit")}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                  {formErrors.ea_description && (
-                    <p className="text-red-600 text-sm">{formErrors.ea_description}</p>
-                  )}
+              <div className="bg-white border rounded-lg p-6">
+                <div className="grid gap-4 py-4">
+                  <div>
+                    <Label htmlFor="ewc_code_edit">EWC Code</Label>
+                    <Input
+                      id="ewc_code_edit"
+                      name="ewc_code"
+                      value={editFormData.ewc_code}
+                      onChange={(e) => handleInputChange(e, "edit")}
+                    />
+                    {formErrors.ewc_code && (
+                      <p className="text-red-600 text-sm">{formErrors.ewc_code}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="ea_description_edit">EA Description</Label>
+                    <textarea
+                      id="ea_description_edit"
+                      name="ea_description"
+                      value={editFormData.ea_description}
+                      onChange={(e) => handleInputChange(e, "edit")}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    {formErrors.ea_description && (
+                      <p className="text-red-600 text-sm">{formErrors.ea_description}</p>
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter>

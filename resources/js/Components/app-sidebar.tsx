@@ -97,7 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: "Staff Accounts",
-            url: "/settings/staff-accounts/",
+            url: "/settings/staff/",
           },
           {
             title: "Categories",

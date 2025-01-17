@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
@@ -41,7 +39,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Edit, Trash2 } from "lucide-react";
+import { Menu, Eye, Edit, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -56,21 +54,24 @@ export default function ClientAccounts({
   const [addFormData, setAddFormData] = useState({
     name: "",
     email: "",
+    contact_name: "",
   });
   const [formErrors, setFormErrors] = useState({
     name: "",
     email: "",
+    contact_name: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const resetFormErrors = () => setFormErrors({ name: "", email: "" });
+  const resetFormErrors = () => setFormErrors({ name: "", email: "", contact_name: "" });
 
   const resetAddForm = () => {
     setAddFormData({
       name: "",
       email: "",
+      contact_name: "",
     });
     resetFormErrors();
   };
@@ -154,27 +155,15 @@ export default function ClientAccounts({
             >
               <Edit className="h-4 w-4" />
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete <b>{user.name}</b>?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDelete(user.id)}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                (window.location.href = `/customers/${user.id}`)
+              }
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
           </div>
         );
       },
@@ -207,7 +196,7 @@ export default function ClientAccounts({
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold">All Customers</h2>
                 <p className="text-sm text-muted-foreground">
-                Below is a list of all customers on the system.
+                  Below is a list of all customers on the system.
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -237,7 +226,7 @@ export default function ClientAccounts({
                     <div className="bg-white border rounded-lg p-6">
                       <div className="grid gap-4">
                         <div>
-                          <Label htmlFor="name">Name</Label>
+                          <Label htmlFor="name">Company Name</Label>
                           <Input
                             id="name"
                             name="name"
@@ -246,6 +235,21 @@ export default function ClientAccounts({
                           />
                           {formErrors.name && (
                             <p className="text-red-600 text-sm">{formErrors.name}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="contact_name">Contact Name</Label>
+                          <Input
+                            id="contact_name"
+                            name="contact_name"
+                            value={addFormData.contact_name}
+                            onChange={handleInputChange}
+                            required
+                          />
+                          {formErrors.contact_name && (
+                            <p className="text-red-600 text-sm">
+                              {formErrors.contact_name}
+                            </p>
                           )}
                         </div>
                         <div>

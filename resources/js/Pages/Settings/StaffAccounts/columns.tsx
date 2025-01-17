@@ -9,50 +9,44 @@ export type Staff = {
   id: number;
   name: string;
   email: string;
-  landline: string | null; // Optional field
   mobile: string | null;   // Optional field
+  role: string | null;     // Role name (optional if no role is assigned)
+  active: boolean;         // Active status (true or false)
 };
 
 // Define the columns for the staff table
 export const columns: ColumnDef<Staff>[] = [
   {
     accessorKey: "name",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() =>
-          column.toggleSorting(column.getIsSorted() === "asc")
-        }
-      >
-        Name
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.original.name}</div>, // Optional: Custom render for the cell
+    header: "Name",
+    cell: ({ row }) => <div>{row.original.name}</div>,
   },
   {
     accessorKey: "email",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() =>
-          column.toggleSorting(column.getIsSorted() === "asc")
-        }
-      >
-        Email
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.original.email}</div>, // Optional: Custom render for the cell
-  },
-  {
-    accessorKey: "landline",
-    header: "Landline",
-    cell: ({ row }) => <div>{row.original.landline || "N/A"}</div>, // Display "N/A" if null
+    header: "Email",
+    cell: ({ row }) => <div>{row.original.email}</div>,
   },
   {
     accessorKey: "mobile",
     header: "Mobile",
-    cell: ({ row }) => <div>{row.original.mobile || "N/A"}</div>, // Display "N/A" if null
+    cell: ({ row }) => <div>{row.original.mobile || "N/A"}</div>,
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => <div>{row.original.role || "Unassigned"}</div>,
+  },
+  {
+    accessorKey: "active",
+    header: "Status",
+    cell: ({ row }) => (
+      <div
+        className={`font-semibold ${
+          row.original.active ? "text-green-500" : "text-red-500"
+        }`}
+      >
+        {row.original.active ? "Active" : "Disabled"}
+      </div>
+    ),
   },
 ];

@@ -132,12 +132,12 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
         <div className="flex flex-1 flex-col gap-6 p-8">
           <div className="flex justify-between items-center">
             <div className="text-3xl font-semibold text-gray-800">Settings: Edit Category</div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 onClick={() => (window.location.href = "/settings/categories")}
               >
-                <ArrowLeft className="h-6 w-6 mr-2" />
+                <ArrowLeft className="h-6 w-6" />
                 Done Editing
               </Button>
               <Button
@@ -146,6 +146,7 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
                 disabled={isSubmitting}
               >
                 <Save className="h-6 w-6" />
+                Save Changes
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -154,6 +155,7 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
                     disabled={isDeleting}
                   >
                     <Trash2 className="h-6 w-6" />
+                    Delete Category
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>

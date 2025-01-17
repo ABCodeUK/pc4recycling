@@ -108,7 +108,7 @@ export default function UpdatePasswordForm({ className = "" }: { className?: str
         {/* Save Button */}
         <div className="flex items-center gap-4">
           <Button type="submit" disabled={processing}>
-            Save
+            Change Password
           </Button>
           {recentlySuccessful && (
             <p className="text-sm text-muted-foreground">Saved.</p>

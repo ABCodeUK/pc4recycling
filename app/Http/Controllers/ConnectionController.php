@@ -6,6 +6,7 @@ use App\Models\Connection;
 use App\Http\Controllers\ChatGPTController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class ConnectionController extends Controller
 {
@@ -56,6 +57,8 @@ class ConnectionController extends Controller
             $connection->connected = $this->testDatabaseConnection($validated);
         } elseif ($type === 'chatgpt') {
             $connection->connected = $this->chatGPTController->connect($validated['api_key']);
+        } elseif ($type === 'IMEI') {
+            $connection->connected = $this->testIMEIConnection($validated['api_key']);
         }
 
         $connection->save();
@@ -93,6 +96,8 @@ class ConnectionController extends Controller
             $isConnected = $this->testDatabaseConnection($validated);
         } elseif ($type === 'chatgpt') {
             $isConnected = $this->chatGPTController->testConnection($validated['api_key']);
+        } elseif ($type === 'IMEI') {
+            $isConnected = $this->testIMEIConnection($validated['api_key']);
         }
 
         return response()->json(['connected' => $isConnected], $isConnected ? 200 : 400);
@@ -117,6 +122,23 @@ class ConnectionController extends Controller
 
             DB::connection('temp_mysql')->getPdo();
             return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Test the IMEI API connection.
+     */
+    private function testIMEIConnection($apiKey)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])->get('https://dash.imei.info/api/account/account');
+
+            return $response->successful();
         } catch (\Exception $e) {
             return false;
         }

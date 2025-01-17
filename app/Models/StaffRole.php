@@ -9,14 +9,40 @@ class StaffRole extends Model
 {
     use HasFactory;
 
-    // Specify the table name (optional if it matches Laravel's naming convention)
-    protected $table = 'users_roles'; // Update to match your roles table
+    // Specify the table name
+    protected $table = 'users_roles';
 
     // Mass-assignable attributes
-    protected $fillable = [
-        'name', // Assuming 'name' is the column for role names
-    ];
+    protected $fillable = ['name'];
 
-    // Add timestamps (optional, set false if the table doesn't have created_at and updated_at)
+    // Add timestamps (set to false if your table doesn't include created_at/updated_at)
     public $timestamps = true;
+
+    /**
+     * Relationship: Users assigned to this role
+     *
+     * Links the role to the users via the users_staff pivot table.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function users()
+    {
+        return $this->hasMany(UserStaff::class, 'role_id', 'id')
+            ->whereHas('user', function ($query) {
+                $query->where('type', 'Staff');
+            })
+            ->with('user'); // Include user details
+    }
+
+    /**
+     * Relationship: Staff Details
+     *
+     * Links to the users_staff table to fetch staff-specific details for this role.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function staffDetails()
+    {
+        return $this->hasMany(UserStaff::class, 'role_id', 'id');
+    }
 }

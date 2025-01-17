@@ -17,6 +17,7 @@ import { useState } from 'react';
 import ChatGPTConnection from './ChatGPT/ChatGPT-Connection'; // ChatGPT Connection Card
 import MySQLConnection from './MySQL/MySQL-Connection'; // MySQL Connection Card
 import IceCatConnection from './IceCat/IceCat-Connection'; // IceCat Connection Card
+import IMEIConnection from './IMEI/IMEI-Connection'; // IceCat Connection Card
 
 export default function Connections() {
   return (
@@ -55,6 +56,9 @@ export default function Connections() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
             {/* MySQL Connection */}
             <MySQLConnection />
+
+            {/* IMEI Connection */}
+            <IMEIConnection />            
 
             {/* ChatGPT Connection */}
             <ChatGPTConnection />

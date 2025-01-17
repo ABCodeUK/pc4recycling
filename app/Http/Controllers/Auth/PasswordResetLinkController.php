@@ -48,4 +48,44 @@ class PasswordResetLinkController extends Controller
             'email' => [trans($status)],
         ]);
     }
+
+    public function sendResetLinkForStaff(Request $request, $id)
+    {
+        // Find the staff member by ID
+        $user = User::findOrFail($id);
+
+        // Ensure the user is a staff member
+        if ($user->type !== 'Staff') {
+            return response()->json(['error' => 'Invalid user type'], 422);
+        }
+
+        // Send the reset link
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json(['message' => 'Reset link sent successfully.']);
+        }
+
+        return response()->json(['error' => 'Failed to send reset link.'], 500);
+    }
+    
+    public function sendResetLinkForClient(Request $request, $id)
+    {
+        // Find the staff member by ID
+        $user = User::findOrFail($id);
+
+        // Ensure the user is a client
+        if ($user->type !== 'Client') {
+            return response()->json(['error' => 'Invalid user type'], 422);
+        }
+
+        // Send the reset link
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json(['message' => 'Reset link sent successfully.']);
+        }
+
+        return response()->json(['error' => 'Failed to send reset link.'], 500);
+    }
 }

@@ -39,7 +39,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, ArrowLeft } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -136,15 +136,20 @@ export default function StaffRoles({ roles }: { roles: Role[] }) {
   const handleDelete = async (id: number) => {
     try {
       const response = await axios.delete(`/settings/staff/roles/${id}`);
-
+  
       if (response.status === 200) {
         setData((prev) => prev.filter((item) => item.id !== id));
         toast.success("Role successfully deleted!");
       } else {
-        toast.error("Failed to delete role. Please try again.");
+        toast.error(response.data.message || "Failed to delete role. Please try again.");
       }
-    } catch (error) {
-      toast.error("Error deleting role. Please check the logs.");
+    } catch (error: any) {
+      if (error.response && error.response.data.message) {
+        // Display backend validation error message
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Error deleting role. Please check the logs.");
+      }
     }
   };
 
@@ -159,7 +164,7 @@ export default function StaffRoles({ roles }: { roles: Role[] }) {
       header: () => <div className="text-right">Actions</div>,
       cell: ({ row }: { row: any }) => {
         const role = row.original;
-
+  
         return (
           <div className="flex justify-end space-x-2">
             <Button
@@ -176,24 +181,36 @@ export default function StaffRoles({ roles }: { roles: Role[] }) {
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={role.userCount > 0} // Disable if users are assigned
+                  title={
+                    role.userCount > 0
+                      ? "Cannot delete a role with assigned users"
+                      : undefined
+                  }
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete role <b>{role.name}</b>?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDelete(role.id)}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
+              {!role.userCount && (
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete role <b>{role.name}</b>? This
+                      action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDelete(role.id)}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              )}
             </AlertDialog>
           </div>
         );
@@ -219,22 +236,35 @@ export default function StaffRoles({ roles }: { roles: Role[] }) {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href="/settings/staff">Staff</BreadcrumbLink>
+                <BreadcrumbLink href="/settings/staff">Staff Accounts</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink href="/settings/staff/roles">
-                  Roles
+                  Staff Roles
                 </BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
-          <div className="text-3xl font-semibold text-gray-800">Settings: Staff Roles</div>
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-semibold text-gray-800">
+                Settings: Staff Roles
+              </h2>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => (window.location.href = "/settings/staff/")}
+            >
+                              <ArrowLeft className="h-6 w-6" />
+              Staff Accounts
+            </Button>
+          </div>
           <section className="bg-white border shadow rounded-lg p-6">
             <header className="flex items-center justify-between">
-              <div className="space-y-1">
+                           <div className="space-y-1">
                 <h2 className="text-xl font-semibold">Manage Roles</h2>
                 <p className="text-sm text-muted-foreground">
                   Add, edit, or delete roles used in the system.
@@ -246,7 +276,7 @@ export default function StaffRoles({ roles }: { roles: Role[] }) {
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="max-w-sm"
-                />
+                />                
                 <Dialog
                   open={isAddDialogOpen}
                   onOpenChange={(isOpen) => {
@@ -255,11 +285,11 @@ export default function StaffRoles({ roles }: { roles: Role[] }) {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button onClick={() => setIsAddDialogOpen(true)}>Add Role</Button>
+                    <Button onClick={() => setIsAddDialogOpen(true)}>Add New Role</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px] bg-white">
                     <DialogHeader>
-                      <DialogTitle>Add Role</DialogTitle>
+                      <DialogTitle>Add New Role</DialogTitle>
                       <DialogDescription>
                         Fill in the details for the new role below.
                       </DialogDescription>

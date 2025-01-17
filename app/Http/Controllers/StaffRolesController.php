@@ -3,22 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\StaffRole;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class StaffRolesController extends Controller
 {
     /**
      * Display a listing of the roles.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch all Roles
-        $roles = StaffRole::all();
-
-        // Pass data to the Inertia template
+        // Fetch all Roles with a count of users assigned
+        $roles = StaffRole::withCount('users')->get();
+    
+        // Format roles for frontend
+        $formattedRoles = $roles->map(function ($role) {
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'userCount' => $role->users_count, // Map the user count
+            ];
+        });
+    
+        // Check if the request expects a JSON response
+        if ($request->expectsJson()) {
+            return response()->json($formattedRoles);
+        }
+    
+        // Pass data to the Inertia template for the web view
         return Inertia::render('Settings/StaffAccounts/StaffRoles/StaffRoles', [
-            'roles' => $roles,
+            'roles' => $formattedRoles,
         ]);
     }
 
@@ -71,7 +85,7 @@ class StaffRolesController extends Controller
         $role = StaffRole::findOrFail($id);
 
         // Prevent deletion if the role is assigned to any staff
-        if ($role->usersStaff()->exists()) {
+        if ($role->users()->exists()) {
             return response()->json([
                 'message' => 'Cannot delete a role that is assigned to staff.',
             ], 400);
@@ -79,7 +93,6 @@ class StaffRolesController extends Controller
 
         $role->delete();
 
-        // Return success message as JSON
         return response()->json(['message' => 'Role deleted successfully.']);
     }
 }

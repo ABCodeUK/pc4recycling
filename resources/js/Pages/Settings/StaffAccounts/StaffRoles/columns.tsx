@@ -8,22 +8,20 @@ import { Button } from "@/components/ui/button";
 export type StaffRole = {
   id: number;
   name: string; // Role name
+  userCount: number | null; // Number of users assigned to the role, can be null
 };
 
 // Define the columns for the roles table
 export const columns: ColumnDef<StaffRole>[] = [
   {
     accessorKey: "name", // Access the 'name' field
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() =>
-          column.toggleSorting(column.getIsSorted() === "asc")
-        }
-      >
-        Role Name
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
+    header: "Name",
   },
+  {
+    accessorKey: "userCount", // Access the 'userCount' field
+    header: "User Count",
+    cell: ({ row }) => (
+      <div>{row.original.userCount ?? 0}</div> // Show 0 if userCount is null or undefined
+    ),
+  }
 ];

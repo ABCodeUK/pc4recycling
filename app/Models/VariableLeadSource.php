@@ -17,6 +17,31 @@ class VariableLeadSource extends Model
         'ls_name',
     ];
 
-    // Add timestamps (optional if you want to ensure explicit handling)
-    public $timestamps = true;
+        /**
+     * Relationship: Users assigned to this role
+     *
+     * Links the industry to the users via the users_client pivot table.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function users()
+    {
+        return $this->hasMany(UserClient::class, 'lead_source_id', 'id')
+            ->whereHas('user', function ($query) {
+                $query->where('type', 'Client');
+            })
+            ->with('user'); // Include user details
+    }
+
+    /**
+     * Relationship: Client Details
+     *
+     * Links to the users_clients table to fetch client-specific details for this role.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function clientDetails()
+    {
+        return $this->hasMany(UserClient::class, 'lead_source_id', 'id');
+    }
 }

@@ -13,11 +13,13 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\ConnectionController;
 use App\Http\Controllers\ChatGPTController;
+use App\Http\Controllers\IMEIController;
 use App\Http\Controllers\MySQLConnectionController;
 use App\Http\Controllers\IceCatController;
 use App\Http\Controllers\StaffAccountsController;
 use App\Http\Controllers\StaffRolesController;
 use App\Http\Controllers\ClientAccountsController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,6 +34,12 @@ Route::get('/settings/connections/chatgpt', [ChatGPTController::class, 'getConne
 Route::post('/settings/connections/chatgpt/connect', [ChatGPTController::class, 'connect']);
 Route::post('/settings/connections/chatgpt/test', [ChatGPTController::class, 'test']);
 Route::delete('/settings/connections/chatgpt', [ChatGPTController::class, 'disconnect']);
+
+// IMEI Connection
+Route::get('/settings/connections/imei', [IMEIController::class, 'getConnection']);
+Route::post('/settings/connections/imei/connect', [IMEIController::class, 'connect']);
+Route::post('/settings/connections/imei/test', [IMEIController::class, 'test']);
+Route::delete('/settings/connections/imei', [IMEIController::class, 'disconnect']);
 
 // MySQL Connection
     Route::prefix('settings/connections/mysql')->group(function () {
@@ -77,13 +85,27 @@ Route::prefix('sub-categories')->group(function () {
     Route::get('/{parent_id}', [SubCategoryController::class, 'index'])->name('sub-categories.index');
 });
 
+// Client Accounts
+Route::middleware(['auth'])->group(function () {
+    Route::get('/customers', [ClientAccountsController::class, 'index'])->name('client.index'); // client list
+    Route::get('/customers/{id}', [ClientAccountsController::class, 'view'])->name('client.view'); // client View
+    Route::get('/customers/{id}/edit', [ClientAccountsController::class, 'edit'])->name('client.edit'); // Edit client
+    Route::post('/customers/store', [ClientAccountsController::class, 'store'])->name('client.store'); // Store new client
+    Route::put('/customers/update/{id}', [ClientAccountsController::class, 'update'])->name('client.update'); // Update client
+    Route::delete('/customers/delete/{id}', [ClientAccountsController::class, 'destroy'])->name('client.destroy');  // Delete client
+    Route::post('/customers/{id}/reset-password', [ClientAccountsController::class, 'resetPassword']); // Reset client password
+    Route::post('/customers/{id}/send-reset-email', [ClientAccountsController::class, 'sendResetEmail']); // Client password reset email
+});
+
 // Staff Accounts
 Route::middleware(['auth'])->group(function () {
     Route::get('/settings/staff', [StaffAccountsController::class, 'index'])->name('staff.index'); // Staff list
     Route::get('/settings/staff/{id}/edit', [StaffAccountsController::class, 'edit'])->name('staff.edit'); // Edit staff
-    Route::put('/settings/staff/update/{id}', [StaffAccountsController::class, 'update'])->name('staff.update');
-    Route::post('/settings/staff/store', [StaffAccountsController::class, 'store'])->name('staff.store'); // Store new staff    
+    Route::post('/settings/staff/store', [StaffAccountsController::class, 'store'])->name('staff.store'); // Store new staff 
+    Route::put('/settings/staff/update/{id}', [StaffAccountsController::class, 'update'])->name('staff.update'); // Update Staff   
     Route::delete('/settings/staff/delete/{id}', [StaffAccountsController::class, 'destroy'])->name('staff.destroy'); // Delete staff
+    Route::post('/settings/staff/{id}/reset-password', [StaffAccountsController::class, 'resetPassword']); // Reset staff password
+    Route::post('/settings/staff/{id}/send-reset-email', [StaffAccountsController::class, 'sendResetEmail']); // Staff password reset email
 });
 
 // Staff Roles
@@ -92,15 +114,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/staff/roles', [StaffRolesController::class, 'store'])->name('roles.store');
     Route::put('/settings/staff/roles/{id}', [StaffRolesController::class, 'update'])->name('roles.update');
     Route::delete('/settings/staff/roles/{id}', [StaffRolesController::class, 'destroy'])->name('roles.destroy');
-});
-
-// Client Accounts
-Route::middleware(['auth'])->group(function () {
-    Route::get('/customers', [ClientAccountsController::class, 'index'])->name('client.index');
-    Route::get('/customers/{id}/edit', [ClientAccountsController::class, 'edit'])->name('client.edit');
-    Route::delete('/customers/delete/{id}', [ClientAccountsController::class, 'destroy'])->name('client.destroy');
-    Route::put('/customers/update/{id}', [ClientAccountsController::class, 'update'])->name('client.update');
-    Route::post('/customers/store', [ClientAccountsController::class, 'store'])->name('client.store');
 });
 
 // Settings: Variables
@@ -157,9 +170,13 @@ Route::middleware('auth')->group(function () {
     // Main connections page
     Route::get('/settings/connections', [ConnectionController::class, 'index'])->name('settings.connections');
 
-    // API-specific routes
+    // CHATGPT API-specific routes
     Route::post('/settings/connections/chatgpt/connect', [ChatGPTController::class, 'connect'])->name('settings.connections.chatgpt.connect');
     Route::post('/settings/connections/chatgpt/test', [ChatGPTController::class, 'test'])->name('settings.connections.chatgpt.test');
+
+    // IMEI API-specific routes
+    Route::post('/settings/connections/imei/connect', [IMEIController::class, 'connect'])->name('settings.connections.imei.connect');
+    Route::post('/settings/connections/imei/test', [IMEIController::class, 'test'])->name('settings.connections.imei.test');
 });
 
 // Include authentication routes

@@ -15,6 +15,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import UserAddresses from "@/Pages/ClientAccounts/Address/ClientAddresses";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -38,6 +39,9 @@ import {
 import axios from "axios";
 import { toast } from "sonner";
 import { Save, ArrowLeft, Trash2 } from "lucide-react";
+import ClientJobs from "@/Pages/ClientAccounts/Jobs/ClientJobs";
+// Add this with other imports at the top
+import ClientSubClients from "@/Pages/ClientAccounts/SubClients/ClientSubClients";
 
 export default function ClientAccountsEdit({
   user_edit,
@@ -77,6 +81,7 @@ export default function ClientAccountsEdit({
   const [formData, setFormData] = useState({
     name: user_edit.name || "",
     email: user_edit.email || "",
+    position: user_edit.position || "",
     landline: user_edit.landline || "",
     mobile: user_edit.mobile || "",
     active: user_edit.active || false,
@@ -232,7 +237,7 @@ export default function ClientAccountsEdit({
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = "/customers")}
+                onClick={() => (window.location.href = `/customers/${user_edit.id}`)}
               >
                 <ArrowLeft className="h-6 w-6 mr-0" />
                 Done Editing
@@ -253,313 +258,320 @@ export default function ClientAccountsEdit({
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            <section className="bg-white border shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold leading-7 text-gray-900">Customer Details</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-    Update your customer details below.
-  </p>
-              <Separator />
-              <div className="grid gap-4 mt-4">
-                <div>
-                  <Label htmlFor="name">Name*</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  {formErrors.name && (
-                    <p className="text-red-600 text-sm">{formErrors.name}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="email">Email*</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  {formErrors.email && (
-                    <p className="text-red-600 text-sm">{formErrors.email}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="landline">Landline</Label>
-                  <Input
-                    id="landline"
-                    name="landline"
-                    value={formData.landline}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="mobile">Mobile</Label>
-                  <Input
-                    id="mobile"
-                    name="mobile"
-                    value={formData.mobile}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact_name">Contact Name</Label>
-                  <Input
-                    id="contact_name"
-                    name="contact_name"
-                    value={formData.contact_name}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                {/* Customer Type Field */}
-                <div>
-                      <Label htmlFor="customer_type_id">Customer Type</Label>
-                      <Select
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            customer_type_id: value,
-                          }))
-                        }
-                        value={String(formData.customer_type_id || "")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Customer Type">
-                            {customer_types.find(
-                              (type) => String(type.id) === formData.customer_type_id)?.ct_name || "Select Customer Type"}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {customer_types.map((type) => (
-                            <SelectItem key={type.id} value={String(type.id)}>
-                              {type.ct_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {/* Customer Type Field */}
-                      <div>
-                      <Label htmlFor="lead_source_id">Lead Source</Label>
-                      <Select
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            lead_source_id: value,
-                          }))
-                        }
-                        value={String(formData.lead_source_id || "")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Lead Source">
-                            {lead_sources.find(
-                              (type) => String(type.id) === formData.lead_source_id)?.ls_name || "SelectLead Source"}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {lead_sources.map((type) => (
-                            <SelectItem key={type.id} value={String(type.id)}>
-                              {type.ls_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Industry Field */}
-                    <div>
-                      <Label htmlFor="industry_id">Industry</Label>
-                      <Select
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            industry_id: value,
-                          }))
-                        }
-                        value={String(formData.industry_id || "")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Industry">
-                            {industries.find(
-                              (industry) => String(industry.id) === formData.industry_id
-                            )?.in_name || "Select Industry"}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {industries.map((industry) => (
-                            <SelectItem key={industry.id} value={String(industry.id)}>
-                              {industry.in_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="town_city">Town/City</Label>
-                  <Input
-                    id="town_city"
-                    name="town_city"
-                    value={formData.town_city}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="county">County</Label>
-                  <Input
-                    id="county"
-                    name="county"
-                    value={formData.county}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="postcode">Postcode</Label>
-                  <Input
-                    id="postcode"
-                    name="postcode"
-                    value={formData.postcode}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sic_code">SIC Code</Label>
-                  <Input
-                    id="sic_code"
-                    name="sic_code"
-                    value={formData.sic_code}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="customer_notes">Customer Notes</Label>
-                  <Input
-                    id="customer_notes"
-                    name="customer_notes"
-                    value={formData.customer_notes}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </section>
-
-{/* Right Card: Account Settings */}
-<section className="bg-white border shadow rounded-lg p-6">
-  <h2 className="text-xl font-semibold leading-7 text-gray-900">Account Settings</h2>
-  <p className="text-sm text-muted-foreground mb-4">
-    Manage account access, reset passwords, or delete the client account.
-  </p>
-  <Separator className="mb-10" />
-  <div className="space-y-6">
-    {/* Reset Password Card */}
-    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-      <div className="space-y-0.5">
-        <h3 className="text-base font-medium">Reset Password</h3>
-        <p className="text-sm text-muted-foreground">
-          Reset the client's password using one of the options below.
-        </p>
+          <div className="flex flex-col gap-6 p-0">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+    {/* Left Card: Customer Details */}
+    <section className="bg-white border shadow rounded-lg p-6">
+      <h2 className="text-xl font-semibold leading-7 text-gray-900 flex justify-between items-center">
+        Customer Details
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Account Status:</span>
+          <span className={`text-sm px-4 py-1 rounded-sm ${formData.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-medium`}>
+            {formData.active ? 'Active' : 'Disabled'}
+          </span>
+        </div>
+      </h2>
+      <Separator className="my-4" />
+      <div className="grid gap-4 mt-4">
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="name" className="text-left">Company Name*</Label>
+          <div className="col-span-2">
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+            {formErrors.name && <p className="text-red-600 text-sm">{formErrors.name}</p>}
+          </div>
+        </div>
+        <Separator />
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="address" className="text-left">Address</Label>
+          <div className="col-span-2">
+            <Input
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="town_city" className="text-left">Town/City</Label>
+          <div className="col-span-2">
+            <Input
+              id="town_city"
+              name="town_city"
+              value={formData.town_city}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="county" className="text-left">County</Label>
+          <div className="col-span-2">
+            <Input
+              id="county"
+              name="county"
+              value={formData.county}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="postcode" className="text-left">Postcode</Label>
+          <div className="col-span-2">
+            <Input
+              id="postcode"
+              name="postcode"
+              value={formData.postcode}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <Separator />
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="contact_name" className="text-left">Contact Name</Label>
+          <div className="col-span-2">
+            <Input
+              id="contact_name"
+              name="contact_name"
+              value={formData.contact_name}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="position" className="text-left">Position</Label>
+          <div className="col-span-2">
+            <Input
+              id="position"
+              name="position"
+              value={formData.position}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <Separator />
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="landline" className="text-left">Landline</Label>
+          <div className="col-span-2">
+            <Input
+              id="landline"
+              name="landline"
+              value={formData.landline}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="mobile" className="text-left">Mobile</Label>
+          <div className="col-span-2">
+            <Input
+              id="mobile"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="email" className="text-left">Email*</Label>
+          <div className="col-span-2">
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
+            {formErrors.email && <p className="text-red-600 text-sm">{formErrors.email}</p>}
+          </div>
+        </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <Button
-          variant="outline"
-          onClick={handleSendResetEmail} // Updated for client endpoint
-        >
-          Email Password Reset
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline">Manual Password Reset</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Manual Password Reset</AlertDialogTitle>
-              <AlertDialogDescription>
-                Enter the new password below to manually reset the client's password.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(e) =>
-                    setPasswordForm((prev) => ({
-                      ...prev,
-                      newPassword: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) =>
-                    setPasswordForm((prev) => ({
-                      ...prev,
-                      confirmPassword: e.target.value,
-                    }))
-                  }
-                />
-              </div>
+    </section>
+
+    {/* Right Card: More Details */}
+    <section className="bg-white border shadow rounded-lg p-6">
+      <h2 className="text-xl font-semibold leading-7 text-gray-900">More Details</h2>
+      <Separator />
+      <div className="grid gap-4 mt-4">
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="lead_source_id" className="text-left">Lead Source</Label>
+          <div className="col-span-2">
+            <Select
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, lead_source_id: value }))
+              }
+              value={String(formData.lead_source_id || "")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Lead Source">
+                  {lead_sources.find((source) => String(source.id) === formData.lead_source_id)?.ls_name || "Select Lead Source"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {lead_sources.map((source) => (
+                  <SelectItem key={source.id} value={String(source.id)}>
+                    {source.ls_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="industry_id" className="text-left">Industry</Label>
+          <div className="col-span-2">
+            <Select
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, industry_id: value }))
+              }
+              value={String(formData.industry_id || "")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Industry">
+                  {industries.find((industry) => String(industry.id) === formData.industry_id)?.in_name || "Select Industry"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {industries.map((industry) => (
+                  <SelectItem key={industry.id} value={String(industry.id)}>
+                    {industry.in_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <Separator />
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="sic_code" className="text-left">SIC Code</Label>
+          <div className="col-span-2">
+            <Input
+              id="sic_code"
+              name="sic_code"
+              value={formData.sic_code}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <Separator />
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="customer_notes" className="text-left">Customer Notes</Label>
+          <div className="col-span-2">
+            <Input
+              id="customer_notes"
+              name="customer_notes"
+              value={formData.customer_notes}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+          <section>
+            <ClientJobs parentId={user_edit.id} />
+            <div className="mt-6">
+              <UserAddresses parentId={user_edit.id} />
             </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleManualPasswordReset}>
-                Save
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            <div className="mt-6">
+              <ClientSubClients parentId={user_edit.id} />
+            </div>
+          </section>
+  {/* Full-Width Account Settings Card */}
+  <section className="bg-white border shadow rounded-lg p-6">
+    <h2 className="text-xl font-semibold leading-7 text-gray-900">Account Settings</h2>
+    <Separator className="mb-6" />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Reset Password */}
+      <div className="rounded-lg border p-4">
+        <h3 className="text-base font-medium">Reset Password</h3>
+        <p className="text-sm text-muted-foreground">Reset the client's password.</p>
+        <div className="mt-4 space-y-2">
+          <Button variant="outline" onClick={handleSendResetEmail}>
+            Email Password Reset
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">Manual Password Reset</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Manual Password Reset</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Enter the new password below to manually reset the client's password.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    name="newPassword"
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(e) =>
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        newPassword: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        confirmPassword: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleManualPasswordReset}>
+                  Save
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
-    </div>
 
-    {/* Disable Account Card */}
-    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-      <div className="space-y-0.5">
+      {/* Disable Account */}
+      <div className="rounded-lg border p-4">
         <h3 className="text-base font-medium">Disable Account</h3>
         <p className="text-sm text-muted-foreground">
           Disable this client account from being accessed.
         </p>
+        <Switch
+          className="mt-4"
+          checked={!formData.active}
+          onCheckedChange={(checked) => handleSwitchChange(!checked)}
+        />
       </div>
-      <Switch
-        checked={!formData.active} // Switch is checked when active is false (inactive)
-        onCheckedChange={(checked) => handleSwitchChange(!checked)} // Invert the checked value
-      />
-    </div>
 
-    {/* Delete Account Card */}
-    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-      <div className="space-y-0.5">
+      {/* Delete Account */}
+      <div className="rounded-lg border p-4">
         <h3 className="text-base font-medium">Delete Account</h3>
         <p className="text-sm text-muted-foreground">
-          Permanently remove this client account from the system. This action
-          cannot be undone.
+          Permanently remove this client account from the system.
         </p>
-      </div>
-      <div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive">
+            <Button variant="destructive" className="mt-4">
               <Trash2 className="h-5 w-5 mr-2" />
               Delete Account
             </Button>
@@ -568,8 +580,7 @@ export default function ClientAccountsEdit({
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this client account? This
-                action cannot be undone.
+                Are you sure you want to delete this client account? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -582,9 +593,8 @@ export default function ClientAccountsEdit({
         </AlertDialog>
       </div>
     </div>
-  </div>
-</section>
-          </div>
+  </section>
+</div>
         </div>
       </SidebarInset>
     </SidebarProvider>

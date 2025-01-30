@@ -19,11 +19,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'position',
         'landline',
         'mobile',
-        'type',      // Differentiates between Client and Staff
-        'active',    // Status management
+        'type',
+        'active',
+        'parent_id',
     ];
 
     /**
@@ -43,8 +43,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'active' => 'boolean', // Cast 'active' to boolean
         'password' => 'hashed',
+        'active' => 'boolean',
     ];
 
     /* -------------------------------------------------------------------------- */
@@ -122,6 +122,15 @@ class User extends Authenticatable
     public function clientDetails()
     {
         return $this->hasOne(UserClient::class, 'user_id');
+    }
+
+
+    /**
+     * Relationship to Addresses.
+     */
+    public function userAddresses()
+    {
+        return $this->hasMany(UserAddress::class, 'parent_id');
     }
 
     /**
@@ -204,4 +213,20 @@ class User extends Authenticatable
     {
         return $this->clientDetails->full_address ?? null;
     }
+
+    // Add this relationship if it doesn't exist
+    public function jobs()
+    {
+        return $this->hasMany(Job::class, 'client_id');
+    }
+
+public function subClients()
+{
+    return $this->hasMany(User::class, 'parent_id');
+}
+
+public function parentClient()
+{
+    return $this->belongsTo(User::class, 'parent_id');
+}
 }

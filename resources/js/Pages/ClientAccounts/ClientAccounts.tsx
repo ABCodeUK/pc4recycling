@@ -39,7 +39,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Menu, Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Edit, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -47,7 +47,10 @@ export default function ClientAccounts({
   clients,
   currentUserId,
 }: {
-  clients: Client[];
+  clients: {
+    // ... other fields ...
+    jobs_count: number; // Add this field to match the backend data
+  }[];
   currentUserId: number;
 }) {
   const [data, setData] = useState<Client[]>(clients);
@@ -150,19 +153,10 @@ export default function ClientAccounts({
               variant="outline"
               size="sm"
               onClick={() =>
-                (window.location.href = `/customers/${user.id}/edit`)
-              }
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
                 (window.location.href = `/customers/${user.id}`)
               }
             >
-              <Menu className="h-4 w-4" />
+              <Eye className="h-4 w-4" />
             </Button>
           </div>
         );

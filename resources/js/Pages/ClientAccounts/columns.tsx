@@ -16,6 +16,7 @@ export type Client = {
   customer_type?: string | null; // Specific customer type field
   active: boolean;
   total_jobs: number;
+  jobs_count: number; // Change from total_jobs to jobs_count to match backend
 };
 
 // Define the columns for the client table
@@ -81,8 +82,8 @@ export const columns: ColumnDef<Client>[] = [
     ),
   },
   {
-    accessorKey: "total_jobs",
+    accessorKey: "jobs_count",
     header: "Total Jobs",
-    cell: ({ row }) => <div>0</div>,
+    cell: ({ row }) => <div>{row.original.jobs_count}</div>, // Use jobs_count instead of hardcoded 0
   },
 ];

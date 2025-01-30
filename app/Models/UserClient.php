@@ -90,4 +90,5 @@ class UserClient extends Model
     {
         return "{$this->address}, {$this->town_city}, {$this->county}, {$this->postcode}";
     }
+
 }

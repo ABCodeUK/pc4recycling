@@ -33,7 +33,6 @@ class IMEIController extends Controller
         $request->validate(['api_key' => 'required|string|max:255']);
 
         try {
-            // Test connection to IMEI API
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $request->api_key,
                 'Content-Type' => 'application/json',
@@ -42,7 +41,6 @@ class IMEIController extends Controller
             ]);
 
             if ($response->successful()) {
-                // Save API key and connection status to the database
                 Connection::updateOrCreate(
                     ['type' => 'IMEI'],
                     [
@@ -75,7 +73,6 @@ class IMEIController extends Controller
                 ? $connection->api_key
                 : $request->validate(['api_key' => 'required|string|max:255'])['api_key'];
 
-            // Test connection to IMEI API
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
@@ -147,6 +144,47 @@ class IMEIController extends Controller
             }
 
             return response()->json(['message' => 'Failed to fetch account info.'], 400);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Check IMEI details using the API.
+     */
+    public function checkIMEI(Request $request)
+    {
+        $request->validate([
+            'imei' => 'required|string|max:15',
+            'service' => 'required|integer',
+        ]);
+
+        try {
+            $connection = Connection::where('type', 'IMEI')->first();
+
+            if (!$connection || !$connection->connected) {
+                return response()->json(['message' => 'IMEI connection not established.'], 400);
+            }
+
+            $apiKey = $connection->api_key;
+            $imei = $request->input('imei');
+            $service = $request->input('service');
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])->get("https://dash.imei.info/api/check/{$service}/", [
+                'API_KEY' => $apiKey,
+                'imei' => $imei,
+            ]);
+
+            if ($response->successful()) {
+                return response()->json($response->json(), 200);
+            }
+
+            return response()->json([
+                'message' => 'Failed to check IMEI. Response: ' . $response->body(),
+            ], 400);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }

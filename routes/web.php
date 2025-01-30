@@ -1,6 +1,7 @@
 <?php
 
 // Settings Controllers
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VariableEwcCodeController;
 use App\Http\Controllers\VariableHPCodeController;
@@ -19,48 +20,29 @@ use App\Http\Controllers\IceCatController;
 use App\Http\Controllers\StaffAccountsController;
 use App\Http\Controllers\StaffRolesController;
 use App\Http\Controllers\ClientAccountsController;
+use App\Http\Controllers\ClientAddressController;
+use App\Http\Controllers\ClientJobController;
+use App\Http\Controllers\ClientSubController;
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-
+use App\Http\Controllers\IMEICheckerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Include authentication routes
+require __DIR__.'/auth.php';
+
 // Root route renders the Dashboard, redirect unauthenticated users to login
 Route::get('/', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return Inertia::render('Dashboard/Dashboard');
+})->middleware(['auth', 'verified'])->name('home');  // Changed from 'dashboard' to 'home'
 
-// ChatGPT Connection
-Route::get('/settings/connections/chatgpt', [ChatGPTController::class, 'getConnection']);
-Route::post('/settings/connections/chatgpt/connect', [ChatGPTController::class, 'connect']);
-Route::post('/settings/connections/chatgpt/test', [ChatGPTController::class, 'test']);
-Route::delete('/settings/connections/chatgpt', [ChatGPTController::class, 'disconnect']);
-
-// IMEI Connection
-Route::get('/settings/connections/imei', [IMEIController::class, 'getConnection']);
-Route::post('/settings/connections/imei/connect', [IMEIController::class, 'connect']);
-Route::post('/settings/connections/imei/test', [IMEIController::class, 'test']);
-Route::delete('/settings/connections/imei', [IMEIController::class, 'disconnect']);
-
-// MySQL Connection
-    Route::prefix('settings/connections/mysql')->group(function () {
-    Route::get('/', [MySQLConnectionController::class, 'getConnection'])->name('mysql.get');
-    Route::post('/test', [MySQLConnectionController::class, 'testConnection'])->name('mysql.test');
-    Route::post('/save', [MySQLConnectionController::class, 'saveConnection'])->name('mysql.save');
-    Route::delete('/', [MySQLConnectionController::class, 'disconnect'])->name('mysql.disconnect');
-});
-
-// IceCat Connection
-Route::get('/settings/connections/icecat', [IceCatController::class, 'getConnection']);
-Route::post('/settings/connections/icecat/save', [IceCatController::class, 'saveConnection']);
-Route::post('/settings/connections/icecat/test', [IceCatController::class, 'testConnection']);
-Route::delete('/settings/connections/icecat', [IceCatController::class, 'disconnect']);
-
-// Dashboard route (kept for consistency)
+// Admin Dashboard route (kept for consistency)
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    return Inertia::render('Dashboard/Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Profile routes (requires authentication)
+// Admin Profile routes (requires authentication)
 Route::middleware('auth')->group(function () {
     Route::get('/my-account', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/my-account', [ProfileController::class, 'update'])->name('profile.update');
@@ -70,31 +52,63 @@ Route::middleware('auth')->group(function () {
 // Settings: CATEGORIES
 Route::middleware('auth')->group(function () {
     // Main Categories Routes
-    Route::get('/settings/categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::post('/settings/categories', [CategoryController::class, 'store'])->name('categories.store');
-    Route::put('/settings/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
-    Route::delete('/settings/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-    Route::get('/settings/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+    Route::get('/settings/categories', [CategoryController::class, 'index'])->name('categories.index'); // Categories List
+    Route::post('/settings/categories', [CategoryController::class, 'store'])->name('categories.store'); // Categories Store
+    Route::put('/settings/categories/{id}', [CategoryController::class, 'update'])->name('categories.update'); // Categories Update
+    Route::delete('/settings/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy'); // Categories Delete
+    Route::get('/settings/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit'); // Categories Edit
 });
 
-// SubCategory Routes
+// Sub-Category Routes
 Route::prefix('sub-categories')->group(function () {
-    Route::post('/', [SubCategoryController::class, 'store'])->name('sub-categories.store');
-    Route::put('/{id}', [SubCategoryController::class, 'update'])->name('sub-categories.update');
-    Route::delete('/{id}', [SubCategoryController::class, 'destroy'])->name('sub-categories.destroy');
-    Route::get('/{parent_id}', [SubCategoryController::class, 'index'])->name('sub-categories.index');
+    Route::get('/{parent_id}', [SubCategoryController::class, 'index'])->name('sub-categories.index');  // Sub-Category list
+    Route::post('/', [SubCategoryController::class, 'store'])->name('sub-categories.store'); // Sub-Category Store
+    Route::put('/{id}', [SubCategoryController::class, 'update'])->name('sub-categories.update'); // Sub-Category Update
+    Route::delete('/{id}', [SubCategoryController::class, 'destroy'])->name('sub-categories.destroy'); // Sub-Category Delete
 });
 
 // Client Accounts
 Route::middleware(['auth'])->group(function () {
-    Route::get('/customers', [ClientAccountsController::class, 'index'])->name('client.index'); // client list
-    Route::get('/customers/{id}', [ClientAccountsController::class, 'view'])->name('client.view'); // client View
-    Route::get('/customers/{id}/edit', [ClientAccountsController::class, 'edit'])->name('client.edit'); // Edit client
-    Route::post('/customers/store', [ClientAccountsController::class, 'store'])->name('client.store'); // Store new client
-    Route::put('/customers/update/{id}', [ClientAccountsController::class, 'update'])->name('client.update'); // Update client
-    Route::delete('/customers/delete/{id}', [ClientAccountsController::class, 'destroy'])->name('client.destroy');  // Delete client
-    Route::post('/customers/{id}/reset-password', [ClientAccountsController::class, 'resetPassword']); // Reset client password
-    Route::post('/customers/{id}/send-reset-email', [ClientAccountsController::class, 'sendResetEmail']); // Client password reset email
+    Route::get('/customers', [ClientAccountsController::class, 'index'])->name('client.index'); // Client Account list
+    Route::get('/customers/{id}', [ClientAccountsController::class, 'view'])->name('client.view'); // Client Account View
+    Route::get('/customers/{id}/edit', [ClientAccountsController::class, 'edit'])->name('client.edit'); // Client Account Edit
+    Route::post('/customers/store', [ClientAccountsController::class, 'store'])->name('client.store'); // Client Account Store
+    Route::put('/customers/update/{id}', [ClientAccountsController::class, 'update'])->name('client.update'); // Client Account Update
+    Route::delete('/customers/delete/{id}', [ClientAccountsController::class, 'destroy'])->name('client.destroy');  // Client Account Delete
+    Route::post('/customers/{id}/reset-password', [ClientAccountsController::class, 'resetPassword']); // Client Account Reset Password
+    Route::post('/customers/{id}/send-reset-email', [ClientAccountsController::class, 'sendResetEmail']); // Client Account Send Password Reset Email
+});
+    Route::get('/customers/{id}/default-address', [ClientAccountsController::class, 'getDefaultAddress']);
+    Route::get('/customers/{id}/jobs', [ClientJobController::class, 'index'])->name('customers.jobs');
+
+// Client Address Routes
+Route::prefix('addresses')->group(function () {
+    Route::get('/{parent_id}', [ClientAddressController::class, 'index'])->name('addresses.index');  // Address list
+    Route::post('/', [ClientAddressController::class, 'store'])->name('addresses.store');         // Store Address
+    Route::put('/{id}', [ClientAddressController::class, 'update'])->name('addresses.update');    // Update Address
+    Route::delete('/{id}', [ClientAddressController::class, 'destroy'])->name('addresses.destroy'); // Delete Address
+});
+
+// Jobs
+Route::middleware('auth')->group(function () {
+    // Collections
+    Route::get('/collections/', [JobController::class, 'index'])->name('collections.index');
+    Route::post('/collections/', [JobController::class, 'store'])->name('collections.store');
+    Route::put('/collections/{id}', [JobController::class, 'update'])->name('collections.update');
+    Route::delete('/collections/{id}', [JobController::class, 'destroy'])->name('collections.destroy');
+    Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
+    // Processing
+    Route::get('/processing/', [JobController::class, 'index'])->name('processing.index'); // Collections List
+    Route::post('/processing/', [JobController::class, 'store'])->name('processing.store'); // Collections Store
+    Route::put('/processing/{id}', [JobController::class, 'update'])->name('processing.update'); // Collections Update
+    Route::delete('/processing/{id}', [JobController::class, 'destroy'])->name('processing.destroy'); // Collections Delete
+    Route::get('/processing/{id}/edit', [JobController::class, 'edit'])->name('processing.edit'); // Collections Edit
+    // Completed
+    Route::get('/completed/', [JobController::class, 'index'])->name('completed.index'); // Collections List
+    Route::post('/completed/', [JobController::class, 'store'])->name('completed.store'); // Collections Store
+    Route::put('/completed/{id}', [JobController::class, 'update'])->name('completed.update'); // Collections Update
+    Route::delete('/completed/{id}', [JobController::class, 'destroy'])->name('completed.destroy'); // Collections Delete
+    Route::get('/completed/{id}/edit', [JobController::class, 'edit'])->name('completed.edit'); // Collections Edit
 });
 
 // Staff Accounts
@@ -110,10 +124,10 @@ Route::middleware(['auth'])->group(function () {
 
 // Staff Roles
 Route::middleware(['auth'])->group(function () {
-    Route::get('/settings/staff/roles', [StaffRolesController::class, 'index'])->name('roles.index');
-    Route::post('/settings/staff/roles', [StaffRolesController::class, 'store'])->name('roles.store');
-    Route::put('/settings/staff/roles/{id}', [StaffRolesController::class, 'update'])->name('roles.update');
-    Route::delete('/settings/staff/roles/{id}', [StaffRolesController::class, 'destroy'])->name('roles.destroy');
+    Route::get('/settings/staff/roles', [StaffRolesController::class, 'index'])->name('roles.index'); // Staff Roles List
+    Route::post('/settings/staff/roles', [StaffRolesController::class, 'store'])->name('roles.store'); // Staff Roles Store
+    Route::put('/settings/staff/roles/{id}', [StaffRolesController::class, 'update'])->name('roles.update'); // Staff Roles Update
+    Route::delete('/settings/staff/roles/{id}', [StaffRolesController::class, 'destroy'])->name('roles.destroy'); // Staff Roles Delete
 });
 
 // Settings: Variables
@@ -179,5 +193,51 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/connections/imei/test', [IMEIController::class, 'test'])->name('settings.connections.imei.test');
 });
 
-// Include authentication routes
-require __DIR__.'/auth.php';
+// ChatGPT Connection
+Route::get('/settings/connections/chatgpt', [ChatGPTController::class, 'getConnection']);
+Route::post('/settings/connections/chatgpt/connect', [ChatGPTController::class, 'connect']);
+Route::post('/settings/connections/chatgpt/test', [ChatGPTController::class, 'test']);
+Route::delete('/settings/connections/chatgpt', [ChatGPTController::class, 'disconnect']);
+
+// IMEI Connection
+Route::get('/settings/connections/imei', [IMEIController::class, 'getConnection']);
+Route::post('/settings/connections/imei/connect', [IMEIController::class, 'connect']);
+Route::post('/settings/connections/imei/test', [IMEIController::class, 'test']);
+Route::delete('/settings/connections/imei', [IMEIController::class, 'disconnect']);
+ 
+// MySQL Connection
+Route::prefix('settings/connections/mysql')->group(function () {
+Route::get('/', [MySQLConnectionController::class, 'getConnection'])->name('mysql.get');
+Route::post('/test', [MySQLConnectionController::class, 'testConnection'])->name('mysql.test');
+Route::post('/save', [MySQLConnectionController::class, 'saveConnection'])->name('mysql.save');
+Route::delete('/', [MySQLConnectionController::class, 'disconnect'])->name('mysql.disconnect');
+});
+
+// IceCat Connection
+Route::get('/settings/connections/icecat', [IceCatController::class, 'getConnection']);
+Route::post('/settings/connections/icecat/save', [IceCatController::class, 'saveConnection']);
+Route::post('/settings/connections/icecat/test', [IceCatController::class, 'testConnection']);
+Route::delete('/settings/connections/icecat', [IceCatController::class, 'disconnect']);
+
+Route::middleware('auth')->group(function () {
+    Route::get('/tools/imei-checker', [IMEICheckerController::class, 'index'])->name('tools.imei-checker');
+    Route::post('/tools/imei-checker/check', [IMEICheckerController::class, 'check'])->name('tools.imei-checker.check');
+    Route::get('/tools/imei-checker/services', [IMEICheckerController::class, 'getServices'])->name('tools.imei-checker.services');
+    
+});
+// Add these with your other routes
+Route::get('/api/dashboard-metrics', [DashboardController::class, 'getMetrics'])
+    ->middleware(['auth'])
+    ->name('dashboard.metrics');
+
+Route::get('/api/upcoming-jobs', [DashboardController::class, 'getUpcomingJobs'])
+    ->middleware(['auth'])
+    ->name('dashboard.upcoming-jobs');
+// Add these routes with your other client routes
+// Sub-client routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/customers/{id}/sub-clients', [ClientSubController::class, 'index']);
+    Route::post('/sub-clients', [ClientSubController::class, 'store']);
+    Route::put('/sub-clients/{id}', [ClientSubController::class, 'update']);
+    Route::delete('/sub-clients/{id}', [ClientSubController::class, 'destroy']);
+});

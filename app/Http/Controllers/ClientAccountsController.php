@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserClient;
+use App\Models\UserAddress;
 use App\Models\VariableCustomerType;
 use App\Models\VariableIndustry;
 use App\Models\VariableLeadSource;
+use App\Models\Job;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -19,7 +21,8 @@ class ClientAccountsController extends Controller
     public function index()
     {
         $clients = User::where('type', 'Client')
-            ->with(['clientDetails.customerType', 'clientDetails.industry', 'clientDetails.leadSource']) // Include relationships
+            ->with(['clientDetails.customerType', 'clientDetails.industry', 'clientDetails.leadSource'])
+            ->withCount('jobs') // Add this line to count related jobs
             ->get()
             ->map(function ($user) {
                 return [
@@ -38,11 +41,12 @@ class ClientAccountsController extends Controller
                     'customer_type' => $user->clientDetails->customerType->ct_name ?? null,
                     'lead_source' => $user->clientDetails->leadSource->ls_name ?? null,
                     'active' => $user->active,
+                    'jobs_count' => $user->jobs_count, // Add this line to include the count
                 ];
             });
-
+    
         $currentUserId = auth()->id();
-
+    
         return Inertia::render('ClientAccounts/ClientAccounts', [
             'clients' => $clients,
             'currentUserId' => $currentUserId,
@@ -61,6 +65,29 @@ class ClientAccountsController extends Controller
         }
 
         return Inertia::render('ClientAccounts/ClientAccountsEdit', [
+            'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active']),
+            'client_details' => $user->clientDetails ? $user->clientDetails->only([
+                'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
+                'contact_name', 'contact_position', 'sic_code', 'customer_notes',
+            ]) : [],
+            'industries' => VariableIndustry::all(['id', 'in_name']),
+            'lead_sources' => VariableLeadSource::all(['id', 'ls_name']),
+            'customer_types' => VariableCustomerType::all(['id', 'ct_name']),
+        ]);
+    }
+
+    /**
+     * Display the specified client account.
+     */
+    public function view($id)
+    {
+        $user = User::findOrFail($id);
+    
+        if ($user->type !== 'Client') {
+            return redirect()->route('client.index');
+        }
+    
+        return Inertia::render('ClientAccounts/ClientAccountsView', [
             'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active']),
             'client_details' => $user->clientDetails ? $user->clientDetails->only([
                 'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
@@ -124,7 +151,8 @@ class ClientAccountsController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
             'landline' => 'nullable|string|max:255',
             'mobile' => 'nullable|string|max:255',
             'contact_name' => 'nullable|string|max:255',
@@ -133,18 +161,21 @@ class ClientAccountsController extends Controller
             'customer_type_id' => 'nullable|exists:variable_customer_types,id',
         ]);
 
-        $validated['type'] = 'Client';
-        $validated['active'] = true;
-        $validated['password'] = bcrypt('defaultPassword');
+        try {
+            $user = User::create([
+                'type' => 'Client', // Explicitly set type as Client for main customer
+                'active' => true,
+            ]);
 
-        $user = User::create($validated);
+            $user->clientDetails()->create($request->only([
+                'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
+                'contact_name', 'contact_position', 'sic_code', 'customer_notes',
+            ]));
 
-        $user->clientDetails()->create($request->only([
-            'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
-            'contact_name', 'contact_position', 'sic_code', 'customer_notes',
-        ]));
-
-        return response()->json($user);
+            return response()->json($user);
+        } catch (\Exception $e) {
+            // ... error handling ...
+        }
     }
 
     /**
@@ -181,4 +212,55 @@ class ClientAccountsController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function getClientDetails($id)
+    {
+        try {
+            $clientDetails = UserClient::where('user_id', $id)->firstOrFail();
+            return response()->json($clientDetails, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Client details not found.'], 404);
+        }
+    }
+
+    /**
+ * Get the default address for a specific user.
+ */
+public function getDefaultAddress($id)
+{
+    $userClient = UserClient::where('user_id', $id)->firstOrFail();
+
+    return response()->json([
+        'address' => $userClient->address,
+        'town_city' => $userClient->town_city,
+        'county' => $userClient->county,
+        'postcode' => $userClient->postcode,
+    ]);
+}
+    
+// Add this new method
+public function getClientJobs($id)
+{
+    $jobs = Job::where('client_id', $id)
+        ->with('client') // Include client relationship if needed
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($job) {
+            return [
+                'id' => $job->id,
+                'job_id' => $job->job_id,
+                'address' => $job->address,
+                'town_city' => $job->town_city,
+                'postcode' => $job->postcode,
+                'created_at' => $job->created_at,
+                'collection_date' => $job->collection_date,
+                'staff_collecting' => $job->staff_collecting,
+                'job_status' => $job->job_status,
+                'items_count' => 0, // You'll need to implement this based on your requirements
+            ];
+        });
+
+    return response()->json($jobs);
+}
+    
 }

@@ -6,12 +6,14 @@ import {
   SlidersVertical,
   Calendar,
   Ticket,
+  Wrench,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavRecycling } from "@/components/nav-Recycling";
 import { NavSecond } from "@/components/nav-Second";
 import { NavSettings } from "@/components/nav-settings";
+import { NavTools } from "@/components/nav-tools";
 import { NavUser } from "@/components/nav-user";
 
 import {
@@ -85,6 +87,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Ticket,
       },
     ],
+    navTools: [
+      {
+        title: "Tools",
+        url: "",
+        icon: Wrench,
+        items: [
+          {
+            title: "IMEI Checker",
+            url: "/tools/imei-checker/",
+          },
+        ],
+      },
+    ],
     navSettings: [
       {
         title: "System Settings",
@@ -124,6 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navMain: markActive(data.navMain),
     navRecycling: markActive(data.navRecycling),
     navSecond: markActive(data.navSecond),
+    navTools: markActive(data.navTools),
     navSettings: markActive(data.navSettings),
   };
 
@@ -144,6 +160,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <NavMain items={updatedData.navMain} />
           <NavRecycling items={updatedData.navRecycling} />
           <NavSecond items={updatedData.navSecond} />
+          <NavTools items={updatedData.navTools} />
           <NavSettings items={updatedData.navSettings} />
         </SidebarGroup>
       </SidebarContent>

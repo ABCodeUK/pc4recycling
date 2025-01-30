@@ -248,70 +248,75 @@ export default function StaffAccountsEdit({
               </p>
               <Separator />
               <div className="grid gap-4 mt-4">
-                <div>
-                  <Label htmlFor="name">Name*</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  {formErrors.name && (
-                    <p className="text-red-600 text-sm">{formErrors.name}</p>
-                  )}
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="name" className="text-left">Name*</Label>
+                  <div className="col-span-2">
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                    {formErrors.name && (
+                      <p className="text-red-600 text-sm">{formErrors.name}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="email">Email*</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  {formErrors.email && (
-                    <p className="text-red-600 text-sm">{formErrors.email}</p>
-                  )}
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="email" className="text-left">Email*</Label>
+                  <div className="col-span-2">
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                    {formErrors.email && (
+                      <p className="text-red-600 text-sm">{formErrors.email}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="role_id">Role*</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        role_id: value,
-                      }))
-                    }
-                    value={formData.role_id}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a Role">
-                        {roles.find((role) => String(role.id) === formData.role_id)
-                          ?.name || "Select a Role"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={String(role.id)}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formErrors.role_id && (
-                    <p className="text-red-600 text-sm">{formErrors.role_id}</p>
-                  )}
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="role_id" className="text-left">Role*</Label>
+                  <div className="col-span-2">
+                    <Select
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          role_id: value,
+                        }))
+                      }
+                      value={formData.role_id}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a Role">
+                          {roles.find((role) => String(role.id) === formData.role_id)
+                            ?.name || "Select a Role"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={String(role.id)}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="mobile">Mobile</Label>
-                  <Input
-                    id="mobile"
-                    name="mobile"
-                    value={formData.mobile}
-                    onChange={handleInputChange}
-                  />
+                <div className="grid grid-cols-3 items-center gap-4">
+                  <Label htmlFor="mobile" className="text-left">Mobile</Label>
+                  <div className="col-span-2">
+                    <Input
+                      id="mobile"
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleInputChange}
+                    />
+                  </div>
                 </div>
               </div>
             </section>

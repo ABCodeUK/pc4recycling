@@ -154,7 +154,7 @@ export default function Completed({ jobs = [], collection_types, sanitisation_op
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
-          <div className="text-3xl font-semibold text-gray-800">Completed</div>
+          <div className="text-3xl font-semibold text-gray-800">Jobs: Completed</div>
           <section className="bg-white border shadow rounded-lg p-6">
             <header className="flex items-center justify-between">
               <div className="space-y-1">

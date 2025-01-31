@@ -37,10 +37,10 @@ export default function UpcomingJobs() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold leading-7 text-gray-900">
-              Next 30 Days Collections
+              Next 2 Weeks Collections
             </h2>
             <p className="text-sm text-muted-foreground">
-              View scheduled collections for the next 30 days
+              View scheduled collections for the next 14 days
             </p>
           </div>
           <div className="flex items-center gap-4">

@@ -68,19 +68,25 @@ class Job extends Model
 
     public static function generateJobId()
     {
-        $year = date('y');
+        $year = date('y');  // This will give us '25' for 2025
         $prefix = "J{$year}";
         
+        // Get the latest job number for the current year
         $latestJob = self::where('job_id', 'like', $prefix . '%')
-            ->orderBy('job_id', 'desc')
+            ->orderBy('created_at', 'desc')
             ->first();
 
         if (!$latestJob) {
-            return $prefix . '0001';
+            // If no jobs exist for this year, start with 001
+            return $prefix . '001';
         }
 
-        $number = intval(substr($latestJob->job_id, -4)) + 1;
-        return $prefix . str_pad($number, 4, '0', STR_PAD_LEFT);
+        // Extract the numeric portion and increment
+        $currentNumber = (int)substr($latestJob->job_id, 3);
+        $nextNumber = $currentNumber + 1;
+        
+        // Format with leading zeros (3 digits)
+        return $prefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
     public function client()

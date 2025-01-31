@@ -157,7 +157,7 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
     ...subClientColumns,
     {
       id: "actions",
-      header: "Actions",
+      header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => (
         <div className="flex justify-end space-x-2">
           <Button
@@ -211,12 +211,6 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Input
-            placeholder="Search Sub-Clients..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
           <Button onClick={() => setIsAddDialogOpen(true)}>Add Sub-Client</Button>
         </div>
       </header>

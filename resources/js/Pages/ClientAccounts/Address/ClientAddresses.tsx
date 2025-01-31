@@ -227,12 +227,6 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Input
-            placeholder="Search Addresses..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
           <Button onClick={() => setIsAddDialogOpen(true)}>Add Address</Button>
         </div>
       </header>

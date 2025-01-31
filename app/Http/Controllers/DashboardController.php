@@ -43,11 +43,11 @@ class DashboardController extends Controller
     {
         try {
             $now = Carbon::now();
-            $thirtyDaysFromNow = Carbon::now()->addDays(30);
+            $fourteenDaysFromNow = Carbon::now()->addDays(14);
             
             $jobs = Job::with('client')
                 ->whereIn('job_status', ['Needs Scheduling', 'Scheduled'])
-                ->whereBetween('collection_date', [$now, $thirtyDaysFromNow])
+                ->whereBetween('collection_date', [$now, $fourteenDaysFromNow])
                 ->orderBy('collection_date')
                 ->get()
                 ->map(function ($job) {

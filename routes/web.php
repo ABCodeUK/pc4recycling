@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/collections/{id}', [JobController::class, 'update'])->name('collections.update');
     Route::delete('/collections/{id}', [JobController::class, 'destroy'])->name('collections.destroy');
     Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
+    
     // Processing
     Route::get('/processing/', [JobController::class, 'index'])->name('processing.index'); // Collections List
     Route::post('/processing/', [JobController::class, 'store'])->name('processing.store'); // Collections Store
@@ -241,3 +242,4 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/sub-clients/{id}', [ClientSubController::class, 'update']);
     Route::delete('/sub-clients/{id}', [ClientSubController::class, 'destroy']);
 });
+Route::get('/api/next-job-id', [JobController::class, 'getNextJobId']);

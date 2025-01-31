@@ -154,7 +154,7 @@ export default function Processing({ jobs = [], collection_types, sanitisation_o
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
-          <div className="text-3xl font-semibold text-gray-800">Processing</div>
+          <div className="text-3xl font-semibold text-gray-800">Jobs: Processing</div>
           <section className="bg-white border shadow rounded-lg p-6">
             <header className="flex items-center justify-between">
               <div className="space-y-1">

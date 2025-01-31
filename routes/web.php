@@ -24,6 +24,7 @@ use App\Http\Controllers\ClientAddressController;
 use App\Http\Controllers\ClientJobController;
 use App\Http\Controllers\ClientSubController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobDocumentController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\IMEICheckerController;
 use Illuminate\Support\Facades\Route;
@@ -92,11 +93,13 @@ Route::prefix('addresses')->group(function () {
 // Jobs
 Route::middleware('auth')->group(function () {
     // Collections
+    Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])->name('collections.next-job-id');
     Route::get('/collections/', [JobController::class, 'index'])->name('collections.index');
     Route::post('/collections/', [JobController::class, 'store'])->name('collections.store');
+    Route::get('/collections/{id}', [JobController::class, 'show'])->name('collections.show'); // Add this line
+    Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
     Route::put('/collections/{id}', [JobController::class, 'update'])->name('collections.update');
     Route::delete('/collections/{id}', [JobController::class, 'destroy'])->name('collections.destroy');
-    Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
     
     // Processing
     Route::get('/processing/', [JobController::class, 'index'])->name('processing.index'); // Collections List
@@ -242,4 +245,13 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/sub-clients/{id}', [ClientSubController::class, 'update']);
     Route::delete('/sub-clients/{id}', [ClientSubController::class, 'destroy']);
 });
-Route::get('/api/next-job-id', [JobController::class, 'getNextJobId']);
+Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])
+    ->name('collections.next-job-id');
+// Inside your auth middleware group
+Route::middleware('auth')->group(function () {
+    // Job Documents routes
+    Route::post('/collections/{id}/documents', [JobDocumentController::class, 'store'])
+        ->name('job.documents.store');
+    Route::delete('/collections/{jobId}/documents/{documentId}', [JobDocumentController::class, 'destroy'])
+        ->name('job.documents.destroy');
+});

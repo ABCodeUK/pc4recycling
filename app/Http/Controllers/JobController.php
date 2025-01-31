@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use App\Models\User;
+use App\Models\UserAddress;  // Add this import
+use App\Models\JobDocument;  // Add this at the top with other imports
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -45,9 +47,8 @@ class JobController extends Controller
     // Add this new method
     public function getNextJobId()
     {
-        return response()->json([
-            'next_job_id' => Job::generateJobId()
-        ]);
+        $nextJobId = Job::generateJobId();
+        return response()->json(['next_job_id' => $nextJobId]);
     }
 
     public function create()
@@ -86,49 +87,82 @@ class JobController extends Controller
     public function edit($id)
     {
         $job = Job::with('client')->findOrFail($id);
+        
+        // Get customers
+        // In the edit method, update the customers mapping
         $customers = User::where('type', 'client')
-            ->select('id', 'name')
+            ->with('clientDetails')
+            ->select('id', 'name', 'email', 'mobile', 'landline') // Add landline here
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($customer) {
+                return [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'company_name' => $customer->name,
+                    'email' => $customer->email,
+                    'mobile' => $customer->mobile,
+                    'landline' => $customer->landline, // Get landline from user
+                    'address' => $customer->clientDetails->address ?? '',
+                    'town_city' => $customer->clientDetails->town_city ?? '',
+                    'county' => $customer->clientDetails->county ?? '',
+                    'postcode' => $customer->clientDetails->postcode ?? '',
+                    'contact_name' => $customer->clientDetails->contact_name ?? '',
+                    'position' => $customer->clientDetails->contact_position ?? '', // Changed from position to contact_position
+                    'account_status' => 'Active'
+                ];
+            });
+    
+        // Get staff members
+        $staff = User::where('type', 'Staff')
+            ->where('active', true)
+            ->with('staffDetails.role')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ];
+            });
     
         return Inertia::render('Jobs/Collections/CollectionsEdit', [
             'job' => $job,
             'customers' => $customers,
+            'addresses' => UserAddress::where('parent_id', $job->client_id)->get(),
             'collection_types' => Job::$collectionTypes,
             'sanitisation_options' => Job::$sanitisationOptions,
             'status_options' => Job::$statuses,
+            'staff_members' => $staff
         ]);
     }
 
     public function update(Request $request, $id)
     {
         $job = Job::findOrFail($id);
-
-        if (!$job->isEditable()) {
-            return redirect()->back()->with('error', 'This job cannot be edited');
-        }
-
+    
         $validated = $request->validate([
+            'job_id' => 'required|string',
             'client_id' => 'required|exists:users,id',
-            'collection_date' => 'nullable|date',
             'job_status' => 'required|in:' . implode(',', Job::$statuses),
+            // Make all other fields optional
+            'collection_date' => 'nullable|date',
             'staff_collecting' => 'nullable|string',
             'vehicle' => 'nullable|string',
-            'address' => 'required|string',
-            'town_city' => 'required|string',
-            'postcode' => 'required|string',
+            'address' => 'nullable|string',
+            'town_city' => 'nullable|string',
+            'postcode' => 'nullable|string',
             'onsite_contact' => 'nullable|string',
             'onsite_number' => 'nullable|string',
             'onsite_email' => 'nullable|email',
-            'collection_type' => 'required|in:' . implode(',', Job::$collectionTypes),
-            'data_sanitisation' => 'required|in:' . implode(',', Job::$sanitisationOptions),
+            'collection_type' => 'nullable|in:' . implode(',', Job::$collectionTypes),
+            'data_sanitisation' => 'nullable|in:' . implode(',', Job::$sanitisationOptions),
             'sla' => 'nullable|string',
             'instructions' => 'nullable|string',
         ]);
-
+    
         $job->update($validated);
-
-        return redirect()->back()->with('success', 'Job updated successfully');
+    
+        return response()->json($job);
     }
 
     public function destroy($id)
@@ -141,5 +175,53 @@ class JobController extends Controller
 
         $job->delete();
         return redirect()->back()->with('success', 'Job deleted successfully');
+    }
+
+    public function show($id)
+    {
+        $job = Job::with('client')->findOrFail($id);
+        
+        // Get customers with details
+        $customers = User::where('type', 'client')
+            ->with('clientDetails')
+            ->select('id', 'name', 'email', 'mobile', 'landline')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($customer) {
+                return [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'company_name' => $customer->name,
+                    'email' => $customer->email,
+                    'mobile' => $customer->mobile,
+                    'landline' => $customer->landline,
+                    'address' => $customer->clientDetails->address ?? '',
+                    'town_city' => $customer->clientDetails->town_city ?? '',
+                    'county' => $customer->clientDetails->county ?? '',
+                    'postcode' => $customer->clientDetails->postcode ?? '',
+                    'contact_name' => $customer->clientDetails->contact_name ?? '',
+                    'position' => $customer->clientDetails->contact_position ?? '',
+                    'account_status' => 'Active'
+                ];
+            });
+    
+        // Get documents for this job
+        $documents = JobDocument::where('job_id', $id)
+            ->get()
+            ->groupBy('document_type')
+            ->map(function ($docs, $type) {
+                return $type === 'other' ? $docs : $docs->first();
+            });
+    
+        return Inertia::render('Jobs/Collections/CollectionsView', [
+            'job' => $job,
+            'customers' => $customers,
+            'documents' => [
+                'collection_manifest' => $documents['collection_manifest'] ?? null,
+                'hazard_waste_note' => $documents['hazard_waste_note'] ?? null,
+                'data_destruction_certificate' => $documents['data_destruction_certificate'] ?? null,
+                'other' => $documents['other'] ?? [],
+            ],
+        ]);
     }
 }

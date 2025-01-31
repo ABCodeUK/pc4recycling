@@ -94,6 +94,11 @@ class Job extends Model
         return $this->belongsTo(User::class, 'client_id');
     }
 
+    public function documents()
+    {
+        return $this->hasMany(JobDocument::class);
+    }
+
     public function scopeCollections($query)
     {
         return $query->whereIn('job_status', ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed']);

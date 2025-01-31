@@ -58,24 +58,43 @@ interface Props {
   };
 }
 
-export default function Collections({ 
-  jobs = [], 
-  customers = [], 
-  collection_types, 
-  sanitisation_options, 
-  status_options = [],
-  pagination 
-}: Props) {
+export default function Collections({ jobs, customers, addresses, collection_types, sanitisation_options, status_options, staff_members }: Props) {
+  // State declarations - keep only one instance of each
   const [data, setData] = useState<Job[]>(jobs);
-  // Add state for next job number
   const [nextJobId, setNextJobId] = useState("");
+  const [formErrors, setFormErrors] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [addFormData, setAddFormData] = useState({
+    job_id: '',
+    client_id: '',
+    collection_date: '',
+    job_status: 'Needs Scheduling',
+    staff_collecting: '',
+    vehicle: '',
+    address: '',
+    town_city: '',
+    postcode: '',
+    onsite_contact: '',
+    onsite_number: '',
+    onsite_email: '',
+    collection_type: '',
+    data_sanitisation: '',
+    sla: '',
+    instructions: ''
+  });
 
-  // Fetch next job number when component mounts
+  // Keep only one useEffect for fetching next job ID
   useEffect(() => {
     const fetchNextJobId = async () => {
       try {
-        const response = await axios.get('/api/next-job-id');
+        const response = await axios.get('/collections/next-job-id');
         setNextJobId(response.data.next_job_id);
+        setAddFormData(prev => ({
+          ...prev,
+          job_id: response.data.next_job_id
+        }));
       } catch (error) {
         console.error('Failed to fetch next job ID:', error);
       }
@@ -83,19 +102,7 @@ export default function Collections({
     fetchNextJobId();
   }, []);
 
-  // Update addFormData state
-  const [addFormData, setAddFormData] = useState({
-    job_id: "",
-    client_id: "",
-    collection_date: "",
-    job_status: "Needs Scheduling"  // Add default status
-  });
-
-  const [formErrors, setFormErrors] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-
+  // Helper functions
   const resetFormErrors = () => setFormErrors({});
 
   const handleInputChange = (e) => {
@@ -107,30 +114,6 @@ export default function Collections({
     setAddFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add status dropdown in the dialog form
-  <div>
-    <Label htmlFor="job_status">Status*</Label>
-    <Select
-      value={addFormData.job_status}
-      onValueChange={(value) => handleSelectChange("job_status", value)}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder="Select Status" />
-      </SelectTrigger>
-      <SelectContent>
-        {status_options.map((status) => (
-          <SelectItem key={status} value={status}>
-            {status}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    {formErrors.job_status && (
-      <p className="text-red-600 text-sm">{formErrors.job_status}</p>
-    )}
-  </div>
-
-  // Update handleAddSubmit to handle different redirects
   const handleAddSubmit = async () => {
     resetFormErrors();
     

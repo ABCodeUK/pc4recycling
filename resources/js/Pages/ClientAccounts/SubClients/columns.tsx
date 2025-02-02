@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/Components/ui/badge";
+import { Button } from "@/Components/ui/button";
 import { Edit, Trash2, User } from "lucide-react";
 
 export interface SubClient {

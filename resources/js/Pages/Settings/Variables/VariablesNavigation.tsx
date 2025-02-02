@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
 export default function VariablesNavigation({
   currentTab,

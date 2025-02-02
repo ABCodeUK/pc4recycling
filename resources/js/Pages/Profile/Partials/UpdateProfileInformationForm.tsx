@@ -1,10 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import { Alert } from "@/Components/ui/alert";
+import { Separator } from "@/Components/ui/separator"
 import { useForm, usePage } from "@inertiajs/react";
 import { FormEventHandler } from "react";
+import { Inertia } from "@inertiajs/inertia";
 
 export default function UpdateProfileInformation({
   mustVerifyEmail,
@@ -21,9 +22,9 @@ export default function UpdateProfileInformation({
     useForm({
       name: user.name,
       email: user.email,
-      position: user.position || "",
-      landline: user.landline || "",
-      mobile: user.mobile || "",
+      position: (user as any).position || "",
+      landline: (user as any).landline || "",
+      mobile: (user as any).mobile || "",
     });
 
   const submit: FormEventHandler = (e) => {
@@ -46,11 +47,11 @@ export default function UpdateProfileInformation({
       <form onSubmit={submit} className="mt-6 space-y-6">
         {/* Form Field */}
         {[
-          { label: "Your Name", id: "name", value: data.name, onChange: (v) => setData("name", v) },
-          { label: "Email Address", id: "email", type: "email", value: data.email, onChange: (v) => setData("email", v) },
-          { label: "Position", id: "position", value: data.position, onChange: (v) => setData("position", v) },
-          { label: "Landline", id: "landline", value: data.landline, onChange: (v) => setData("landline", v) },
-          { label: "Mobile", id: "mobile", value: data.mobile, onChange: (v) => setData("mobile", v) },
+          { label: "Your Name", id: "name", value: data.name, onChange: (v: string) => setData("name", v) },
+          { label: "Email Address", id: "email", type: "email", value: data.email, onChange: (v: string) => setData("email", v) },
+          { label: "Position", id: "position", value: data.position, onChange: (v: string) => setData("position", v) },
+          { label: "Landline", id: "landline", value: data.landline, onChange: (v: string) => setData("landline", v) },
+          { label: "Mobile", id: "mobile", value: data.mobile, onChange: (v: string) => setData("mobile", v) },
         ].map(({ label, id, type = "text", value, onChange }) => (
           <div key={id} className="flex items-center gap-4">
             <Label htmlFor={id} className="w-1/4 text-left">
@@ -65,7 +66,9 @@ export default function UpdateProfileInformation({
                 placeholder={`Your ${label}`}
                 disabled={processing}
               />
-              {errors[id] && <Alert variant="destructive">{errors[id]}</Alert>}
+              {errors[id as keyof typeof errors] && (
+                <Alert variant="destructive">{errors[id as keyof typeof errors]}</Alert>
+              )}
             </div>
           </div>
         ))}
@@ -80,7 +83,7 @@ export default function UpdateProfileInformation({
                   type="button"
                   className="underline text-primary"
                   onClick={() =>
-                    Inertia.post(route("verification.send"), {}, { method: "post" })
+                    Inertia.post(route("verification.send"))
                   }
                 >
                   Click here to re-send the verification email.
@@ -88,7 +91,7 @@ export default function UpdateProfileInformation({
               </p>
             </Alert>
             {status === "verification-link-sent" && (
-              <Alert variant="success">
+              <Alert variant="default">
                 <p className="text-sm">
                   A new verification link has been sent to your email address.
                 </p>

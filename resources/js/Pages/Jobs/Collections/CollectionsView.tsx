@@ -1,20 +1,20 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input"; // Add this import
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Label } from "@/Components/ui/label";
+import { Input } from "@/Components/ui/input"; // Add this import
 import { Edit, ArrowLeft } from "lucide-react";
 import { useState } from "react"; // Add this for state management
 import { toast } from "sonner";
@@ -490,12 +490,12 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                 className="text-blue-600 hover:underline flex items-center gap-2"
               >
                 <FileText className="h-4 w-4" />
-                {documents.collection_manifest.stored_filename}
+                {documents.collection_manifest.original_filename}
               </a>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleDeleteDocument(documents.collection_manifest.id, 'collection_manifest')}
+onClick={() => documents.collection_manifest && handleDeleteDocument(documents.collection_manifest.id, 'collection_manifest')}
               >
                 <Trash2 className="h-4 w-4 text-red-500" />
               </Button>
@@ -532,12 +532,12 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                   className="text-blue-600 hover:underline flex items-center gap-2"
                 >
                   <FileText className="h-4 w-4" />
-                  {documents.hazard_waste_note.stored_filename}
+                  {documents.hazard_waste_note.original_filename}
                 </a>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDeleteDocument(documents.hazard_waste_note.id, 'hazard_waste_note')}
+                  onClick={() => documents.hazard_waste_note && handleDeleteDocument(documents.hazard_waste_note.id, 'hazard_waste_note')}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>
@@ -576,12 +576,12 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                   className="text-blue-600 hover:underline flex items-center gap-2"
                 >
                   <FileText className="h-4 w-4" />
-                  {documents.data_destruction_certificate.stored_filename}
+                  {documents.data_destruction_certificate.original_filename}
                 </a>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDeleteDocument(documents.data_destruction_certificate.id, 'data_destruction_certificate')}
+                  onClick={() => documents.data_destruction_certificate && handleDeleteDocument(documents.data_destruction_certificate.id, 'data_destruction_certificate')}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>
@@ -638,7 +638,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                   className="text-blue-600 hover:underline flex items-center gap-2"
                 >
                   <FileText className="h-4 w-4" />
-                  {doc.stored_filename || doc.original_filename}
+                  {doc.original_filename}
                 </a>
                 <Button
                   variant="ghost"

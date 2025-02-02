@@ -6,7 +6,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/Components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -16,22 +16,11 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
+} from "@/Components/ui/sidebar"
 
-export function NavSettings({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
+import { type NavProps } from "@/types/navigation"
+
+export function NavSettings({ items }: NavProps) {
   return (
 
       <SidebarMenu>

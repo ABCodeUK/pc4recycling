@@ -2,5 +2,5 @@ import EwcCodes from "@/Pages/Settings/Variables/EwcCodes/EwcCodes"; // Import t
 
 export default function Variables() {
     // Render the EWC Codes page directly
-    return <EwcCodes />;
+    return <EwcCodes ewcCodes={[]} />;
 }

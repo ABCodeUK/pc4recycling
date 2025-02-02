@@ -9,7 +9,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/components/ui/avatar"
+} from "@/Components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,16 +18,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/Components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/Components/ui/sidebar"
 import { Inertia } from "@inertiajs/inertia"
 
-export function NavUser({ user }: { user: { name: string; email: string; avatar?: string } }) {
+interface UserProps {
+  user: {
+    name: string;
+    email: string;
+    avatar?: string;
+  }
+}
+
+export function NavUser({ user }: UserProps) {
   const { isMobile } = useSidebar()
 
   const handleLogout = () => {

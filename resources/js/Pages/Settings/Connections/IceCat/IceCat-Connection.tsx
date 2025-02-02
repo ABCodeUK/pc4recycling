@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Badge } from '@/Components/ui/badge';
 
 export default function IceCatConnection() {
   const [connectionDetails, setConnectionDetails] = useState({

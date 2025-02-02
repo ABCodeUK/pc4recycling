@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import { Alert } from "@/Components/ui/alert";
+import { Separator } from "@/Components/ui/separator"
 import { useForm } from "@inertiajs/react";
 import { FormEventHandler, useRef } from "react";
 

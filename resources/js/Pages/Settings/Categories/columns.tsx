@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/Components/ui/badge";
 
 export interface Category {
   id: number;

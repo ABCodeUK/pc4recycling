@@ -1,9 +1,9 @@
-import { AppSidebar } from '@/components/app-sidebar';
+import { AppSidebar } from '@/Components/app-sidebar';
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from '@/components/ui/sidebar';
+} from '@/Components/ui/sidebar';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -11,8 +11,8 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 
-} from '@/components/ui/breadcrumb';
-import { Separator } from '@/components/ui/separator';
+} from '@/Components/ui/breadcrumb';
+import { Separator } from '@/Components/ui/separator';
 import { PageProps } from '@/types';
 import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';

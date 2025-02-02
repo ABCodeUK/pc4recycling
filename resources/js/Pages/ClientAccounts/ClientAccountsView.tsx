@@ -1,18 +1,18 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
 import UserAddresses from "@/Pages/ClientAccounts/Address/ClientAddresses";
 import ClientJobs from "@/Pages/ClientAccounts/Jobs/ClientJobs";
 import ClientSubClients from "@/Pages/ClientAccounts/SubClients/ClientSubClients";
@@ -44,10 +44,11 @@ export default function ClientAccountsView({
     contact_name?: string | null;
     sic_code?: string | null;
     customer_notes?: string | null;
+    lead_source_id?: string | null;
   };
   customer_types: { id: number; ct_name: string }[];
   industries: { id: number; in_name: string }[];
-  lead_sources: { id: number; in_name: string }[];
+  lead_sources: { id: number; ls_name: string }[];
 }) {
   if (!user_edit || !client_details || !customer_types || !industries) {
     return <div>Loading...</div>;

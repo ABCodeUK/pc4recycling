@@ -6,7 +6,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/Components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -16,7 +16,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
+} from "@/Components/ui/sidebar"
 
 export function NavSecond({
   items,
@@ -39,7 +39,7 @@ export function NavSecond({
 <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild isActive={item.isActive}>
             <a href={item.url}>
-              <item.icon />
+              {item.icon && <item.icon />}
               <span>{item.title}</span>
             </a>
           </SidebarMenuButton>

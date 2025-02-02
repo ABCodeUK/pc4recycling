@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
 import { DataTable } from "./data-table";
 import { userAddressColumns } from "./columns"; // Import dynamic columns
 import { UserAddress } from "./columns"; // Import UserAddress type
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/Components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -28,7 +28,7 @@ import {
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 
 export default function ClientAddresses({ parentId }: { parentId: number }) {
   const [data, setData] = useState<UserAddress[]>([]);

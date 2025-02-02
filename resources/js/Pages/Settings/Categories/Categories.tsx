@@ -1,21 +1,22 @@
 import { useState } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import type { Option } from "@/Components/ui/multiple-select";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { Category } from "./columns";
@@ -27,9 +28,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import MultipleSelector from "@/components/ui/multiple-select";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+} from "@/Components/ui/dialog";
+import MultipleSelector from "@/Components/ui/multiple-select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/ui/select";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -40,7 +41,7 @@ import {
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 import { Edit, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -83,7 +84,7 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
 
   const resetFormErrors = () => setFormErrors({});
 
-  const handleInputChange = (e, type = "add") => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, type = "add") => {
     const { name, value } = e.target;
     if (type === "add") {
       setAddFormData((prev) => ({ ...prev, [name]: value }));
@@ -92,7 +93,7 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
     }
   };
 
-  const handleSelectChange = (name, value, type = "add") => {
+  const handleSelectChange = (name: string, value: string | number, type = "add") => {
     if (type === "add") {
       setAddFormData((prev) => ({ ...prev, [name]: value }));
     } else {
@@ -100,7 +101,7 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
     }
   };
 
-  const handleMultiSelectChange = (name, values, type = "add") => {
+  const handleMultiSelectChange = (name: string, values: number[], type = "add") => {
     if (type === "add") {
       setAddFormData((prev) => ({ ...prev, [name]: values }));
     } else {
@@ -119,8 +120,8 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
         setIsAddDialogOpen(false);
       }
     } catch (error) {
-      if (error.response?.data?.errors) {
-        setFormErrors(error.response.data.errors);
+      if ((error as any).response?.data?.errors) {
+        setFormErrors((error as any).response.data.errors);
       } else {
         toast.error("Failed to create category. Please try again.");
       }
@@ -146,8 +147,8 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
         setIsEditDialogOpen(false);
       }
     } catch (error) {
-      if (error.response?.data?.errors) {
-        setFormErrors(error.response.data.errors);
+      if ((error as any).response?.data?.errors) {
+        setFormErrors((error as any).response.data.errors);
       } else {
         toast.error("Failed to update category. Please try again.");
       }
@@ -288,8 +289,8 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
               onChange={(e) => handleInputChange(e, "add")}
               required
             />
-            {formErrors.name && (
-              <p className="text-red-600 text-sm">{formErrors.name}</p>
+            {(formErrors as { name?: string }).name && (
+              <p className="text-red-600 text-sm">{(formErrors as { name?: string }).name}</p>
             )}
           </div>
           <div>
@@ -306,8 +307,8 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
               />
               <span className="absolute right-3 text-sm text-gray-500">kg</span>
             </div>
-            {formErrors.default_weight && (
-              <p className="text-red-600 text-sm">{formErrors.default_weight}</p>
+            {(formErrors as { default_weight?: string }).default_weight && (
+              <p className="text-red-600 text-sm">{(formErrors as { default_weight?: string }).default_weight}</p>
             )}
           </div>
           <div>
@@ -324,14 +325,14 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
               </SelectTrigger>
               <SelectContent>
                 {ewcCodes.map((ewc) => (
-                  <SelectItem key={ewc.id} value={ewc.id}>
+                  <SelectItem key={ewc.id} value={ewc.id.toString()}>
                     {ewc.ewc_code}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {formErrors.ewc_code_id && (
-              <p className="text-red-600 text-sm">{formErrors.ewc_code_id}</p>
+            {(formErrors as { ewc_code_id?: string }).ewc_code_id && (
+              <p className="text-red-600 text-sm">{(formErrors as { ewc_code_id?: string }).ewc_code_id}</p>
             )}
           </div>
           <div>
@@ -385,44 +386,43 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
               onChange={(e) => handleInputChange(e, "add")}
             />
           </div>
-          <div>
-            <Label htmlFor="hp_codes">HP Codes</Label>
-            <MultipleSelector
-              value={addFormData.hp_codes.map((id) => {
-                const hp = hpCodes.find((hp) => hp.id === id);
-                return hp
-                  ? { value: hp.id, label: `${hp.hp_code} - ${hp.hp_type}` }
-                  : null;
-              })}
-              options={hpCodes.map((hp) => ({
-                value: hp.id,
-                label: `${hp.hp_code} - ${hp.hp_type}`,
-              }))}
-              onChange={(values) =>
-                handleMultiSelectChange(
-                  "hp_codes",
-                  values.map((item) => item.value),
-                  "add"
-                )
-              }
-              placeholder="Select HP Codes"
-            />
-          </div>
+          
+          <MultipleSelector
+            value={addFormData.hp_codes
+              .map(id => {
+                const hp = hpCodes.find(hp => hp.id === id);
+                return hp ? { value: String(hp.id), label: `${hp.hp_code} - ${hp.hp_type}` } : null;
+              })
+              .filter((item): item is Option => item !== null)}
+            options={hpCodes.map(hp => ({
+              value: String(hp.id),
+              label: `${hp.hp_code} - ${hp.hp_type}`
+            }))}
+            onChange={(values) =>
+              handleMultiSelectChange(
+                "hp_codes",
+                values.map(item => Number(item.value)),
+                "add"
+              )
+            }
+            placeholder="Select HP Codes"
+          />
           <div>
             <Label htmlFor="spec_fields">Spec Fields</Label>
             <MultipleSelector
-              value={addFormData.spec_fields.map((id) => {
+              value={addFormData.spec_fields
+                .map((id) => {
                 const spec = specFields.find((sf) => sf.id === id);
-                return spec ? { value: spec.id, label: spec.spec_name } : null;
-              })}
+                return spec ? { value: String(spec.id), label: spec.spec_name } : null;
+              }).filter((item): item is Option => item !== null)}
               options={specFields.map((sf) => ({
-                value: sf.id,
+                value: String(sf.id),
                 label: sf.spec_name,
               }))}
               onChange={(values) =>
                 handleMultiSelectChange(
                   "spec_fields",
-                  values.map((item) => item.value),
+                  values.map((item) => Number(item.value)),
                   "add"
                 )
               }
@@ -466,8 +466,8 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
                     onChange={(e) => handleInputChange(e, "edit")}
                     required
                   />
-                  {formErrors.name && (
-                    <p className="text-red-600 text-sm">{formErrors.name}</p>
+                  {(formErrors as { name?: string }).name && (
+<p className="text-red-600 text-sm">{(formErrors as { name?: string }).name}</p>
                   )}
                 </div>
                 <div>
@@ -484,14 +484,14 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
                     </SelectTrigger>
                     <SelectContent>
                       {ewcCodes.map((ewc) => (
-                        <SelectItem key={ewc.id} value={ewc.id}>
+                        <SelectItem key={ewc.id} value={ewc.id.toString()}>
                           {ewc.ewc_code}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {formErrors.ewc_code_id && (
-                    <p className="text-red-600 text-sm">{formErrors.ewc_code_id}</p>
+                  {(formErrors as { ewc_code_id?: string }).ewc_code_id && (
+<p className="text-red-600 text-sm">{(formErrors as { ewc_code_id?: string }).ewc_code_id}</p>
                   )}
                 </div>
                 <div>
@@ -504,8 +504,8 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
                     onChange={(e) => handleInputChange(e, "edit")}
                     required
                   />
-                  {formErrors.default_weight && (
-                    <p className="text-red-600 text-sm">{formErrors.default_weight}</p>
+                  {(formErrors as { default_weight?: string }).default_weight && (
+                    <p className="text-red-600 text-sm">{(formErrors as { default_weight?: string }).default_weight}</p>
                   )}
                 </div>
                 <div>
@@ -559,16 +559,16 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
                   <MultipleSelector
                     value={editFormData.hp_codes.map((id) => {
                       const hp = hpCodes.find((hp) => hp.id === id);
-                      return hp ? { value: hp.id, label: `${hp.hp_code} - ${hp.hp_type}` } : null;
-                    })}
+                      return hp ? { value: String(hp.id), label: `${hp.hp_code} - ${hp.hp_type}` } : null;
+                    }).filter((item): item is { value: string; label: string } => item !== null)}
                     options={hpCodes.map((hp) => ({
-                      value: hp.id,
-                      label: `${hp.hp_code} - ${hp.hp_type}`,
+                      value: String(hp.id),
+                      label: `${hp.hp_code} - ${hp.hp_type}`
                     }))}
                     onChange={(values) =>
                       handleMultiSelectChange(
                         "hp_codes",
-                        values.map((item) => item.value),
+                        values.map(item => Number(item.value)),
                         "edit"
                       )
                     }
@@ -578,18 +578,19 @@ export default function Categories({ categories, ewcCodes, hpCodes, specFields }
                 <div>
                   <Label htmlFor="spec_fields">Spec Fields</Label>
                   <MultipleSelector
-                    value={editFormData.spec_fields.map((id) => {
+                    value={editFormData.spec_fields
+                      .map((id) => {
                       const spec = specFields.find((sf) => sf.id === id);
-                      return spec ? { value: spec.id, label: spec.spec_name } : null;
-                    })}
+                      return spec ? { value: String(spec.id), label: spec.spec_name } : null;
+                    }).filter((item): item is Option => item !== null)}
                     options={specFields.map((sf) => ({
-                      value: sf.id,
+                      value: String(sf.id),
                       label: sf.spec_name,
                     }))}
                     onChange={(values) =>
                       handleMultiSelectChange(
                         "spec_fields",
-                        values.map((item) => item.value),
+                        values.map((item) => Number(item.value)),
                         "edit"
                       )
                     }

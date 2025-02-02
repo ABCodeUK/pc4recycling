@@ -15,6 +15,7 @@ use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\ConnectionController;
 use App\Http\Controllers\ChatGPTController;
 use App\Http\Controllers\IMEIController;
+use App\Http\Controllers\IMEICheckerController;
 use App\Http\Controllers\MySQLConnectionController;
 use App\Http\Controllers\IceCatController;
 use App\Http\Controllers\StaffAccountsController;
@@ -26,7 +27,6 @@ use App\Http\Controllers\ClientSubController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\JobDocumentController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\IMEICheckerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -223,12 +223,6 @@ Route::post('/settings/connections/icecat/save', [IceCatController::class, 'save
 Route::post('/settings/connections/icecat/test', [IceCatController::class, 'testConnection']);
 Route::delete('/settings/connections/icecat', [IceCatController::class, 'disconnect']);
 
-Route::middleware('auth')->group(function () {
-    Route::get('/tools/imei-checker', [IMEICheckerController::class, 'index'])->name('tools.imei-checker');
-    Route::post('/tools/imei-checker/check', [IMEICheckerController::class, 'check'])->name('tools.imei-checker.check');
-    Route::get('/tools/imei-checker/services', [IMEICheckerController::class, 'getServices'])->name('tools.imei-checker.services');
-    
-});
 // Add these with your other routes
 Route::get('/api/dashboard-metrics', [DashboardController::class, 'getMetrics'])
     ->middleware(['auth'])

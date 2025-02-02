@@ -1,13 +1,13 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/Components/ui/sonner"
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/Components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -17,22 +17,20 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
+} from "@/Components/ui/sidebar"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
+interface NavItem {
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+  isActive?: boolean;
+}
+
+interface NavMainProps {
+  items: NavItem[];
+}
+
+export function NavMain({ items }: NavMainProps) {
   return (
 
       <SidebarMenu>
@@ -40,7 +38,7 @@ export function NavMain({
 <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild isActive={item.isActive}>
             <a href={item.url}>
-              <item.icon />
+              {item.icon && <item.icon />}
               <span>{item.title}</span>
             </a>
           </SidebarMenuButton>

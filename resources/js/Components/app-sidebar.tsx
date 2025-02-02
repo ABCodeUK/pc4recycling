@@ -9,12 +9,12 @@ import {
   Wrench,
 } from "lucide-react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavRecycling } from "@/components/nav-Recycling";
-import { NavSecond } from "@/components/nav-Second";
-import { NavSettings } from "@/components/nav-settings";
-import { NavTools } from "@/components/nav-tools";
-import { NavUser } from "@/components/nav-user";
+import { NavMain } from "@/Components/nav-main";
+import { NavRecycling } from "@/Components/nav-recycling";
+import { NavSecond } from "@/Components/nav-second";
+import { NavSettings } from "@/Components/nav-settings";
+import { NavTools } from "@/Components/nav-tools";
+import { NavUser } from "@/Components/nav-user";
 
 import {
   Sidebar,
@@ -23,16 +23,28 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 
 import { usePage } from "@inertiajs/react"; // Import usePage to access Inertia props
 
+import { type NavItem, type NavigationData } from "@/types/navigation";
+
+// Remove the duplicate interfaces here
+
+// Import the User type from the types file
+import type { User } from "@/types";
+
+// Remove the local User interface and update usePage usage
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = usePage().props; // Access the globally shared user data
+  const { user } = usePage<{
+    auth: {
+      user: User;
+    }
+  }>().props.auth;
 
   const currentPath = window.location.pathname;
 
-  const markActive = (items) =>
+  const markActive = (items: NavItem[]): NavItem[] =>
     items.map((item) => ({
       ...item,
       isActive:
@@ -41,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       items: item.items ? markActive(item.items) : undefined,
     }));
 
-  const data = {
+  const data: NavigationData = {
     navMain: [
       {
         title: "Dashboard",
@@ -135,7 +147,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ],
   };
 
-  const updatedData = {
+  const updatedData: NavigationData = {
     navMain: markActive(data.navMain),
     navRecycling: markActive(data.navRecycling),
     navSecond: markActive(data.navSecond),
@@ -165,7 +177,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} /> {/* Pass the user data dynamically */}
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

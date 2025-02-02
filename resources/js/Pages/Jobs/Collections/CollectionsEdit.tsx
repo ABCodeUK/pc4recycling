@@ -1,22 +1,22 @@
 import { useState } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/ui/select";
 import { Save, ArrowLeft, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 
 // Update the Props interface to include more client details
 interface Props {
@@ -134,7 +134,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -472,7 +472,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                       <Input
                         id="county"
                         name="county"
-                        value={formData.county || ""}
+                        value={(formData as any).county || ""}
                         onChange={handleInputChange}
                       />
                     </div>

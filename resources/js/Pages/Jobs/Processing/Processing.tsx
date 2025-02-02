@@ -1,21 +1,21 @@
 import { useState } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { Job } from "./columns";
@@ -27,8 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+} from "@/Components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/ui/select";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 import { Edit, Eye, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -81,7 +81,7 @@ export default function Processing({ jobs = [], collection_types, sanitisation_o
 
   const resetFormErrors = () => setFormErrors({});
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setAddFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -101,8 +101,8 @@ export default function Processing({ jobs = [], collection_types, sanitisation_o
         setIsAddDialogOpen(false);
       }
     } catch (error) {
-      if (error.response?.data?.errors) {
-        setFormErrors(error.response.data.errors);
+      if ((error as any).response?.data?.errors) {
+        setFormErrors((error as any).response.data.errors);
       } else {
         toast.error("Failed to create job. Please try again.");
       }
@@ -117,7 +117,7 @@ export default function Processing({ jobs = [], collection_types, sanitisation_o
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: any }) => {
         const job = row.original;
         return (
           <div className="flex justify-end space-x-2">

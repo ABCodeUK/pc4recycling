@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/Components/ui/badge";
+import { Button } from "@/Components/ui/button";
 import { Eye, User } from "lucide-react";
 
 export interface ClientJob {
@@ -17,6 +17,17 @@ export interface ClientJob {
   job_status: string;
   items_count: number;
 }
+
+const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline" | "warning" | "success"> = {
+  'Needs Scheduling': 'destructive',
+  'Request Pending': 'warning',
+  'Scheduled': 'default',
+  'Postponed': 'secondary',
+  'Collected': 'success',
+  'Processing': 'default',
+  'Complete': 'success',
+  'Canceled': 'destructive',
+} as const;
 
 export const clientJobColumns: ColumnDef<ClientJob>[] = [
   {
@@ -73,16 +84,7 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
     header: () => <span className="font-bold">Status</span>,
     cell: ({ row }) => {
       const status = row.original.job_status;
-      const variant = {
-        'Needs Scheduling': 'destructive',
-        'Request Pending': 'warning',
-        'Scheduled': 'default',
-        'Postponed': 'secondary',
-        'Collected': 'success',
-        'Processing': 'default',
-        'Complete': 'success',
-        'Canceled': 'destructive',
-      }[status] || 'default';
+      const variant = statusVariants[status] || 'default';
 
       return <Badge variant={variant}>{status}</Badge>;
     },

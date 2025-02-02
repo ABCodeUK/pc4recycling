@@ -1,21 +1,21 @@
 import { useState, useEffect } from "react";  // Add useEffect here
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { Job } from "./columns";
@@ -27,8 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+} from "@/Components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/ui/select";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 import { Edit, Eye, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ interface Props {
   };
 }
 
-export default function Collections({ jobs, customers, addresses, collection_types, sanitisation_options, status_options, staff_members }: Props) {
+export default function Collections({ jobs, customers, collection_types, sanitisation_options, status_options, }: Props) {
   // State declarations - keep only one instance of each
   const [data, setData] = useState<Job[]>(jobs);
   const [nextJobId, setNextJobId] = useState("");
@@ -105,7 +105,7 @@ export default function Collections({ jobs, customers, addresses, collection_typ
   // Helper functions
   const resetFormErrors = () => setFormErrors({});
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setAddFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -119,9 +119,9 @@ export default function Collections({ jobs, customers, addresses, collection_typ
     
     // Validate required fields
     const errors = {};
-    if (!addFormData.job_id && !nextJobId) errors['job_id'] = 'Job ID is required';
-    if (!addFormData.client_id) errors['client_id'] = 'Customer is required';
-    if (!addFormData.collection_date) errors['collection_date'] = 'Collection date is required';
+    if (!addFormData.job_id && !nextJobId) (errors as Record<string, string>)['job_id'] = 'Job ID is required';
+    if (!addFormData.client_id) (errors as Record<string, string>)['client_id'] = 'Customer is required';
+    if (!addFormData.collection_date) (errors as Record<string, string>)['collection_date'] = 'Collection date is required';
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -162,7 +162,7 @@ export default function Collections({ jobs, customers, addresses, collection_typ
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: any }) => {
         const job = row.original;
         return (
           <div className="flex justify-end space-x-2">
@@ -237,8 +237,8 @@ export default function Collections({ jobs, customers, addresses, collection_typ
                           value={addFormData.job_id || nextJobId}
                           onChange={(e) => handleInputChange(e)}
                         />
-                        {formErrors.job_id && (
-                          <p className="text-red-600 text-sm">{formErrors.job_id}</p>
+                        {(formErrors as Record<string, string>).job_id && (
+                          <p className="text-red-600 text-sm">{(formErrors as Record<string, string>).job_id}</p>
                         )}
                       </div>
                       <div>
@@ -258,8 +258,8 @@ export default function Collections({ jobs, customers, addresses, collection_typ
                             ))}
                           </SelectContent>
                         </Select>
-                        {formErrors.client_id && (
-                          <p className="text-red-600 text-sm">{formErrors.client_id}</p>
+                        {(formErrors as Record<string, string>).client_id && (
+                          <p className="text-red-600 text-sm">{(formErrors as Record<string, string>).client_id}</p>
                         )}
                       </div>
                       <div>
@@ -271,8 +271,8 @@ export default function Collections({ jobs, customers, addresses, collection_typ
                           value={addFormData.collection_date}
                           onChange={(e) => handleInputChange(e)}
                         />
-                        {formErrors.collection_date && (
-                          <p className="text-red-600 text-sm">{formErrors.collection_date}</p>
+                        {(formErrors as Record<string, string>).collection_date && (
+                          <p className="text-red-600 text-sm">{(formErrors as Record<string, string>).collection_date}</p>
                         )}
                       </div>
                       <div>
@@ -292,8 +292,8 @@ export default function Collections({ jobs, customers, addresses, collection_typ
                             ))}
                           </SelectContent>
                         </Select>
-                        {formErrors.job_status && (
-                          <p className="text-red-600 text-sm">{formErrors.job_status}</p>
+                        {(formErrors as Record<string, string>).job_status && (
+                          <p className="text-red-600 text-sm">{(formErrors as Record<string, string>).job_status}</p>
                         )}
                       </div>
                     </div>

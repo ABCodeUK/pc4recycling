@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/Components/ui/separator";
 import { DataTable } from "./data-table";
 import { clientJobColumns } from "./columns";
 import { ClientJob } from "./columns";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/Components/ui/input";
 import axios from "axios";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 import { Plus } from "lucide-react";
 
 export default function ClientJobs({ parentId }: { parentId: number }) {

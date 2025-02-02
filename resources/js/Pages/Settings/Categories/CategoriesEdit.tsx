@@ -1,23 +1,24 @@
 import { useState } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import MultipleSelector from "@/components/ui/multiple-select";
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/ui/select";
+import MultipleSelector from "@/Components/ui/multiple-select";
+import type { Option } from "@/Components/ui/multiple-select";
 import SubCategories from "@/Pages/Settings/Categories/SubCategories/SubCategories";
 import axios from "axios";
 import { toast } from "sonner";
@@ -32,9 +33,30 @@ import {
   AlertDialogDescription,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 
-export default function EditCategory({ category, ewcCodes, hpCodes, specFields }) {
+export default function EditCategory({ 
+  category,
+  ewcCodes,
+  hpCodes, 
+  specFields 
+}: {
+  category: {
+    id: string;
+    name: string;
+    default_weight: string;
+    ewc_code?: { id: string };
+    physical_form?: string;
+    concentration?: string;
+    chemical_component?: string;
+    container_type?: string;
+    hp_codes?: Array<{ id: string }>;
+    spec_fields?: Array<{ id: string }>;
+  };
+  ewcCodes: Array<{ id: string; ewc_code: string }>;
+  hpCodes: Array<{ id: string; hp_code: string; hp_type: string }>;
+  specFields: Array<{ id: string; spec_name: string }>;
+}) {
   if (!category || !ewcCodes || !hpCodes || !specFields) {
     return <div>Loading...</div>;
   }
@@ -47,23 +69,23 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
     concentration: category.concentration || "",
     chemical_component: category.chemical_component || "",
     container_type: category.container_type || "",
-    hp_codes: category.hp_codes?.map((hp) => hp.id) || [],
-    spec_fields: category.spec_fields?.map((sf) => sf.id) || [],
+    hp_codes: category.hp_codes?.map((hp: { id: string }) => hp.id) || [],
+    spec_fields: category.spec_fields?.map((sf: { id: string }) => sf.id) || [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleMultiSelectChange = (name, values) => {
+  const handleMultiSelectChange = (name: string, values: string[]) => {
     setFormData((prev) => ({ ...prev, [name]: values }));
   };
 
@@ -218,7 +240,7 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
             <SelectValue placeholder="Select EWC Code" />
           </SelectTrigger>
           <SelectContent>
-            {ewcCodes.map((ewc) => (
+            {ewcCodes.map((ewc: { id: string; ewc_code: string }) => (
               <SelectItem key={ewc.id} value={ewc.id}>
                 {ewc.ewc_code}
               </SelectItem>
@@ -288,17 +310,21 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
       <Label htmlFor="hp_codes" className="text-left">HP Codes</Label>
       <div className="col-span-2">
         <MultipleSelector
-          value={formData.hp_codes.map((id) => {
-            const hp = hpCodes.find((hp) => hp.id === id);
-            return hp
-              ? { value: hp.id, label: `${hp.hp_code} - ${hp.hp_type}` }
-              : null;
-          })}
+          value={formData.hp_codes
+            .map((id: string) => {
+              const hp = hpCodes.find((hp: { id: string }) => hp.id === id);
+              if (!hp) return undefined;
+              return {
+                value: hp.id,
+                label: `${hp.hp_code} - ${hp.hp_type}`
+              };
+            })
+            .filter((item): item is Option => !!item)}
           options={hpCodes.map((hp) => ({
             value: hp.id,
-            label: `${hp.hp_code} - ${hp.hp_type}`,
+            label: `${hp.hp_code} - ${hp.hp_type}`
           }))}
-          onChange={(values) =>
+          onChange={(values: Option[]) =>
             handleMultiSelectChange(
               "hp_codes",
               values.map((item) => item.value)
@@ -306,21 +332,23 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
           }
           placeholder="Select HP Codes"
         />
-      </div>
-    </div>
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="spec_fields" className="text-left">Spec Fields</Label>
-      <div className="col-span-2">
+        
         <MultipleSelector
-          value={formData.spec_fields.map((id) => {
-            const spec = specFields.find((sf) => sf.id === id);
-            return spec ? { value: spec.id, label: spec.spec_name } : null;
-          })}
+          value={formData.spec_fields
+            .map((id: string) => {
+              const spec = specFields.find((sf) => sf.id === id);
+              if (!spec) return undefined;
+              return {
+                value: spec.id,
+                label: spec.spec_name
+              };
+            })
+            .filter((item): item is Option => !!item)}
           options={specFields.map((sf) => ({
             value: sf.id,
-            label: sf.spec_name,
+            label: sf.spec_name
           }))}
-          onChange={(values) =>
+          onChange={(values: Option[]) =>
             handleMultiSelectChange(
               "spec_fields",
               values.map((item) => item.value)
@@ -334,7 +362,7 @@ export default function EditCategory({ category, ewcCodes, hpCodes, specFields }
 </div>
           </section>
           <section>
-            <SubCategories parentId={category.id} />
+            <SubCategories parentId={parseInt(category.id)} />
           </section>
         </div>
       </SidebarInset>

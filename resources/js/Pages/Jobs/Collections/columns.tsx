@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/Components/ui/badge";
+import { Button } from "@/Components/ui/button";
 import { Edit, Trash2, User } from "lucide-react";
 import {
   AlertDialog,
@@ -12,7 +12,7 @@ import {
   AlertDialogDescription,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 
 export interface Job {
   id: number;
@@ -43,7 +43,7 @@ export const columns: ColumnDef<Job>[] = [
     accessorKey: "job_id",
     header: () => <span className="font-bold">ID</span>,
     cell: (info) => (
-      <span className="text-primary">{info.getValue()}</span>
+      <span className="text-primary">{String(info.getValue())}</span>
     ),
   },
   {
@@ -86,7 +86,7 @@ export const columns: ColumnDef<Job>[] = [
     cell: (info) => (
       <div className="flex items-center gap-2">
         <User className="h-4 w-4" />
-        <span>{info.getValue() || "Not Assigned"}</span>
+        <span>{String(info.getValue()) || 'N/A'}</span>
       </div>
     ),
   },
@@ -106,7 +106,7 @@ export const columns: ColumnDef<Job>[] = [
         'Canceled': 'destructive',
       }[status] || 'default';
 
-      return <Badge variant={variant}>{status}</Badge>;
+      return <Badge variant={variant as "destructive" | "warning" | "default" | "secondary" | "success" | "outline"}>{status}</Badge>;
     },
   }
 ];

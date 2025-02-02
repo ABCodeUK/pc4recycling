@@ -1,7 +1,7 @@
 import { useForm } from "@inertiajs/react";
 import { GalleryVerticalEnd } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/Components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/Components/ui/card";
 
 export default function VerifyEmail({ status }: { status?: string }) {
     const { post, processing } = useForm({});

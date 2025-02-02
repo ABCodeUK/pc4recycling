@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/Components/ui/badge";
+import { Button } from "@/Components/ui/button";
 import { Eye, User } from "lucide-react";
 
 export interface ClientJob {
@@ -92,7 +92,7 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
         'Canceled': 'destructive',
       }[status] || 'default';
 
-      return <Badge variant={variant}>{status}</Badge>;
+      return <Badge variant={variant as "default" | "destructive" | "outline" | "secondary" | "warning" | "success"}>{status}</Badge>;
     },
   },
   {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
 import { DataTable } from "./data-table";
 import { subCategoryColumns } from "./columns"; // Import dynamic columns
 import { SubCategory } from "./columns"; // Import SubCategory type
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/Components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 import { Edit, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -134,7 +134,7 @@ export default function SubCategories({ parentId }: { parentId: number }) {
 
   const columnsWithActions = [
     ...subCategoryColumns.filter((column) =>
-      ["name", "default_weight"].includes(column.accessorKey as string)
+      ["name", "default_weight"].includes(column.id as string)
     ), // Include only Name and Default Weight from imported columns
     {
       id: "actions",

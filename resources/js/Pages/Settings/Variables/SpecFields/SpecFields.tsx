@@ -1,25 +1,25 @@
 import { useState } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/Components/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/Components/ui/sidebar";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/Components/ui/breadcrumb";
+import { Separator } from "@/Components/ui/separator";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { SpecField } from "./columns";
-import VariablesNavigation from "@/Pages/Settings/Variables/variablesnavigation";
+import VariablesNavigation from "@/Pages/Settings/Variables/VariablesNavigation";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/Components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 import { Edit, Trash2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -47,7 +47,7 @@ import { toast } from "sonner";
 export default function SpecFields({ specFields }: { specFields: SpecField[] }) {
   const [data, setData] = useState<SpecField[]>(() => {
     return [...specFields].sort((a, b) =>
-      b.spec_default - a.spec_default || a.spec_order - b.spec_order
+      (b.spec_default ? 1 : 0) - (a.spec_default ? 1 : 0) || Number(a.spec_order) - Number(b.spec_order)
     );
   });
 
@@ -182,7 +182,7 @@ export default function SpecFields({ specFields }: { specFields: SpecField[] }) 
   );
 
   const sortData = (a: SpecField, b: SpecField) =>
-    b.spec_default - a.spec_default || a.spec_order - b.spec_order;
+    (b.spec_default ? 1 : 0) - (a.spec_default ? 1 : 0) || Number(a.spec_order) - Number(b.spec_order);
 
   const columnsWithActions = [
     ...columns,

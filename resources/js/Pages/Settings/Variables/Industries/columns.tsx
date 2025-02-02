@@ -2,14 +2,14 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 
-export type LeadSource = {
+export type Industry = {
   id: number;
   in_name: string;
 };
 
-export const columns: ColumnDef<LeadSource>[] = [
+export const columns: ColumnDef<Industry>[] = [
   {
     accessorKey: "in_name",
     header: ({ column }) => (

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/Components/ui/separator";
 import { DataTable } from "./data-table";
 import { subClientColumns } from "./columns";
 import { SubClient } from "./columns";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
 import axios from "axios";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/Components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/Components/ui/alert-dialog";
 
 // Add this import at the top with other imports
 import { Edit, Trash2 } from "lucide-react";
@@ -158,7 +158,7 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
     {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: SubClient } }) => (
         <div className="flex justify-end space-x-2">
           <Button
             variant="outline"

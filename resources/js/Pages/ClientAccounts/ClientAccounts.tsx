@@ -93,26 +93,41 @@ export default function ClientAccounts({
     resetFormErrors();
     try {
       setIsSubmitting(true);
-      const response = await axios.post("/customers/store", addFormData);
-      if (response.status === 200) {
-        const newClient = response.data;
-        setData((prev) => [...prev, newClient]);
+      const generatedPassword = Math.random().toString(36).slice(-8);
+      
+      const formData = new FormData();
+      formData.append('name', addFormData.name);
+      formData.append('email', addFormData.email);
+      formData.append('contact_name', addFormData.contact_name);
+      formData.append('type', 'client');
+      formData.append('password', generatedPassword);
+      formData.append('password_confirmation', generatedPassword);
+      
+      const response = await axios.post("/customers/store", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      
+      if (response.data) {
+        setData((prev) => [...prev, response.data]);
         toast.success("Client successfully added!");
         setIsAddDialogOpen(false);
-
-        if (newClient.id) {
-          window.location.href = `/customers/${newClient.id}/edit`;
-        } else {
-          console.error("New client ID is missing");
+        resetAddForm();
+  
+        if (response.data.id) {
+          window.location.href = `/customers/${response.data.id}/edit`;
         }
-      } else {
-        toast.error("Failed to add client. Please try again.");
       }
     } catch (error: any) {
-      if (error.response && error.response.data.errors) {
+      console.error('Error response:', error.response?.data);
+      if (error.response?.data?.errors) {
         setFormErrors(error.response.data.errors);
+        Object.values(error.response.data.errors).forEach((error: any) => {
+          toast.error(error[0]);
+        });
       } else {
-        toast.error("Error adding client. Please check the logs.");
+        toast.error("Failed to add client.");
       }
     } finally {
       setIsSubmitting(false);

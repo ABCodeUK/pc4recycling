@@ -38,10 +38,12 @@ export default function ClientAccountsView({
     customer_type_id?: number | null;
     industry_id?: number | null;
     address?: string | null;
+    address_2?: string | null;
     town_city?: string | null;
     county?: string | null;
     postcode?: string | null;
     contact_name?: string | null;
+    contact_position?: string | null; // Add this line
     sic_code?: string | null;
     customer_notes?: string | null;
     lead_source_id?: string | null;
@@ -59,6 +61,12 @@ export default function ClientAccountsView({
     if (!id) return "Not specified";
     const industry = industries.find((i) => i.id === id);
     return industry ? industry.in_name : "Not specified";
+  };
+
+  const getCustomerTypeName = (id: number | null) => {
+    if (!id) return "Not specified";
+    const type = customer_types.find((t) => t.id === id);
+    return type ? type.ct_name : "Not specified";
   };
 
   // Helper function to get lead source name
@@ -135,11 +143,12 @@ export default function ClientAccountsView({
                     </span>
                   </div>
                 </h2>
-                <Separator className="my-4" />
-                <dl className="grid gap-2">
+                <Separator className="my-3" />
+                <dl className="grid gap-1">
                   <DetailRow label="Company Name" value={user_edit.name} />
                   <Separator />
-                  <DetailRow label="Address" value={client_details.address || ""} />
+                  <DetailRow label="Address Line 1" value={client_details.address || ""} />
+                  <DetailRow label="Address Line 2" value={client_details.address_2 || ""} />
                   <DetailRow label="Town/City" value={client_details.town_city || ""} />
                   <DetailRow label="County" value={client_details.county || ""} />
                   <DetailRow label="Postcode" value={client_details.postcode || ""} />
@@ -148,7 +157,10 @@ export default function ClientAccountsView({
                     label="Contact Name"
                     value={client_details.contact_name || ""}
                   />
-                  <DetailRow label="Position" value={user_edit.position || ""} />
+                  <DetailRow 
+                    label="Position" 
+                    value={client_details.contact_position || ""} 
+                  />
                   <Separator />
                   <DetailRow label="Landline" value={user_edit.landline || ""} />
                   <DetailRow label="Mobile" value={user_edit.mobile || ""} />
@@ -161,11 +173,15 @@ export default function ClientAccountsView({
                 <h2 className="text-xl font-semibold leading-7 text-gray-900">
                   More Details
                 </h2>
-                <Separator className="my-4" />
-                <dl className="grid gap-2">
+                <Separator className="my-3" />
+                <dl className="grid gap-1">
                   <DetailRow
                     label="Lead Source"
                     value={getLeadSourceName(Number(client_details.lead_source_id))}
+                  />
+                  <DetailRow
+                    label="Customer Type"
+                    value={getCustomerTypeName(Number(client_details.customer_type_id))}
                   />
                   <DetailRow
                     label="Industry"

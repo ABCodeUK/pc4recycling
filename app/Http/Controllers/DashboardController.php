@@ -13,19 +13,30 @@ class DashboardController extends Controller
         try {
             $now = Carbon::now();
             $startOfYear = Carbon::now()->startOfYear();
-            $thirtyDaysAgo = Carbon::now()->subDays(30);
+            $startOfMonth = Carbon::now()->startOfMonth();
     
             $metrics = [
-                'jobsThisYear' => Job::whereYear('created_at', $now->year)->count(),
-                'jobsLast30Days' => Job::where('created_at', '>=', $thirtyDaysAgo)->count(),
-                'upcomingCollections' => Job::whereIn('job_status', ['Needs Scheduling', 'Scheduled'])
+                // Jobs with collection dates in current year
+                'jobsThisYear' => Job::whereYear('collection_date', $now->year)
+                    ->count(),
+                
+                // Jobs with collection dates in current month
+                'jobsLast30Days' => Job::whereYear('collection_date', $now->year)
+                    ->whereMonth('collection_date', $now->month)
+                    ->count(),
+                
+                // Only scheduled jobs
+                'upcomingCollections' => Job::where('job_status', 'Scheduled')
                     ->where('collection_date', '>=', $now)
                     ->count(),
+                
+                // Completed jobs with collection dates in current year
                 'completedJobsThisYear' => Job::where('job_status', 'Complete')
-                    ->whereYear('created_at', $now->year)
+                    ->whereYear('collection_date', $now->year)
                     ->count(),
+                
                 'recentJobs' => Job::with('client')
-                    ->whereIn('job_status', ['Needs Scheduling', 'Scheduled'])
+                    ->where('job_status', 'Scheduled')
                     ->where('collection_date', '>=', $now)
                     ->orderBy('collection_date')
                     ->limit(10)

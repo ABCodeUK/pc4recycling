@@ -35,7 +35,10 @@ import { type NavItem, type NavigationData } from "@/types/navigation";
 import type { User } from "@/types";
 
 // Remove the local User interface and update usePage usage
+import { useSidebar } from "@/Components/ui/sidebar";
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { collapsed } = useSidebar();
   const { user } = usePage<{
     auth: {
       user: User;
@@ -118,10 +121,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "",
         icon: SlidersVertical,
         items: [
-          {
-            title: "General",
-            url: "/settings/general/",
-          },
+//          {
+//            title: "General",
+//            url: "/settings/general/",
+//          },
           {
             title: "Staff Accounts",
             url: "/settings/staff/",
@@ -130,10 +133,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Categories",
             url: "/settings/categories/",
           },
-          {
-            title: "Items",
-            url: "/settings/items/",
-          },
+//          {
+//            title: "Items",
+//            url: "/settings/items/",
+//          },
           {
             title: "Variables",
             url: "/settings/variables/",
@@ -157,15 +160,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-<SidebarHeader>
-  <div className="p-4">
-    <img
-      src="/images/logos/logo.png"
-      alt="Website Logo"
-      className="w-40 h-auto mx-auto"
-    />
-  </div>
-</SidebarHeader>
+      <SidebarHeader>
+        <div className="p-2">
+          <img
+            src={collapsed ? "/images/logos/icon.svg" : "/images/logos/logo-colour.svg"}
+            alt="ITAM logo"
+            className="w-auto h-8"
+          />
+        </div>
+      </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>

@@ -3,11 +3,14 @@
 // Settings Controllers
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\VariableEwcCodeController;
 use App\Http\Controllers\VariableHPCodeController;
 use App\Http\Controllers\VariableManufacturerController;
 use App\Http\Controllers\VariableSpecFieldController;
 use App\Http\Controllers\VariableCustomerTypeController;
+use App\Http\Controllers\VariableCollectionTypeController;
+use App\Http\Controllers\VariableDataSanitisationController;
 use App\Http\Controllers\VariableLeadSourceController;
 use App\Http\Controllers\VariableIndustryController;
 use App\Http\Controllers\CategoryController;
@@ -95,7 +98,8 @@ Route::middleware('auth')->group(function () {
     // Collections
     Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])->name('collections.next-job-id');
     Route::get('/collections/', [JobController::class, 'index'])->name('collections.index');
-    Route::post('/collections/', [JobController::class, 'store'])->name('collections.store');
+    // Add this with your other collection routes
+    Route::post('/collections', [JobController::class, 'store'])->name('collections.store');
     Route::get('/collections/{id}', [JobController::class, 'show'])->name('collections.show'); // Add this line
     Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
     Route::put('/collections/{id}', [JobController::class, 'update'])->name('collections.update');
@@ -181,7 +185,23 @@ Route::middleware('auth')->group(function () {
    Route::post('/settings/variables/industries', [VariableIndustryController::class, 'store'])->name('variables.industries.store');
    Route::put('/settings/variables/industries/{id}', [VariableIndustryController::class, 'update'])->name('variables.industries.update');
    Route::delete('/settings/variables/industries/{id}', [VariableIndustryController::class, 'destroy'])->name('variables.industries.destroy');
+
+    // Collection Types
+    Route::get('/settings/variables/collection-types', [VariableCollectionTypeController::class, 'index'])->name('variables.collection-types'); // Fixed typo in name
+    Route::post('/settings/variables/collection-types', [VariableCollectionTypeController::class, 'store'])->name('variables.collection-types.store');
+    Route::put('/settings/variables/collection-types/{id}', [VariableCollectionTypeController::class, 'update'])->name('variables.collection-types.update');
+    Route::delete('/settings/variables/collection-types/{id}', [VariableCollectionTypeController::class, 'destroy'])->name('variables.collection-types.destroy');
+
+        // Data Sanitisation
+        Route::get('/settings/variables/data-sanitisation', [VariableDataSanitisationController::class, 'index'])->name('variables.data-sanitisation'); // Fixed typo in name
+        Route::post('/settings/variables/data-sanitisation', [VariableDataSanitisationController::class, 'store'])->name('variables.data-sanitisation.store');
+        Route::put('/settings/variables/data-sanitisation/{id}', [VariableDataSanitisationController::class, 'update'])->name('variables.data-sanitisation.update');
+        Route::delete('/settings/variables/data-sanitisation/{id}', [VariableDataSanitisationController::class, 'destroy'])->name('variables.data-sanitisation.destroy');
 });
+
+// Calendar
+Route::get('/calendar', [CalendarController::class, 'index'])
+    ->middleware(['auth']);
 
 // Settings: Connections
 Route::middleware('auth')->group(function () {
@@ -231,21 +251,25 @@ Route::get('/api/dashboard-metrics', [DashboardController::class, 'getMetrics'])
 Route::get('/api/upcoming-jobs', [DashboardController::class, 'getUpcomingJobs'])
     ->middleware(['auth'])
     ->name('dashboard.upcoming-jobs');
-// Add these routes with your other client routes
-// Sub-client routes
+
+    // Sub-client routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/customers/{id}/sub-clients', [ClientSubController::class, 'index']);
     Route::post('/sub-clients', [ClientSubController::class, 'store']);
     Route::put('/sub-clients/{id}', [ClientSubController::class, 'update']);
     Route::delete('/sub-clients/{id}', [ClientSubController::class, 'destroy']);
 });
+
 Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])
     ->name('collections.next-job-id');
-// Inside your auth middleware group
+
+
 Route::middleware('auth')->group(function () {
     // Job Documents routes
     Route::post('/collections/{id}/documents', [JobDocumentController::class, 'store'])
         ->name('job.documents.store');
     Route::delete('/collections/{jobId}/documents/{documentId}', [JobDocumentController::class, 'destroy'])
         ->name('job.documents.destroy');
+    Route::get('/documents/{jobId}/{uuid}', [JobDocumentController::class, 'show'])
+    ->name('documents.show');
 });

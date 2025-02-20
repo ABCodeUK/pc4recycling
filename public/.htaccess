@@ -1,3 +1,21 @@
+#+PHPVersion
+#=php82
+AddHandler x-httpd-php82 .php
+#-PHPVersion
+
+# File upload settings
+<IfModule mod_php.c>
+    php_value upload_max_filesize 128M
+    php_value post_max_size 128M
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+
+# Alternative method if mod_php is not available
+<IfModule mod_fcgid.c>
+    FcgidMaxRequestLen 134217728
+</IfModule>
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

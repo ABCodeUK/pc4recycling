@@ -29,6 +29,12 @@ export default function VariablesNavigation({
         <TabsTrigger value="industries" asChild>
           <a href="/settings/variables/industries">Industries</a>
         </TabsTrigger>
+        <TabsTrigger value="collection-types" asChild>
+          <a href="/settings/variables/collection-types">Collection Types</a>
+        </TabsTrigger>
+        <TabsTrigger value="data-sanitisation" asChild>
+          <a href="/settings/variables/data-sanitisation">Data Sanitization</a>
+        </TabsTrigger>
       </TabsList>
     </Tabs>
   );

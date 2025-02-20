@@ -71,34 +71,34 @@ export default function Dashboard() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Jobs This Year</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Jobs This Year</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{metrics.jobsThisYear}</div>
-                <p className="text-xs text-muted-foreground">Total jobs in {new Date().getFullYear()}</p>
+                <p className="text-xs text-muted-foreground">Jobs in <b>{new Date().getFullYear()}</b></p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Last 30 Days</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Jobs This Month</CardTitle>
                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{metrics.jobsLast30Days}</div>
-                <p className="text-xs text-muted-foreground">Jobs in the last month</p>
+                <p className="text-xs text-muted-foreground">Jobs in <b>{new Date().toLocaleString('default', { month: 'long' })}</b></p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Collections</CardTitle>
+                <CardTitle className="text-sm font-medium">Scheduled Collections</CardTitle>
                 <ClipboardList className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{metrics.upcomingCollections}</div>
-                <p className="text-xs text-muted-foreground">Scheduled collections</p>
+                <p className="text-xs text-muted-foreground">Jobs In The System</p>
               </CardContent>
             </Card>
 
@@ -109,7 +109,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{metrics.completedJobsThisYear}</div>
-                <p className="text-xs text-muted-foreground">Completed this year</p>
+                <p className="text-xs text-muted-foreground">Jobs Completed in <b>{new Date().getFullYear()}</b></p>
               </CardContent>
             </Card>
           </div>

@@ -198,168 +198,181 @@ export default function EditCategory({
             </div>
           </div>
           <section className="grid grid-cols-2 gap-6 items-start">
- {/* Left Card */}
-<div className="bg-white border shadow rounded-lg p-6">
-  <div className="flex flex-col gap-4">
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="name" className="text-left">Category Name*</Label>
-      <div className="col-span-2">
-        <Input
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-    </div>
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="default_weight" className="text-left">Default Weight*</Label>
-      <div className="col-span-2 relative">
-        <Input
-          id="default_weight"
-          name="default_weight"
-          type="number"
-          value={formData.default_weight}
-          onChange={handleInputChange}
-          required
-          className="pr-12"
-        />
-        <span className="absolute inset-y-0 right-4 flex items-center text-gray-500">kg</span>
-      </div>
-    </div>
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="ewc_code_id" className="text-left">EWC Code*</Label>
-      <div className="col-span-2">
-        <Select
-          value={formData.ewc_code_id}
-          onValueChange={(value) => handleSelectChange("ewc_code_id", value)}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select EWC Code" />
-          </SelectTrigger>
-          <SelectContent>
-            {ewcCodes.map((ewc: { id: string; ewc_code: string }) => (
-              <SelectItem key={ewc.id} value={ewc.id}>
-                {ewc.ewc_code}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="physical_form" className="text-left">Physical Form</Label>
-      <div className="col-span-2">
-        <Select
-          value={formData.physical_form}
-          onValueChange={(value) => handleSelectChange("physical_form", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Physical Form" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Solid">Solid</SelectItem>
-            <SelectItem value="Liquid">Liquid</SelectItem>
-            <SelectItem value="Mixed">Mixed</SelectItem>
-            <SelectItem value="Sludge">Sludge</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  </div>
-</div>
-{/* Right Card */}
-<div className="bg-white border shadow rounded-lg p-6">
-  <div className="flex flex-col gap-4">
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="concentration" className="text-left">Concentration</Label>
-      <div className="col-span-2">
-        <Input
-          id="concentration"
-          name="concentration"
-          value={formData.concentration}
-          onChange={handleInputChange}
-        />
-      </div>
-    </div>
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="chemical_component" className="text-left">Chemical Component</Label>
-      <div className="col-span-2">
-        <Input
-          id="chemical_component"
-          name="chemical_component"
-          value={formData.chemical_component}
-          onChange={handleInputChange}
-        />
-      </div>
-    </div>
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="container_type" className="text-left">Container Type</Label>
-      <div className="col-span-2">
-        <Input
-          id="container_type"
-          name="container_type"
-          value={formData.container_type}
-          onChange={handleInputChange}
-        />
-      </div>
-    </div>
-    <div className="grid grid-cols-3 items-center gap-4">
-      <Label htmlFor="hp_codes" className="text-left">HP Codes</Label>
-      <div className="col-span-2">
-        <MultipleSelector
-          value={formData.hp_codes
-            .map((id: string) => {
-              const hp = hpCodes.find((hp: { id: string }) => hp.id === id);
-              if (!hp) return undefined;
-              return {
-                value: hp.id,
-                label: `${hp.hp_code} - ${hp.hp_type}`
-              };
-            })
-            .filter((item): item is Option => !!item)}
-          options={hpCodes.map((hp) => ({
-            value: hp.id,
-            label: `${hp.hp_code} - ${hp.hp_type}`
-          }))}
-          onChange={(values: Option[]) =>
-            handleMultiSelectChange(
-              "hp_codes",
-              values.map((item) => item.value)
-            )
-          }
-          placeholder="Select HP Codes"
-        />
-        
-        <MultipleSelector
-          value={formData.spec_fields
-            .map((id: string) => {
-              const spec = specFields.find((sf) => sf.id === id);
-              if (!spec) return undefined;
-              return {
-                value: spec.id,
-                label: spec.spec_name
-              };
-            })
-            .filter((item): item is Option => !!item)}
-          options={specFields.map((sf) => ({
-            value: sf.id,
-            label: sf.spec_name
-          }))}
-          onChange={(values: Option[]) =>
-            handleMultiSelectChange(
-              "spec_fields",
-              values.map((item) => item.value)
-            )
-          }
-          placeholder="Select Spec Fields"
-        />
-      </div>
-    </div>
-  </div>
-</div>
+            {/* Left Card */}
+            <div className="bg-white border shadow rounded-lg">
+              <header className="p-6">
+                <h2 className="text-lg font-semibold">Category Details</h2>
+              </header>
+              <Separator />
+              <div className="p-6">
+                <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="name" className="text-left">Category Name*</Label>
+                    <div className="col-span-2">
+                      <Input
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="default_weight" className="text-left">Default Weight*</Label>
+                    <div className="col-span-2 relative">
+                      <Input
+                        id="default_weight"
+                        name="default_weight"
+                        type="number"
+                        value={formData.default_weight}
+                        onChange={handleInputChange}
+                        required
+                        className="pr-12"
+                      />
+                      <span className="absolute inset-y-0 right-4 flex items-center text-gray-500">kg</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="ewc_code_id" className="text-left">EWC Code*</Label>
+                    <div className="col-span-2">
+                      <Select
+                        value={formData.ewc_code_id}
+                        onValueChange={(value) => handleSelectChange("ewc_code_id", value)}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select EWC Code" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ewcCodes.map((ewc: { id: string; ewc_code: string }) => (
+                            <SelectItem key={ewc.id} value={ewc.id}>
+                              {ewc.ewc_code}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="physical_form" className="text-left">Physical Form</Label>
+                    <div className="col-span-2">
+                      <Select
+                        value={formData.physical_form}
+                        onValueChange={(value) => handleSelectChange("physical_form", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Physical Form" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Solid">Solid</SelectItem>
+                          <SelectItem value="Liquid">Liquid</SelectItem>
+                          <SelectItem value="Mixed">Mixed</SelectItem>
+                          <SelectItem value="Sludge">Sludge</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Card */}
+            <div className="bg-white border shadow rounded-lg">
+              <header className="p-6">
+                <h2 className="text-lg font-semibold">Additional Information</h2>
+              </header>
+              <Separator />
+              <div className="p-6">
+                <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="concentration" className="text-left">Concentration</Label>
+                    <div className="col-span-2">
+                      <Input
+                        id="concentration"
+                        name="concentration"
+                        value={formData.concentration}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="chemical_component" className="text-left">Chemical Component</Label>
+                    <div className="col-span-2">
+                      <Input
+                        id="chemical_component"
+                        name="chemical_component"
+                        value={formData.chemical_component}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="container_type" className="text-left">Container Type</Label>
+                    <div className="col-span-2">
+                      <Input
+                        id="container_type"
+                        name="container_type"
+                        value={formData.container_type}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="hp_codes" className="text-left">HP Codes</Label>
+                    <div className="col-span-2">
+                      <MultipleSelector
+                        value={formData.hp_codes
+                          .map((id: string) => {
+                            const hp = hpCodes.find((hp: { id: string }) => hp.id === id);
+                            if (!hp) return undefined;
+                            return {
+                              value: hp.id,
+                              label: `${hp.hp_code} - ${hp.hp_type}`
+                            };
+                          })
+                          .filter((item): item is Option => !!item)}
+                        options={hpCodes.map((hp) => ({
+                          value: hp.id,
+                          label: `${hp.hp_code} - ${hp.hp_type}`
+                        }))}
+                        onChange={(values: Option[]) =>
+                          handleMultiSelectChange(
+                            "hp_codes",
+                            values.map((item) => item.value)
+                          )
+                        }
+                        placeholder="Select HP Codes"
+                      />
+                      
+                      <MultipleSelector
+                        value={formData.spec_fields
+                          .map((id: string) => {
+                            const spec = specFields.find((sf) => sf.id === id);
+                            if (!spec) return undefined;
+                            return {
+                              value: spec.id,
+                              label: spec.spec_name
+                            };
+                          })
+                          .filter((item): item is Option => !!item)}
+                        options={specFields.map((sf) => ({
+                          value: sf.id,
+                          label: sf.spec_name
+                        }))}
+                        onChange={(values: Option[]) =>
+                          handleMultiSelectChange(
+                            "spec_fields",
+                            values.map((item) => item.value)
+                          )
+                        }
+                        placeholder="Select Spec Fields"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
           <section>
             <SubCategories parentId={parseInt(category.id)} />

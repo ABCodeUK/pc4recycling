@@ -3,6 +3,7 @@ import { ColumnDef } from "@tanstack/react-table";
 export interface UserAddress {
   id: number;
   address: string;
+  address_2: string;
   town_city: string;
   county: string;
   postcode: string;
@@ -13,8 +14,13 @@ export interface UserAddress {
 export const userAddressColumns: ColumnDef<UserAddress>[] = [
   {
     accessorKey: "address",
-    header: "Address",
+    header: "Address Line 1",
     cell: (info) => info.getValue(),
+  },
+  {
+    accessorKey: "address_2",
+    header: "Address Line 2",
+    cell: (info) => info.getValue() || "-", // Add fallback for empty values
   },
   {
     accessorKey: "town_city",

@@ -1,1 +1,0 @@
-const s=[{accessorKey:"address",header:"Address",cell:e=>e.getValue()},{accessorKey:"town_city",header:"Town / City",cell:e=>e.getValue()},{accessorKey:"county",header:"County",cell:e=>e.getValue()},{accessorKey:"postcode",header:"Postcode",cell:e=>e.getValue()}];export{s as userAddressColumns};

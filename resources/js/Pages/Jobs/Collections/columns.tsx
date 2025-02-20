@@ -13,6 +13,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/Components/ui/alert-dialog";
+import { ArrowUpDown } from "lucide-react"; // Add this import
 
 export interface Job {
   id: number;
@@ -27,6 +28,7 @@ export interface Job {
   staff_collecting: string | null;
   vehicle: string | null;
   address: string;
+  address_2: string;
   town_city: string;
   postcode: string;
   onsite_contact: string | null;
@@ -42,8 +44,13 @@ export const columns: ColumnDef<Job>[] = [
   {
     accessorKey: "job_id",
     header: () => <span className="font-bold">ID</span>,
-    cell: (info) => (
-      <span className="text-primary">{String(info.getValue())}</span>
+    cell: ({ row }) => (
+      <a 
+        href={`/collections/${row.original.id}`}
+        className="text-primary font-medium"
+      >
+        {row.original.job_id}
+      </a>
     ),
   },
   {
@@ -61,7 +68,7 @@ export const columns: ColumnDef<Job>[] = [
   },
   {
     accessorKey: "created_at",
-    header: () => <span className="font-bold">Booked</span>,
+    header: () => <span className="font-bold">Date Created</span>,
     cell: (info) => {
       const date = info.getValue() as string;
       return date ? new Date(date).toLocaleDateString() : "N/A";
@@ -69,7 +76,16 @@ export const columns: ColumnDef<Job>[] = [
   },
   {
     accessorKey: "collection_date",
-    header: () => <span className="font-bold">Collection</span>,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="flex items-center"
+      >
+        <span className="font-bold">Collection Date</span>
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: (info) => {
       const date = info.getValue() as string;
       return date ? new Date(date).toLocaleDateString() : "Not Scheduled";
@@ -93,20 +109,32 @@ export const columns: ColumnDef<Job>[] = [
   {
     accessorKey: "job_status",
     header: () => <span className="font-bold">Status</span>,
-    cell: (info) => {
-      const status = info.getValue() as string;
-      const variant = {
-        'Needs Scheduling': 'destructive',
-        'Request Pending': 'warning',
-        'Scheduled': 'default',
-        'Postponed': 'secondary',
-        'Collected': 'success',
-        'Processing': 'default',
-        'Complete': 'success',
-        'Canceled': 'destructive',
-      }[status] || 'default';
+    cell: ({ row }) => {
+      const status = row.getValue("job_status") as string;
+      let color: string;
 
-      return <Badge variant={variant as "destructive" | "warning" | "default" | "secondary" | "success" | "outline"}>{status}</Badge>;
+      switch (status) {
+        case 'Scheduled':
+          color = 'bg-orange-100 text-orange-800 border-orange-200';
+          break;
+        case 'Postponed':
+        case 'Cancelled':
+          color = 'bg-red-100 text-red-800 border-red-200';
+          break;
+        case 'Collected':
+        case 'Processing':
+        case 'Complete':
+          color = 'bg-green-100 text-green-800 border-green-200';
+          break;
+        default:
+          color = 'bg-gray-100 text-gray-800 border-gray-200';
+      }
+
+      return (
+        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${color}`}>
+          {status}
+        </div>
+      );
     },
   }
 ];

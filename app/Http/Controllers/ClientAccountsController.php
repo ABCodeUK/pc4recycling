@@ -33,6 +33,7 @@ class ClientAccountsController extends Controller
                     'landline' => $user->landline,
                     'contact_name' => $user->clientDetails->contact_name ?? null,
                     'address' => $user->clientDetails->address ?? null,
+                    'address_2' => $user->clientDetails->address ?? null,
                     'town_city' => $user->clientDetails->town_city ?? null,
                     'county' => $user->clientDetails->county ?? null,
                     'postcode' => $user->clientDetails->postcode ?? null,
@@ -67,7 +68,7 @@ class ClientAccountsController extends Controller
         return Inertia::render('ClientAccounts/ClientAccountsEdit', [
             'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active']),
             'client_details' => $user->clientDetails ? $user->clientDetails->only([
-                'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
+                'industry_id', 'lead_source_id', 'customer_type_id', 'address','address_2', 'town_city', 'county', 'postcode',
                 'contact_name', 'contact_position', 'sic_code', 'customer_notes',
             ]) : [],
             'industries' => VariableIndustry::all(['id', 'in_name']),
@@ -90,7 +91,7 @@ class ClientAccountsController extends Controller
         return Inertia::render('ClientAccounts/ClientAccountsView', [
             'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active']),
             'client_details' => $user->clientDetails ? $user->clientDetails->only([
-                'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
+                'industry_id', 'lead_source_id', 'customer_type_id', 'address','address_2', 'town_city', 'county', 'postcode',
                 'contact_name', 'contact_position', 'sic_code', 'customer_notes',
             ]) : [],
             'industries' => VariableIndustry::all(['id', 'in_name']),
@@ -109,38 +110,58 @@ class ClientAccountsController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'landline' => 'nullable|string|max:255',
             'mobile' => 'nullable|string|max:255',
+            'position' => 'nullable|string|max:255', // This should be removed
             'active' => 'required|boolean',
+            'type' => 'required|string',
             'industry_id' => 'nullable|exists:variable_industries,id',
             'lead_source_id' => 'nullable|exists:variable_lead_sources,id',
             'customer_type_id' => 'nullable|exists:variable_customer_types,id',
             'address' => 'nullable|string|max:255',
+            'address_2' => 'nullable|string|max:255',
             'town_city' => 'nullable|string|max:255',
             'county' => 'nullable|string|max:255',
             'postcode' => 'nullable|string|max:20',
             'contact_name' => 'nullable|string|max:255',
-            'contact_position' => 'nullable|string|max:255',
             'sic_code' => 'nullable|string|max:255',
             'customer_notes' => 'nullable|string',
         ]);
-
+    
         $user = User::findOrFail($id);
-
+    
+        // Update user fields
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'landline' => $validated['landline'],
             'mobile' => $validated['mobile'],
             'active' => $validated['active'],
+            'type' => $validated['type'],
+            // Remove position from here
         ]);
+    
+        // Update or create client details
+        $clientData = array_intersect_key($validated, array_flip([
+            'industry_id',
+            'lead_source_id',
+            'customer_type_id',
+            'address',
+            'address_2',
+            'town_city',
+            'county',
+            'postcode',
+            'contact_name',
+            'sic_code',
+            'customer_notes',
+        ]));
 
+        // Add position to client details as contact_position
+        $clientData['contact_position'] = $validated['position'] ?? null;
+    
         $user->clientDetails()->updateOrCreate(
             ['user_id' => $user->id],
-            $request->only([
-                'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
-                'contact_name', 'contact_position', 'sic_code', 'customer_notes',
-            ])
+            $clientData
         );
-
+    
         return response()->json(['message' => 'Client updated successfully.']);
     }
 
@@ -152,29 +173,29 @@ class ClientAccountsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'landline' => 'nullable|string|max:255',
-            'mobile' => 'nullable|string|max:255',
             'contact_name' => 'nullable|string|max:255',
-            'industry_id' => 'nullable|exists:variable_industries,id',
-            'lead_source_id' => 'nullable|exists:variable_lead_sources,id',
-            'customer_type_id' => 'nullable|exists:variable_customer_types,id',
+            'password' => 'required|string|min:8',
         ]);
-
+    
         try {
+            // Create the user
             $user = User::create([
-                'type' => 'Client', // Explicitly set type as Client for main customer
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => bcrypt($validated['password']),
+                'type' => 'Client',
                 'active' => true,
             ]);
-
-            $user->clientDetails()->create($request->only([
-                'industry_id', 'lead_source_id', 'customer_type_id', 'address', 'town_city', 'county', 'postcode',
-                'contact_name', 'contact_position', 'sic_code', 'customer_notes',
-            ]));
-
-            return response()->json($user);
+    
+            // Create the client details
+            $user->clientDetails()->create([
+                'contact_name' => $validated['contact_name'],
+            ]);
+    
+            return response()->json($user->load('clientDetails'));
+    
         } catch (\Exception $e) {
-            // ... error handling ...
+            return response()->json(['message' => 'Failed to create client account.'], 500);
         }
     }
 
@@ -232,6 +253,7 @@ public function getDefaultAddress($id)
 
     return response()->json([
         'address' => $userClient->address,
+        'address_2' => $userClient->address,
         'town_city' => $userClient->town_city,
         'county' => $userClient->county,
         'postcode' => $userClient->postcode,
@@ -250,6 +272,7 @@ public function getClientJobs($id)
                 'id' => $job->id,
                 'job_id' => $job->job_id,
                 'address' => $job->address,
+                'address_2' => $job->address,
                 'town_city' => $job->town_city,
                 'postcode' => $job->postcode,
                 'created_at' => $job->created_at,
@@ -261,6 +284,32 @@ public function getClientJobs($id)
         });
 
     return response()->json($jobs);
+}
+public function destroy($id)
+{
+    try {
+        $user = User::findOrFail($id);
+        
+        // Check if user has any jobs
+        if ($user->jobs()->count() > 0) {
+            return response()->json([
+                'message' => 'Cannot delete customer with existing jobs. Please delete all jobs first.',
+                'hasJobs' => true
+            ], 422);
+        }
+        
+        // Delete related records first
+        if ($user->clientDetails) {
+            $user->clientDetails->delete();
+        }
+        
+        // Delete the user
+        $user->delete();
+        
+        return response()->json(['message' => 'Customer deleted successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Error deleting customer: ' . $e->getMessage()], 500);
+    }
 }
     
 }

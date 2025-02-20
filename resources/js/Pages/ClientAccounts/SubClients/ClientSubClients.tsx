@@ -140,9 +140,9 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
     try {
       await axios.delete(`/sub-clients/${id}`);
       setData((prev) => prev.filter((item) => item.id !== id));
-      toast.success("Sub-client successfully deleted!");
+      toast.success("Sub-User successfully deleted!");
     } catch {
-      toast.error("Failed to delete sub-client.");
+      toast.error("Failed to delete sub-User.");
     }
   };
 
@@ -204,14 +204,14 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
       <header className="flex justify-between items-center">
         <div className="space-y-1">
           <h2 className="text-xl font-semibold leading-7 text-gray-900">
-            Manage Sub-Clients
+            Manage Sub-Users
           </h2>
           <p className="text-sm text-muted-foreground">
-            Add, edit, or delete sub-clients for this customer.
+            Add, edit, or delete sub-user for this customer.
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Button onClick={() => setIsAddDialogOpen(true)}>Add Sub-Client</Button>
+          <Button onClick={() => setIsAddDialogOpen(true)}>Add Sub-Users</Button>
         </div>
       </header>
       <Separator className="my-4" />
@@ -227,69 +227,71 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
       >
         <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
-            <DialogTitle>Add Sub-Client</DialogTitle>
+            <DialogTitle>Add Sub-Users</DialogTitle>
             <DialogDescription>
-              Fill in the details for the new sub-client below.
+              Fill in the details for the new sub-user below.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={addFormData.name}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-              {formErrors.name && (
-                <p className="text-red-600 text-sm">{formErrors.name}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={addFormData.email}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-              {formErrors.email && (
-                <p className="text-red-600 text-sm">{formErrors.email}</p>
-              )}
-            </div>
-            {/* Remove this block
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={addFormData.password}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-              {formErrors.password && (
-                <p className="text-red-600 text-sm">{formErrors.password}</p>
-              )}
-            </div>
-            */}
-            <div>
-              <Label htmlFor="landline">Landline</Label>
-              <Input
-                id="landline"
-                name="landline"
-                value={addFormData.landline}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-            </div>
-            <div>
-              <Label htmlFor="mobile">Mobile</Label>
-              <Input
-                id="mobile"
-                name="mobile"
-                value={addFormData.mobile}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
+          <div className="bg-white border rounded-lg p-6">
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={addFormData.name}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.name && (
+                  <p className="text-red-600 text-sm">{formErrors.name}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={addFormData.email}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.email && (
+                  <p className="text-red-600 text-sm">{formErrors.email}</p>
+                )}
+              </div>
+              {/* Remove this block
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={addFormData.password}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.password && (
+                  <p className="text-red-600 text-sm">{formErrors.password}</p>
+                )}
+              </div>
+              */}
+              <div>
+                <Label htmlFor="landline">Landline</Label>
+                <Input
+                  id="landline"
+                  name="landline"
+                  value={addFormData.landline}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+              </div>
+              <div>
+                <Label htmlFor="mobile">Mobile</Label>
+                <Input
+                  id="mobile"
+                  name="mobile"
+                  value={addFormData.mobile}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>

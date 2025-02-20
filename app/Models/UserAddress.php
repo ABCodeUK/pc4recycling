@@ -10,7 +10,7 @@ class UserAddress extends Model
     use HasFactory;
 
     protected $table = 'users_addresses'; // Explicitly set the table name
-    protected $fillable = ['address', 'town_city', 'county', 'postcode', 'parent_id'];
+    protected $fillable = ['address', 'address_2', 'town_city', 'county', 'postcode', 'parent_id'];
 
     public function parentUser()
     {

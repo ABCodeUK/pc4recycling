@@ -92,59 +92,55 @@ export default function ClientAccounts({
   const handleAddSubmit = async () => {
     resetFormErrors();
     try {
-      setIsSubmitting(true);
-      const generatedPassword = Math.random().toString(36).slice(-8);
-      
-      const formData = new FormData();
-      formData.append('name', addFormData.name);
-      formData.append('email', addFormData.email);
-      formData.append('contact_name', addFormData.contact_name);
-      formData.append('type', 'client');
-      formData.append('password', generatedPassword);
-      formData.append('password_confirmation', generatedPassword);
-      
-      const response = await axios.post("/customers/store", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+        setIsSubmitting(true);
+        const generatedPassword = Math.random().toString(36).slice(-8);
+        
+        // Create the request data
+        const formData = {
+            name: addFormData.name,
+            email: addFormData.email,
+            contact_name: addFormData.contact_name,
+            password: generatedPassword,
+            password_confirmation: generatedPassword,
+        };
+        
+        const response = await axios.post("/customers/store", formData);
+        
+        if (response.data) {
+            toast.success("Client successfully added!");
+            setIsAddDialogOpen(false);
+            resetAddForm();
+            
+            // Redirect to edit page
+            if (response.data.id) {
+                window.location.href = `/customers/${response.data.id}/edit`;
+            }
         }
-      });
-      
-      if (response.data) {
-        setData((prev) => [...prev, response.data]);
-        toast.success("Client successfully added!");
-        setIsAddDialogOpen(false);
-        resetAddForm();
-  
-        if (response.data.id) {
-          window.location.href = `/customers/${response.data.id}/edit`;
-        }
-      }
     } catch (error: any) {
-      console.error('Error response:', error.response?.data);
-      if (error.response?.data?.errors) {
-        setFormErrors(error.response.data.errors);
-        Object.values(error.response.data.errors).forEach((error: any) => {
-          toast.error(error[0]);
-        });
-      } else {
-        toast.error("Failed to add client.");
-      }
+        if (error.response?.data?.errors) {
+            setFormErrors(error.response.data.errors);
+            Object.values(error.response.data.errors).forEach((error: any) => {
+                toast.error(error[0]);
+            });
+        } else {
+            toast.error("Failed to add client.");
+        }
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await axios.delete(`/customers/delete/${id}`);
-      if (response.status === 200) {
-        setData((prev) => prev.filter((item) => item.id !== id));
-        toast.success("Client successfully deleted!");
+      const response = await axios.delete(`/customers/${id}`);
+      setData((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Client successfully deleted!");
+    } catch (error: any) {
+      if (error.response?.data?.hasJobs) {
+        toast.error(error.response.data.message);
       } else {
-        toast.error("Failed to delete client. Please try again.");
+        toast.error("Error deleting client.");
       }
-    } catch (error) {
-      toast.error("Error deleting client. Please check the logs.");
     }
   };
 

@@ -63,10 +63,12 @@ export default function ClientAccountsEdit({
     customer_type_id?: number | null;
     industry_id?: number | null;
     address?: string | null;
+    address_2?: string | null;
     town_city?: string | null;
     county?: string | null;
     postcode?: string | null;
     contact_name?: string | null;
+    contact_position?: string | null;  // Add this line
     sic_code?: string | null;
     customer_notes?: string | null;
     lead_source_id?: string | null;
@@ -79,14 +81,17 @@ export default function ClientAccountsEdit({
     return <div>Loading...</div>;
   }
 
+  // In the useState initialization, add type field
   const [formData, setFormData] = useState({
     name: user_edit.name || "",
     email: user_edit.email || "",
-    position: user_edit.position || "",
+    position: client_details.contact_position || "", // Change this line
     landline: user_edit.landline || "",
     mobile: user_edit.mobile || "",
     active: user_edit.active || false,
+    type: "client", // Add this line
     address: client_details.address || "",
+    address_2: client_details.address_2 || "",
     town_city: client_details.town_city || "",
     county: client_details.county || "",
     postcode: client_details.postcode || "",
@@ -121,49 +126,62 @@ export default function ClientAccountsEdit({
   const handleSwitchChange = (checked: boolean) => {
     setFormData((prev) => ({ ...prev, active: checked }));
   };
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (e: React.MouseEvent) => {
+    e.preventDefault();
     resetFormErrors();
     try {
       setIsSubmitting(true);
-  
-      // Prepare data for the backend
       const payload = {
-        ...formData,
-        customer_type_id: formData.customer_type_id || null, // Send null if not selected
-        industry_id: formData.industry_id || null, // Send null if not selected
+          ...formData,
+          type: "Client",
+          position: formData.position || null, // Explicitly include position
+          customer_type_id: formData.customer_type_id === "null" ? null : formData.customer_type_id,
+          industry_id: formData.industry_id === "null" ? null : formData.industry_id,
+          lead_source_id: formData.lead_source_id === "null" ? null : formData.lead_source_id,
+          active: Boolean(formData.active),
       };
-  
-      const response = await axios.put(`/customers/update/${user_edit.id}`, payload);
-  
-      if (response.status === 200) {
-        toast.success("Client successfully updated!");
-      } else {
-        toast.error("Failed to update client. Please try again.");
-      }
+
+        console.log('Sending payload:', payload); // Debug log
+
+        const response = await axios.put(`/customers/update/${user_edit.id}`, payload);
+
+        if (response.status === 200) {
+            toast.success("Client successfully updated!");
+            window.location.reload();
+        }
     } catch (error: any) {
-      if (error.response?.data?.errors) {
-        setFormErrors(error.response.data.errors);
-      } else {
-        toast.error("An error occurred while updating the client.");
-      }
+        console.error('Update error:', error.response?.data); // Debug log
+        if (error.response?.data?.errors) {
+            const errors = error.response.data.errors;
+            Object.entries(errors).forEach(([key, value]) => {
+                toast.error(`${key}: ${value}`);
+            });
+            setFormErrors(error.response.data.errors);
+        } else if (error.response?.data?.message) {
+            toast.error(error.response.data.message);
+        } else {
+            toast.error("An error occurred while updating the client.");
+        }
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
 
   const handleDeleteAccount = async () => {
     try {
-      const response = await axios.delete(
-        `/customers/delete/${user_edit.id}`
-      );
+      // Update the endpoint to match the route in web.php
+      const response = await axios.delete(`/customers/delete/${user_edit.id}`);
+      
       if (response.status === 200) {
         toast.success("Client account successfully deleted!");
         window.location.href = "/customers";
-      } else {
-        toast.error("Failed to delete account. Please try again.");
       }
-    } catch (error) {
-      toast.error("An error occurred while deleting the account.");
+    } catch (error: any) {
+      if (error.response?.data?.hasJobs) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error(error.response?.data?.message || "An error occurred while deleting the account.");
+      }
     }
   };
 
@@ -289,12 +307,23 @@ export default function ClientAccountsEdit({
         </div>
         <Separator />
         <div className="grid grid-cols-3 items-center gap-4">
-          <Label htmlFor="address" className="text-left">Address</Label>
+          <Label htmlFor="address" className="text-left">Address Line 1</Label>
           <div className="col-span-2">
             <Input
               id="address"
               name="address"
               value={formData.address}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="address_2" className="text-left">Address Line 2</Label>
+          <div className="col-span-2">
+            <Input
+              id="address_2"
+              name="address_2"
+              value={formData.address_2}
               onChange={handleInputChange}
             />
           </div>
@@ -405,19 +434,41 @@ export default function ClientAccountsEdit({
           <div className="col-span-2">
             <Select
               onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, lead_source_id: value }))
+                setFormData((prev) => ({ ...prev, lead_source_id: value === "null" ? "" : value }))
               }
-              value={String(formData.lead_source_id || "")}
+              value={formData.lead_source_id || "null"}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Lead Source">
-                  {lead_sources.find((source) => String(source.id) === formData.lead_source_id)?.ls_name || "Select Lead Source"}
-                </SelectValue>
+                <SelectValue placeholder="Select Lead Source" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="null">None</SelectItem>
                 {lead_sources.map((source) => (
                   <SelectItem key={source.id} value={String(source.id)}>
                     {source.ls_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="customer_type_id" className="text-left">Customer Type</Label>
+          <div className="col-span-2">
+            <Select
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, customer_type_id: value === "null" ? "" : value }))
+              }
+              value={formData.customer_type_id || "null"}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Customer Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="null">None</SelectItem>
+                {customer_types.map((type) => (
+                  <SelectItem key={type.id} value={String(type.id)}>
+                    {type.ct_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -429,16 +480,15 @@ export default function ClientAccountsEdit({
           <div className="col-span-2">
             <Select
               onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, industry_id: value }))
+                setFormData((prev) => ({ ...prev, industry_id: value === "null" ? "" : value }))
               }
-              value={String(formData.industry_id || "")}
+              value={formData.industry_id || "null"}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Industry">
-                  {industries.find((industry) => String(industry.id) === formData.industry_id)?.in_name || "Select Industry"}
-                </SelectValue>
+                <SelectValue placeholder="Select Industry" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="null">None</SelectItem>
                 {industries.map((industry) => (
                   <SelectItem key={industry.id} value={String(industry.id)}>
                     {industry.in_name}

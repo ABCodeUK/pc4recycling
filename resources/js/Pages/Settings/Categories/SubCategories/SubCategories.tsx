@@ -44,6 +44,7 @@ export default function SubCategories({ parentId }: { parentId: number }) {
       try {
         const response = await axios.get(`/sub-categories/${parentId}`);
         setData(response.data);
+        console.log('Fetched data:', response.data); // Add this line
       } catch (error) {
         toast.error("Failed to fetch subcategories.");
       }
@@ -132,14 +133,13 @@ export default function SubCategories({ parentId }: { parentId: number }) {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // In the columnsWithActions definition
   const columnsWithActions = [
-    ...subCategoryColumns.filter((column) =>
-      ["name", "default_weight"].includes(column.id as string)
-    ), // Include only Name and Default Weight from imported columns
+    ...subCategoryColumns,
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }: { row: any }) => (
+      cell: ({ row }: { row: { original: SubCategory } }) => (
         <div className="flex justify-end space-x-2">
           <Button
             variant="outline"

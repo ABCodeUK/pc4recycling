@@ -45,12 +45,23 @@ import axios from "axios";
 import { toast } from "sonner";
 
 // Update the Props interface to include customers
+// Update the Props interface to match the expected types
 interface Props {
   jobs: Job[];
-  customers: { id: number; name: string }[];  // Add this line
-  collection_types: string[];
-  sanitisation_options: string[];
-  status_options: string[];  // Add this line
+  customers: { 
+    id: number; 
+    name: string;
+    company_name?: string; 
+  }[];
+  collection_types: Array<{
+    id: number;
+    colt_name: string;
+  }>;
+  sanitisation_options: Array<{
+    id: number;
+    ds_name: string;
+  }>;
+  status_options: string[];
   pagination: {
     total: number;
     currentPage: number;
@@ -114,48 +125,63 @@ export default function Collections({ jobs, customers, collection_types, sanitis
     setAddFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Update the handleAddSubmit function
   const handleAddSubmit = async () => {
-    resetFormErrors();
-    
-    // Validate required fields
-    const errors = {};
-    if (!addFormData.job_id && !nextJobId) (errors as Record<string, string>)['job_id'] = 'Job ID is required';
-    if (!addFormData.client_id) (errors as Record<string, string>)['client_id'] = 'Customer is required';
-    if (!addFormData.collection_date) (errors as Record<string, string>)['collection_date'] = 'Collection date is required';
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      const formData = {
-        job_id: addFormData.job_id || nextJobId,
-        client_id: addFormData.client_id,
-        collection_date: addFormData.collection_date,
-        job_status: addFormData.job_status
-      };
-
-      const response = await axios.post("/collections", formData);
-      if (response.data) {
-        toast.success("Job created successfully!");
-        // Always redirect to edit page after creation
-        window.location.href = `/collections/${response.data.id}/edit`;
+      resetFormErrors();
+      
+      // Validate required fields
+      const errors = {};
+      if (!addFormData.job_id && !nextJobId) (errors as Record<string, string>)['job_id'] = 'Job ID is required';
+      if (!addFormData.client_id) (errors as Record<string, string>)['client_id'] = 'Customer is required';
+  
+      if (Object.keys(errors).length > 0) {
+          setFormErrors(errors);
+          toast.error('Please fill in all required fields');
+          return;
       }
-    } catch (error: any) {
-      if (error.response?.data?.errors) {
-        setFormErrors(error.response.data.errors);
-        const firstError = Object.values(error.response.data.errors)[0];
-        toast.error(Array.isArray(firstError) ? firstError[0] : firstError);
-      } else {
-        toast.error("Failed to create job. Please try again.");
+  
+      try {
+          setIsSubmitting(true);
+          const formattedData = {
+              job_id: addFormData.job_id || nextJobId,
+              client_id: parseInt(addFormData.client_id),
+              collection_date: addFormData.collection_date || null,
+              job_status: addFormData.job_status || "Needs Scheduling",
+              staff_collecting: "",
+              vehicle: "",
+              address: "",
+              town_city: "",
+              postcode: "",
+              onsite_contact: "",
+              onsite_number: "",
+              onsite_email: "",
+              collection_type: null,
+              data_sanitisation: "",
+              sla: "",
+              instructions: ""
+          };
+  
+          const response = await axios.post('/collections', formattedData, {
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+              }
+          });
+  
+          if (response.status === 201 || response.status === 200) {
+              toast.success('Job created successfully');
+              window.location.href = `/collections/${response.data.id}`;
+          }
+      } catch (error: any) {
+          console.error('Create error:', error.response?.data || error);
+          const errorMessage = error.response?.data?.message || "Failed to create job. Please try again.";
+          toast.error(errorMessage);
+      } finally {
+          setIsSubmitting(false);
+          setIsAddDialogOpen(false);
       }
-    } finally {
-      setIsSubmitting(false);
-    }
-};
+  };
 
   const columnsWithActions = [
     ...columns,
@@ -263,7 +289,7 @@ export default function Collections({ jobs, customers, collection_types, sanitis
                         )}
                       </div>
                       <div>
-                        <Label htmlFor="collection_date">Collection Date*</Label>
+                        <Label htmlFor="collection_date">Collection Date (Optional)</Label>
                         <Input
                           id="collection_date"
                           name="collection_date"
@@ -285,11 +311,13 @@ export default function Collections({ jobs, customers, collection_types, sanitis
                             <SelectValue placeholder="Select Status" />
                           </SelectTrigger>
                           <SelectContent>
-                            {status_options.map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
+                            {status_options
+                              .filter(status => ['Needs Scheduling', 'Scheduled', 'Postponed'].includes(status))
+                              .map((status) => (
+                                <SelectItem key={status} value={status}>
+                                  {status}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         {(formErrors as Record<string, string>).job_status && (

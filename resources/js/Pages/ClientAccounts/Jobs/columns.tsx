@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/Components/ui/badge";
 import { Button } from "@/Components/ui/button";
 import { Eye, User } from "lucide-react";
+import { ArrowUpDown } from "lucide-react"; // Add this import
 
 export interface ClientJob {
   id: number;
@@ -33,7 +34,14 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
   {
     accessorKey: "job_id",
     header: () => <span className="font-bold">ID</span>,
-    cell: ({ row }) => <div className="font-medium text-primary">{row.original.job_id}</div>,
+    cell: ({ row }) => (
+      <a 
+        href={`/collections/${row.original.id}`}
+        className="text-primary font-medium"
+      >
+        {row.original.job_id}
+      </a>
+    ),
   },
   {
     accessorKey: "address",
@@ -55,7 +63,16 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
   },
   {
     accessorKey: "collection_date",
-    header: () => <span className="font-bold">Collection</span>,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="flex items-center"
+      >
+        <span className="font-bold">Collection</span>
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => (
       <div>
         {row.original.collection_date

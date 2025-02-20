@@ -19,6 +19,7 @@ class UserClient extends Model
     protected $fillable = [
         'user_id',
         'address',
+        'address_2',
         'town_city',
         'county',
         'postcode',
@@ -88,7 +89,7 @@ class UserClient extends Model
      */
     public function getFullAddressAttribute()
     {
-        return "{$this->address}, {$this->town_city}, {$this->county}, {$this->postcode}";
+        return "{$this->address}, {$this->address_2}, {$this->town_city}, {$this->county}, {$this->postcode}";
     }
 
 }

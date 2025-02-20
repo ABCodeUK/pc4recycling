@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/Components/ui/badge";
 import { Button } from "@/Components/ui/button";
 import { Edit, Trash2, User } from "lucide-react";
+import { ArrowUpDown } from "lucide-react"; // Add this import
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -52,28 +53,38 @@ export const columns: ColumnDef<Job>[] = [
     cell: (info) => info.row.original.client?.name || "N/A",
   },
   {
-    accessorKey: "address",
-    header: () => <span className="font-bold">Address</span>,
-    cell: (info) => {
-      const row = info.row.original;
-      return `${row.town_city}, ${row.postcode}`;
-    },
-  },
-  {
-    accessorKey: "created_at",
-    header: () => <span className="font-bold">Booked</span>,
-    cell: (info) => {
-      const date = info.getValue() as string;
-      return date ? new Date(date).toLocaleDateString() : "N/A";
-    },
-  },
-  {
     accessorKey: "collection_date",
-    header: () => <span className="font-bold">Collection</span>,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="flex items-center"
+      >
+        <span className="font-bold">Date Collected</span>
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: (info) => {
       const date = info.getValue() as string;
-      return date ? new Date(date).toLocaleDateString() : "Not Scheduled";
+      if (!date) return "Not Collected";
+      
+      const collectionDate = new Date(date);
+      const today = new Date();
+      
+      // Only show days ago if the date is in the past
+      if (collectionDate < today) {
+        const diffTime = Math.abs(today.getTime() - collectionDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return `${collectionDate.toLocaleDateString()} (${diffDays} days ago)`;
+      }
+      
+      return collectionDate.toLocaleDateString();
     },
+  },
+  {
+    accessorKey: "processed_at",
+    header: () => <span className="font-bold">Date Processed</span>,
+    cell: () => "-",
   },
   {
     accessorKey: "items",
@@ -82,31 +93,43 @@ export const columns: ColumnDef<Job>[] = [
   },
   {
     accessorKey: "staff_collecting",
-    header: () => <span className="font-bold">Driver</span>,
+    header: () => <span className="font-bold">Staff</span>,
     cell: (info) => (
       <div className="flex items-center gap-2">
         <User className="h-4 w-4" />
-        <span>{String(info.getValue()) || "Not Assigned"}</span>
+        <span>TBC</span>
       </div>
     ),
   },
   {
     accessorKey: "job_status",
     header: () => <span className="font-bold">Status</span>,
-    cell: (info) => {
-      const status = info.getValue() as string;
-      const variant = {
-        'Needs Scheduling': 'destructive',
-        'Request Pending': 'warning',
-        'Scheduled': 'default',
-        'Postponed': 'secondary',
-        'Collected': 'success',
-        'Processing': 'default',
-        'Complete': 'success',
-        'Canceled': 'destructive',
-      }[status] || 'default';
+    cell: ({ row }) => {
+      const status = row.getValue("job_status") as string;
+      let color: string;
 
-      return <Badge variant={variant as "destructive" | "warning" | "default" | "secondary" | "success" | "outline"}>{status}</Badge>;
+      switch (status) {
+        case 'Scheduled':
+          color = 'bg-orange-100 text-orange-800 border-orange-200';
+          break;
+        case 'Postponed':
+        case 'Cancelled':
+          color = 'bg-red-100 text-red-800 border-red-200';
+          break;
+        case 'Collected':
+        case 'Processing':
+        case 'Complete':
+          color = 'bg-green-100 text-green-800 border-green-200';
+          break;
+        default:
+          color = 'bg-gray-100 text-gray-800 border-gray-200';
+      }
+
+      return (
+        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${color}`}>
+          {status}
+        </div>
+      );
     },
   }
 ];

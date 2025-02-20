@@ -32,7 +32,14 @@ export const columns: ColumnDef<Client>[] = [
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div>{row.original.name}</div>,
+    cell: ({ row }) => (
+      <a 
+        href={`/customers/${row.original.id}`}
+        className="text-primary font-medium"
+      >
+        {row.original.name}
+      </a>
+    ),
   },
   {
     accessorKey: "contact_name",

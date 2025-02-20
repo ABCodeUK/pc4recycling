@@ -22,27 +22,34 @@ class ClientAddressController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'address' => 'required|string|max:255',
-            'town_city' => 'required|string|max:255',
-            'county' => 'required|string|max:255',
-            'postcode' => 'required|string|max:255',
-            'parent_id' => 'required|exists:users,id',
-        ]);
+        try {
+            $validated = $request->validate([
+                'address' => 'required|string|max:255',
+                'address_2' => 'nullable|string|max:255',
+                'town_city' => 'required|string|max:255',
+                'county' => 'nullable|string|max:255',
+                'postcode' => 'required|string|max:255',
+                'parent_id' => 'required|exists:users,id',
+            ]);
 
-        $userAddress = UserAddress::create($validated);
-        return response()->json($userAddress, 201);
+            $userAddress = UserAddress::create($validated);
+            return response()->json($userAddress, 201);
+        } catch (\Exception $e) {
+            \Log::error('Address creation failed: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to create address',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Update an existing userAddress.
-     */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'address' => 'required|string|max:255',
+            'address_2' => 'nullable|string|max:255',
             'town_city' => 'required|string|max:255',
-            'county' => 'required|string|max:255',
+            'county' => 'nullable|string|max:255',
             'postcode' => 'required|string|max:255',
         ]);
 

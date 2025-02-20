@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class JobDocument extends Model
 {
@@ -14,7 +15,17 @@ class JobDocument extends Model
         'file_path',
         'mime_type',
         'file_size',
+        'uuid'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($document) {
+            $document->uuid = Str::uuid();
+        });
+    }
 
     public function job()
     {

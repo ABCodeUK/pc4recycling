@@ -37,6 +37,7 @@ export interface Job {
   data_sanitisation: string;
   sla: string | null;
   instructions: string | null;
+  items_count: number; // Add this property
 }
 
 export const columns: ColumnDef<Job>[] = [
@@ -86,10 +87,11 @@ export const columns: ColumnDef<Job>[] = [
     header: () => <span className="font-bold">Date Processed</span>,
     cell: () => "-",
   },
+  // Update the items column in the columns array
   {
     accessorKey: "items",
     header: () => <span className="font-bold">Items</span>,
-    cell: () => "0",
+    cell: ({ row }) => `${row.original.items_count || 0} items`,
   },
   {
     accessorKey: "staff_collecting",

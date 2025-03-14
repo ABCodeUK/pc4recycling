@@ -15,6 +15,8 @@ import { NavSecond } from "@/Components/nav-second";
 import { NavSettings } from "@/Components/nav-settings";
 import { NavTools } from "@/Components/nav-tools";
 import { NavUser } from "@/Components/nav-user";
+import { ClientOnly, StaffOnly, Role } from '@/Components/Auth/Can';
+import { useAuth } from '@/contexts/AuthContext';
 
 import {
   Sidebar,
@@ -67,6 +69,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Customers",
         url: "/customers/",
         icon: Users,
+        roles: "Developer|Administrator|Employee|Manager|Director",
       },
     ],
     navRecycling: [
@@ -173,10 +176,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <NavMain items={updatedData.navMain} />
-          <NavRecycling items={updatedData.navRecycling} />
-          <NavSecond items={updatedData.navSecond} />
-          <NavTools items={updatedData.navTools} />
-          <NavSettings items={updatedData.navSettings} />
+          <Role role="Developer|Administrator|Employee|Manager|Director"><NavRecycling items={updatedData.navRecycling} /></Role>
+          <Role role="Developer|Administrator|Employee|Manager|Director"><NavSecond items={updatedData.navSecond} /></Role>
+          <Role role="Developer|Administrator|Employee|Manager|Director"><NavTools items={updatedData.navTools} /></Role>
+          <Role role="Developer|Administrator|"><NavSettings items={updatedData.navSettings} /></Role>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>

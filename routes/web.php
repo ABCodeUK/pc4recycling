@@ -28,7 +28,9 @@ use App\Http\Controllers\ClientAddressController;
 use App\Http\Controllers\ClientJobController;
 use App\Http\Controllers\ClientSubController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobItemController;
 use App\Http\Controllers\JobDocumentController;
+use App\Http\Controllers\JobAuditController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -55,7 +57,6 @@ Route::middleware('auth')->group(function () {
 
 // Settings: CATEGORIES
 Route::middleware('auth')->group(function () {
-    // Main Categories Routes
     Route::get('/settings/categories', [CategoryController::class, 'index'])->name('categories.index'); // Categories List
     Route::post('/settings/categories', [CategoryController::class, 'store'])->name('categories.store'); // Categories Store
     Route::put('/settings/categories/{id}', [CategoryController::class, 'update'])->name('categories.update'); // Categories Update
@@ -98,13 +99,13 @@ Route::middleware('auth')->group(function () {
     // Collections
     Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])->name('collections.next-job-id');
     Route::get('/collections/', [JobController::class, 'index'])->name('collections.index');
-    // Add this with your other collection routes
     Route::post('/collections', [JobController::class, 'store'])->name('collections.store');
     Route::get('/collections/{id}', [JobController::class, 'show'])->name('collections.show'); // Add this line
     Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
     Route::put('/collections/{id}', [JobController::class, 'update'])->name('collections.update');
     Route::delete('/collections/{id}', [JobController::class, 'destroy'])->name('collections.destroy');
-    
+    Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])->name('collections.next-job-id');
+
     // Processing
     Route::get('/processing/', [JobController::class, 'index'])->name('processing.index'); // Collections List
     Route::post('/processing/', [JobController::class, 'store'])->name('processing.store'); // Collections Store
@@ -117,6 +118,18 @@ Route::middleware('auth')->group(function () {
     Route::put('/completed/{id}', [JobController::class, 'update'])->name('completed.update'); // Collections Update
     Route::delete('/completed/{id}', [JobController::class, 'destroy'])->name('completed.destroy'); // Collections Delete
     Route::get('/completed/{id}/edit', [JobController::class, 'edit'])->name('completed.edit'); // Collections Edit
+
+
+// Job Items routes
+Route::get('/api/categories', [CategoryController::class, 'getCategories']);
+Route::get('/api/jobs/{jobId}/items', [JobItemController::class, 'index']);
+Route::post('/api/jobs/{jobId}/items', [JobItemController::class, 'store']);
+Route::put('/api/jobs/{jobId}/items/{itemId}', [JobItemController::class, 'update']);
+Route::delete('/api/jobs/{jobId}/items/{itemId}', [JobItemController::class, 'destroy']);
+Route::get('/api/jobs/{jobId}/generate-item-number', [JobItemController::class, 'generateItemNumber']);
+Route::post('/api/jobs/{jobId}/mark-collected', [JobController::class, 'markAsCollected']);
+// Inside the middleware('auth')->group(function () { ... }) block
+Route::post('/collections/{id}/mark-collected', [JobController::class, 'markAsCollected'])->name('collections.mark-collected');
 });
 
 // Staff Accounts
@@ -252,6 +265,10 @@ Route::get('/api/upcoming-jobs', [DashboardController::class, 'getUpcomingJobs']
     ->middleware(['auth'])
     ->name('dashboard.upcoming-jobs');
 
+    Route::get('/api/driver-jobs', [DashboardController::class, 'getDriverJobs'])
+    ->middleware(['auth'])
+    ->name('dashboard.driver-jobs');
+
     // Sub-client routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/customers/{id}/sub-clients', [ClientSubController::class, 'index']);
@@ -260,16 +277,18 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/sub-clients/{id}', [ClientSubController::class, 'destroy']);
 });
 
-Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])
-    ->name('collections.next-job-id');
-
-
+// Job Documents routes
 Route::middleware('auth')->group(function () {
-    // Job Documents routes
-    Route::post('/collections/{id}/documents', [JobDocumentController::class, 'store'])
-        ->name('job.documents.store');
-    Route::delete('/collections/{jobId}/documents/{documentId}', [JobDocumentController::class, 'destroy'])
-        ->name('job.documents.destroy');
-    Route::get('/documents/{jobId}/{uuid}', [JobDocumentController::class, 'show'])
-    ->name('documents.show');
+    Route::post('/collections/{id}/documents', [JobDocumentController::class, 'store'])->name('job.documents.store');
+    Route::delete('/collections/{jobId}/documents/{documentId}', [JobDocumentController::class, 'destroy'])->name('job.documents.destroy');
+    Route::get('/documents/{jobId}/{uuid}', [JobDocumentController::class, 'show'])->name('documents.show');
+});
+
+// Job Audit routes
+// Inside the Job Audit routes group
+Route::middleware('auth')->group(function () {
+    Route::get('/api/jobs/{jobId}/audit', [JobAuditController::class, 'index']);
+    Route::post('/api/jobs/{jobId}/audit', [JobAuditController::class, 'store']);
+    Route::put('/api/jobs/{jobId}/audit/{entryId}', [JobAuditController::class, 'update']);
+    Route::delete('/api/jobs/{jobId}/audit/{entryId}', [JobAuditController::class, 'destroy']);
 });

@@ -35,6 +35,7 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
   const [defaultAddress, setDefaultAddress] = useState<UserAddress | null>(null);
   const [addFormData, setAddFormData] = useState({
     address: "",
+    address_2: "",
     town_city: "",
     county: "",
     postcode: "",
@@ -42,6 +43,7 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
   const [editFormData, setEditFormData] = useState<UserAddress | null>(null);
   const [formErrors, setFormErrors] = useState({
     address: "",
+    address_2: "",
     town_city: "",
     county: "",
     postcode: "",
@@ -62,15 +64,19 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
         const defaultResponse = await axios.get(`/customers/${parentId}/default-address`);
         const defaultAddressData = defaultResponse.data;
 
+        // In the useEffect where default address is fetched
         if (defaultAddressData) {
           const defaultRow: UserAddress = {
             id: -1, // Unique identifier for the default address
             address: defaultAddressData.address || "",
+            address_2: defaultAddressData.address_2 || "", // Make sure this is properly mapped
             town_city: defaultAddressData.town_city || "",
             county: defaultAddressData.county || "",
             postcode: defaultAddressData.postcode || "",
             user_id: parentId,
           };
+          console.log('Default address data:', defaultAddressData); // Add this debug log
+          console.log('Created default row:', defaultRow); // Add this debug log
           setDefaultAddress(defaultRow);
         }
 
@@ -86,6 +92,7 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
   const resetFormErrors = () =>
     setFormErrors({
       address: "",
+      address_2: "",
       town_city: "",
       county: "",
       postcode: "",
@@ -94,6 +101,7 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
   const resetAddForm = () => {
     setAddFormData({
       address: "",
+      address_2: "",
       town_city: "",
       county: "",
       postcode: "",
@@ -116,17 +124,33 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
 
   const handleAddSubmit = async () => {
     try {
-      const response = await axios.post("/addresses", {
+      const payload = {
         ...addFormData,
         parent_id: parentId,
-      });
+      };
+      
+      console.log('Sending payload:', payload); // Debug log
+      
+      const response = await axios.post("/addresses", payload);
+      
       setData((prev) => [...prev, response.data]);
       toast.success("Address successfully added!");
       setIsAddDialogOpen(false);
       resetAddForm();
     } catch (error: any) {
-      toast.error("Failed to add address.");
-      setFormErrors(error.response?.data.errors || {});
+      console.error('Error response:', error.response?.data); // Debug log
+      
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        Object.entries(errors).forEach(([key, value]) => {
+          toast.error(`${key}: ${value}`);
+        });
+        setFormErrors(error.response.data.errors);
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to add address. Please try again.");
+      }
     }
   };
 
@@ -248,55 +272,68 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
               Fill in the details for the new address below.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4">
-            {/* Address Form */}
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                name="address"
-                value={addFormData.address}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-              {formErrors.address && (
-                <p className="text-red-600 text-sm">{formErrors.address}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="town_city">Town / City</Label>
-              <Input
-                id="town_city"
-                name="town_city"
-                value={addFormData.town_city}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-              {formErrors.town_city && (
-                <p className="text-red-600 text-sm">{formErrors.town_city}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="county">County</Label>
-              <Input
-                id="county"
-                name="county"
-                value={addFormData.county}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-              {formErrors.county && (
-                <p className="text-red-600 text-sm">{formErrors.county}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="postcode">Postcode</Label>
-              <Input
-                id="postcode"
-                name="postcode"
-                value={addFormData.postcode}
-                onChange={(e) => handleInputChange(e, "add")}
-              />
-              {formErrors.postcode && (
-                <p className="text-red-600 text-sm">{formErrors.postcode}</p>
-              )}
+          <div className="bg-white border rounded-lg p-6">
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="address">Address Line 1*</Label>
+                <Input
+                  id="address"
+                  name="address"
+                  value={addFormData.address}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.address && (
+                  <p className="text-red-600 text-sm">{formErrors.address}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="address_2">Address Line 2*</Label>
+                <Input
+                  id="address_2"
+                  name="address_2"
+                  value={addFormData.address_2}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.address_2 && (
+                  <p className="text-red-600 text-sm">{formErrors.address_2}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="town_city">Town / City*</Label>
+                <Input
+                  id="town_city"
+                  name="town_city"
+                  value={addFormData.town_city}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.town_city && (
+                  <p className="text-red-600 text-sm">{formErrors.town_city}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="county">County</Label>
+                <Input
+                  id="county"
+                  name="county"
+                  value={addFormData.county}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.county && (
+                  <p className="text-red-600 text-sm">{formErrors.county}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="postcode">Postcode*</Label>
+                <Input
+                  id="postcode"
+                  name="postcode"
+                  value={addFormData.postcode}
+                  onChange={(e) => handleInputChange(e, "add")}
+                />
+                {formErrors.postcode && (
+                  <p className="text-red-600 text-sm">{formErrors.postcode}</p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -320,55 +357,68 @@ export default function ClientAddresses({ parentId }: { parentId: number }) {
               Update the details for the address below.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4">
-            {/* Edit Form */}
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                name="address"
-                value={editFormData?.address || ""}
-                onChange={(e) => handleInputChange(e, "edit")}
-              />
-              {formErrors.address && (
-                <p className="text-red-600 text-sm">{formErrors.address}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="town_city">Town / City</Label>
-              <Input
-                id="town_city"
-                name="town_city"
-                value={editFormData?.town_city || ""}
-                onChange={(e) => handleInputChange(e, "edit")}
-              />
-              {formErrors.town_city && (
-                <p className="text-red-600 text-sm">{formErrors.town_city}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="county">County</Label>
-              <Input
-                id="county"
-                name="county"
-                value={editFormData?.county || ""}
-                onChange={(e) => handleInputChange(e, "edit")}
-              />
-              {formErrors.county && (
-                <p className="text-red-600 text-sm">{formErrors.county}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="postcode">Postcode</Label>
-              <Input
-                id="postcode"
-                name="postcode"
-                value={editFormData?.postcode || ""}
-                onChange={(e) => handleInputChange(e, "edit")}
-              />
-              {formErrors.postcode && (
-                <p className="text-red-600 text-sm">{formErrors.postcode}</p>
-              )}
+          <div className="bg-white border rounded-lg p-6">
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  name="address"
+                  value={editFormData?.address || ""}
+                  onChange={(e) => handleInputChange(e, "edit")}
+                />
+                {formErrors.address && (
+                  <p className="text-red-600 text-sm">{formErrors.address}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="address_2">Address Line 2</Label>
+                <Input
+                  id="address_2"
+                  name="address_2"
+                  value={editFormData?.address_2 || ""}
+                  onChange={(e) => handleInputChange(e, "edit")}
+                />
+                {formErrors.address_2 && (
+                  <p className="text-red-600 text-sm">{formErrors.address_2}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="town_city">Town / City</Label>
+                <Input
+                  id="town_city"
+                  name="town_city"
+                  value={editFormData?.town_city || ""}
+                  onChange={(e) => handleInputChange(e, "edit")}
+                />
+                {formErrors.town_city && (
+                  <p className="text-red-600 text-sm">{formErrors.town_city}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="county">County</Label>
+                <Input
+                  id="county"
+                  name="county"
+                  value={editFormData?.county || ""}
+                  onChange={(e) => handleInputChange(e, "edit")}
+                />
+                {formErrors.county && (
+                  <p className="text-red-600 text-sm">{formErrors.county}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="postcode">Postcode</Label>
+                <Input
+                  id="postcode"
+                  name="postcode"
+                  value={editFormData?.postcode || ""}
+                  onChange={(e) => handleInputChange(e, "edit")}
+                />
+                {formErrors.postcode && (
+                  <p className="text-red-600 text-sm">{formErrors.postcode}</p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>

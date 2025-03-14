@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
+    // Method for rendering the Inertia page
     public function index()
     {
         $categories = Category::with(['ewcCode', 'hpCodes', 'specFields'])->get();
@@ -29,6 +30,30 @@ class CategoryController extends Controller
         ]);
     }
 
+    // Method for API requests
+    public function getCategories()
+    {
+        $categories = Category::with('subCategories')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'sub_categories' => $category->subCategories->map(function ($sub) {
+                        return [
+                            'id' => $sub->id,
+                            'name' => $sub->name,
+                            'parent_id' => $sub->parent_id
+                        ];
+                    })
+                ];
+            });
+
+        Log::info('Categories with sub-categories:', ['data' => $categories]);
+        return response()->json($categories);
+    }
+
     public function edit($id)
     {
         $category = Category::with(['ewcCode', 'hpCodes', 'specFields'])->findOrFail($id);
@@ -39,7 +64,7 @@ class CategoryController extends Controller
         $specFields = VariableSpecField::all(['id', 'spec_name']);
 
         return Inertia::render('Settings/Categories/CategoriesEdit', [
-            'category' => $category,
+            'category' => $category, // Corrected variable name
             'ewcCodes' => $ewcCodes,
             'hpCodes' => $hpCodes,
             'specFields' => $specFields,
@@ -129,4 +154,5 @@ class CategoryController extends Controller
             return response()->json(['error' => 'Failed to delete category. Please check the logs for more details.'], 500);
         }
     }
+
 }

@@ -62,6 +62,11 @@ class DashboardController extends Controller
                 ->orderBy('collection_date')
                 ->get()
                 ->map(function ($job) {
+                    // Count items with "added" = "Collection"
+                    $itemsCount = \App\Models\JobItem::where('job_id', $job->id)
+                        ->where('added', 'Collection')
+                        ->count();
+                    
                     return [
                         'id' => $job->id,
                         'job_id' => $job->job_id,
@@ -72,7 +77,7 @@ class DashboardController extends Controller
                         'collection_date' => $job->collection_date,
                         'staff_collecting' => $job->staff_collecting,
                         'job_status' => $job->job_status,
-                        'items_count' => 0,
+                        'items_count' => $itemsCount, // Use the actual count instead of 0
                         'client' => [
                             'name' => $job->client->name ?? 'Unknown Client'
                         ]
@@ -83,6 +88,55 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             \Log::error('Upcoming jobs error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch upcoming jobs'], 500);
+        }
+    }
+    
+    /**
+     * Get jobs assigned to the currently logged-in driver
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDriverJobs(Request $request)
+    {
+        try {
+            $now = Carbon::now();
+            $thirtyDaysFromNow = Carbon::now()->addDays(30);
+            $user = $request->user();
+            
+            $jobs = Job::with('client')
+                ->where('staff_collecting', $user->name)
+                ->whereIn('job_status', ['Scheduled', 'Needs Scheduling'])
+                ->whereBetween('collection_date', [$now, $thirtyDaysFromNow])
+                ->orderBy('collection_date')
+                ->get()
+                ->map(function ($job) {
+                    // Count items with "added" = "Collection"
+                    $itemsCount = \App\Models\JobItem::where('job_id', $job->id)
+                        ->where('added', 'Collection')
+                        ->count();
+                    
+                    return [
+                        'id' => $job->id,
+                        'job_id' => $job->job_id,
+                        'address' => $job->address,
+                        'town_city' => $job->town_city,
+                        'postcode' => $job->postcode,
+                        'created_at' => $job->created_at,
+                        'collection_date' => $job->collection_date,
+                        'staff_collecting' => $job->staff_collecting,
+                        'job_status' => $job->job_status,
+                        'items_count' => $itemsCount, // Use the actual count instead of 0
+                        'client' => [
+                            'name' => $job->client->name ?? 'Unknown Client'
+                        ]
+                    ];
+                });
+    
+            return response()->json($jobs);
+        } catch (\Exception $e) {
+            \Log::error('Driver jobs error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch driver jobs'], 500);
         }
     }
 }

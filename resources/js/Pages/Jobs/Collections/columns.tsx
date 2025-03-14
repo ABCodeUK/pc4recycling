@@ -38,6 +38,7 @@ export interface Job {
   data_sanitisation: string;
   sla: string | null;
   instructions: string | null;
+  items_count: number; // Add this property
 }
 
 export const columns: ColumnDef<Job>[] = [
@@ -91,10 +92,11 @@ export const columns: ColumnDef<Job>[] = [
       return date ? new Date(date).toLocaleDateString() : "Not Scheduled";
     },
   },
+  // Add or update the items column in the columns array
   {
-    accessorKey: "items",
+    accessorKey: "items_count",
     header: () => <span className="font-bold">Items</span>,
-    cell: () => "0",
+    cell: ({ row }) => <div>{row.original.items_count || 0} items</div>,
   },
   {
     accessorKey: "staff_collecting",

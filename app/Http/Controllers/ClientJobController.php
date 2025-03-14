@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Job;
+use App\Models\JobItem;
 use Illuminate\Http\Request;
 
 class ClientJobController extends Controller
@@ -16,6 +17,11 @@ class ClientJobController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($job) {
+                // Count items with "added" = "Collection"
+                $itemsCount = JobItem::where('job_id', $job->id)
+                    ->where('added', 'Collection')
+                    ->count();
+                
                 return [
                     'id' => $job->id,
                     'job_id' => $job->job_id,
@@ -26,7 +32,7 @@ class ClientJobController extends Controller
                     'collection_date' => $job->collection_date,
                     'staff_collecting' => $job->staff_collecting,
                     'job_status' => $job->job_status,
-                    'items_count' => 0, // You can implement this later if needed
+                    'items_count' => $itemsCount, // Now using the actual count
                 ];
             });
 

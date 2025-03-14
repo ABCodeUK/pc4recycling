@@ -26,7 +26,14 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
   {
     accessorKey: "job_id",
     header: () => <span className="font-bold">ID</span>,
-    cell: ({ row }) => <div className="font-medium text-primary">{row.original.job_id}</div>,
+    cell: ({ row }) => (
+      <a 
+        href={`/collections/${row.original.id}`}
+        className="font-medium text-primary hover:text-primary/80 transition-colors"
+      >
+        {row.original.job_id}
+      </a>
+    ),
   },
   {
     accessorKey: "client.name",
@@ -74,7 +81,7 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
   {
     accessorKey: "items_count",
     header: () => <span className="font-bold">Items</span>,
-    cell: ({ row }) => <div>{row.original.items_count}</div>,
+    cell: ({ row }) => <div>{row.original.items_count || 0} items</div>,
   },
   {
     accessorKey: "staff_collecting",

@@ -3,9 +3,10 @@ import { LucideIcon } from "lucide-react";
 export interface NavItem {
   title: string;
   url: string;
-  icon?: LucideIcon;
-  items?: NavItem[];
+  icon?: any;
   isActive?: boolean;
+  items?: NavItem[];
+  roles?: string; // Add this line
 }
 
 export interface NavigationData {

@@ -19,34 +19,37 @@ import {
   SidebarMenuSubItem,
 } from "@/Components/ui/sidebar"
 
-interface NavItem {
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-  isActive?: boolean;
-}
+import React from 'react';
+import { Role } from '@/Components/Auth/Can';
+import { NavProps } from '@/types/navigation';
 
-interface NavMainProps {
-  items: NavItem[];
-}
-
-export function NavMain({ items }: NavMainProps) {
+export function NavMain({ items }: NavProps) {
   return (
-
-      <SidebarMenu>
-        {items.map((item) => (
-<SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild isActive={item.isActive}>
-            <a href={item.url}>
-              {item.icon && <item.icon />}
-              <span>{item.title}</span>
-            </a>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        ))}
-                <Toaster />
-      </SidebarMenu>
-
-
-  )
+    <SidebarMenu>
+      {items.map((item) => (
+        item.roles ? (
+          <Role key={item.title} role={item.roles}>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={item.isActive}>
+                <a href={item.url}>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </Role>
+        ) : (
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton asChild isActive={item.isActive}>
+              <a href={item.url}>
+                {item.icon && <item.icon />}
+                <span>{item.title}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )
+      ))}
+      <Toaster />
+    </SidebarMenu>
+  );
 }

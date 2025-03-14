@@ -81,6 +81,16 @@ class UserClient extends Model
     }
 
     /**
+     * Alias for customerType to maintain compatibility
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function customer_type()
+    {
+        return $this->customerType();
+    }
+
+    /**
      * Accessor: Full Address
      *
      * Combines address fields into a single string.

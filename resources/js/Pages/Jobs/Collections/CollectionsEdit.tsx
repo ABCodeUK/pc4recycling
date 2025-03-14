@@ -1,3 +1,4 @@
+import { router } from "@inertiajs/react";
 import { useState } from "react";
 import { AppSidebar } from "@/Components/app-sidebar";
 import {
@@ -35,82 +36,93 @@ import {
 // Update the Props interface to include more client details
 interface Props {
   job: {
-    id: number;
-    job_id: string;
-    client_id: number;
-    collection_date: string;
-    job_status: string;
-    staff_collecting: string;
-    vehicle: string;
-    address: string;
-    town_city: string;
-    postcode: string;
-    onsite_contact: string;
-    onsite_number: string;
-    onsite_email: string;
-    collection_type: string;
-    data_sanitisation: string;
-    sla: string;
-    instructions: string;
+      id: number;
+      job_id: string;
+      client_id: number;
+      collection_date: string;
+      job_status: string;
+      staff_collecting: string;
+      vehicle: string;
+      address: string;
+      address_2: string;
+      town_city: string;
+      postcode: string;
+      onsite_contact: string;
+      onsite_number: string;
+      onsite_email: string;
+      collection_type: string;
+      data_sanitisation: string;
+      sla: string;
+      instructions: string;
+      equipment_location: string;
+      building_access: string;
+      collection_route: string;
+      parking_loading: string;
+      equipment_readiness: string;
   };
+  sub_clients: {
+      id: number;
+      name: string;
+      email: string;
+      mobile: string | null;
+      landline: string | null;
+  }[];
   customers: { 
-    id: number; 
-    name: string;
-    company_name?: string;
-    // Add these fields for the main address
-    address?: string;
-    town_city?: string;
-    county?: string;
-    postcode?: string;
-    contact_name?: string;
-    position?: string;
-    landline?: string;
-    mobile?: string;
-    email?: string;
-    account_status?: string;
+      id: number; 
+      name: string;
+      company_name?: string;
+      address?: string;
+      address_2?: string;
+      town_city?: string;
+      county?: string;
+      postcode?: string;
+      contact_name?: string;
+      position?: string;
+      landline?: string;
+      mobile?: string;
+      email?: string;
+      account_status?: string;
   }[];
   addresses: {
-    id: number;
-    address: string;
-    town_city: string;
-    county: string;
-    postcode: string;
+      id: number;
+      address: string;
+      address_2: string;
+      town_city: string;
+      county: string;
+      postcode: string;
   }[];
-  collection_types: string[];
-  sanitisation_options: string[];
+  collection_types: Array<{
+      id: number;
+      colt_name: string;
+  }>;
+  sanitisation_options: Array<{
+    id: number;
+    ds_name: string;
+  }>;
   status_options: string[];
   staff_members: {
-    id: number;
-    name: string;
+      id: number;
+      name: string;
   }[];
 }
 
-// Move this import to the top with other imports
-import { router } from "@inertiajs/react";
-
 // Then update the handleDeleteJob function
-export default function CollectionsEdit({ job, customers, addresses, collection_types, sanitisation_options, status_options, staff_members }: Props) {
+export default function CollectionsEdit({ job, customers, addresses, collection_types, sanitisation_options, status_options, staff_members,sub_clients }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const handleDeleteJob = async () => {
-    try {
-      setIsDeleting(true);
-      router.delete(`/collections/${job.id}`, {
-        onSuccess: () => {
-          toast.success("Job successfully deleted!");
-          window.location.href = "/collections";
-        },
-        onError: () => {
-          toast.error("Failed to delete job. Please try again.");
-        },
-        onFinish: () => {
-          setIsDeleting(false);
-        },
-      });
-    } catch (error) {
-      toast.error("Failed to delete job. Please try again.");
-      setIsDeleting(false);
-    }
+  // Replace the entire handleDeleteJob function
+  const handleDeleteJob = () => {
+    setIsDeleting(true);
+    router.delete(`/collections/${job.id}`, {
+      onSuccess: () => {
+        toast.success("Job successfully deleted!");
+        router.get('/collections');
+      },
+      onError: () => {
+        toast.error("Failed to delete job. Please try again.");
+        setIsDeleting(false);
+      }
+    });
   };
 
   const [formData, setFormData] = useState({
@@ -121,15 +133,21 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
     staff_collecting: job.staff_collecting || "",
     vehicle: job.vehicle || "",
     address: job.address || "",
+    address_2: job.address_2 || "",
     town_city: job.town_city || "",
     postcode: job.postcode || "",
     onsite_contact: job.onsite_contact || "",
     onsite_number: job.onsite_number || "",
     onsite_email: job.onsite_email || "",
-    collection_type: job.collection_type || "",
+    collection_type: job.collection_type?.toString() || "",
     data_sanitisation: job.data_sanitisation || "",
     sla: job.sla || "",
-    instructions: job.instructions || ""
+    instructions: job.instructions || "",
+    equipment_location: job.equipment_location || "",
+    building_access: job.building_access || "",
+    collection_route: job.collection_route || "",
+    parking_loading: job.parking_loading || "",
+    equipment_readiness: job.equipment_readiness || "",   
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -168,6 +186,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
       setFormData(prev => ({
         ...prev,
         address: "",
+        address_2: "",
         town_city: "",
         county: "",
         postcode: "",
@@ -180,6 +199,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
         setFormData(prev => ({
           ...prev,
           address: currentCustomer.address || "",
+          address_2: currentCustomer.address_2|| "",
           town_city: currentCustomer.town_city || "",
           county: currentCustomer.county || "",
           postcode: currentCustomer.postcode || "",
@@ -193,6 +213,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
       setFormData(prev => ({
         ...prev,
         address: selectedAddress.address,
+        address_2: selectedAddress.address_2,
         town_city: selectedAddress.town_city,
         county: selectedAddress.county || "",
         postcode: selectedAddress.postcode,
@@ -200,21 +221,62 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
     }
   };
 
+  // Update handleContactSelect function to handle the main contact
+  const handleContactSelect = (contactId: string) => {
+      if (contactId === "manual") {
+          setFormData(prev => ({
+              ...prev,
+              onsite_contact: "",
+              onsite_number: "",
+              onsite_email: "",
+          }));
+          return;
+      }
+  
+      if (contactId === "main" && currentCustomer) {
+          setFormData(prev => ({
+              ...prev,
+              onsite_contact: currentCustomer.contact_name || "",
+              onsite_number: currentCustomer.mobile || currentCustomer.landline || "",
+              onsite_email: currentCustomer.email || "",
+          }));
+          return;
+      }
+  
+      const selectedContact = sub_clients.find(contact => contact.id.toString() === contactId);
+      if (selectedContact) {
+          setFormData(prev => ({
+              ...prev,
+              onsite_contact: selectedContact.name,
+              onsite_number: selectedContact.mobile || selectedContact.landline || "",
+              onsite_email: selectedContact.email,
+          }));
+      }
+  };
+
+  // Update the handleSaveChanges function
   const handleSaveChanges = async () => {
-    try {
-        setIsSubmitting(true);
-        const response = await axios.put(`/collections/${job.id}`, formData);
-        if (response.status === 200) {
-            toast.success("Changes saved successfully!");
-        } else {
-            toast.error("Failed to save changes. Please try again.");
-        }
-    } catch (error) {
-        toast.error("An error occurred while saving changes.");
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+      try {
+          setIsSubmitting(true);
+          // Convert collection_type back to a number before sending
+          const dataToSend = {
+              ...formData,
+              collection_type: formData.collection_type ? parseInt(formData.collection_type) : null
+          };
+          
+          const response = await axios.put(`/collections/${job.id}`, dataToSend);
+          if (response.status === 200) {
+              toast.success("Changes saved successfully!");
+          } else {
+              toast.error("Failed to save changes. Please try again.");
+          }
+      } catch (error: any) {
+          console.error('Save error:', error.response?.data || error);
+          toast.error(error.response?.data?.message || "An error occurred while saving changes.");
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
 
   // Add this line to find the current customer
   const currentCustomer = customers.find(c => c.id.toString() === formData.client_id);
@@ -330,20 +392,6 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                       </Select>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="collection_date">Collection Date*</Label>
-                    <div className="col-span-2">
-                      <Input
-                        id="collection_date"
-                        name="collection_date"
-                        type="date"
-                        value={formData.collection_date}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-3 items-center gap-4">
                     <Label htmlFor="job_status">Status*</Label>
                     <div className="col-span-2">
@@ -362,6 +410,18 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="collection_date">Collection Date</Label>
+                    <div className="col-span-2">
+                      <Input
+                        id="collection_date"
+                        name="collection_date"
+                        type="date"
+                        value={formData.collection_date}
+                        onChange={handleInputChange}
+                      />
                     </div>
                   </div>
                 </div>
@@ -429,12 +489,12 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                           <SelectItem value="manual">Enter Manually</SelectItem>
                           {currentCustomer && currentCustomer.address && (
                             <SelectItem value="main">
-                              {currentCustomer.address}, {currentCustomer.town_city}, {currentCustomer.postcode}
+                            {currentCustomer.address}, {currentCustomer.address_2}, {currentCustomer.town_city}, {currentCustomer.postcode} (Account Address)
                             </SelectItem>
                           )}
                           {addresses.map((address) => (
                             <SelectItem key={address.id} value={address.id.toString()}>
-                              {address.address}, {address.postcode}
+                              {address.address}, {address.address_2}, {address.town_city}, {address.postcode}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -443,7 +503,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                   </div>
 
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="address">Address*</Label>
+                    <Label htmlFor="address">Address Line 1</Label>
                     <div className="col-span-2">
                       <Input
                         id="address"
@@ -453,9 +513,20 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                       />
                     </div>
                   </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="address_2">Address Line 2</Label>
+                    <div className="col-span-2">
+                      <Input
+                        id="address_2"
+                        name="address_2"
+                        value={formData.address_2}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="town_city">Town/City*</Label>
+                    <Label htmlFor="town_city">Town/City</Label>
                     <div className="col-span-2">
                       <Input
                         id="town_city"
@@ -479,7 +550,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                   </div>
 
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="postcode">Postcode*</Label>
+                    <Label htmlFor="postcode">Postcode</Label>
                     <div className="col-span-2">
                       <Input
                         id="postcode"
@@ -489,9 +560,38 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                       />
                     </div>
                   </div>
+                </div>
+
+                <Separator />
+
+                {/* Contact Details */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 items-center gap-4">
+                      <Label htmlFor="onsite_contact_select">Onsite Contact</Label>
+                      <div className="col-span-2">
+                          <Select onValueChange={handleContactSelect}>
+                              <SelectTrigger>
+                                  <SelectValue placeholder="Enter Manually" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="manual">Enter Manually</SelectItem>
+                                  {currentCustomer && currentCustomer.contact_name && (
+                                      <SelectItem value="main">
+                                          {currentCustomer.contact_name} (Main Contact)
+                                      </SelectItem>
+                                  )}
+                                  {sub_clients.map((contact) => (
+                                      <SelectItem key={contact.id} value={contact.id.toString()}>
+                                          {contact.name}
+                                      </SelectItem>
+                                  ))}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                  </div>
 
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="onsite_contact">Onsite Contact</Label>
+                    <Label htmlFor="onsite_contact">Onsite Contact Name</Label>
                     <div className="col-span-2">
                       <Input
                         id="onsite_contact"
@@ -503,7 +603,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                   </div>
 
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="onsite_number">Onsite Number</Label>
+                    <Label htmlFor="onsite_number">Onsite Contact Number</Label>
                     <div className="col-span-2">
                       <Input
                         id="onsite_number"
@@ -515,7 +615,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                   </div>
 
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="onsite_email">Onsite Email</Label>
+                    <Label htmlFor="onsite_email">Onsite Contact Email</Label>
                     <div className="col-span-2">
                       <Input
                         id="onsite_email"
@@ -526,54 +626,53 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                       />
                     </div>
                   </div>
-                </div>
-
+                  
                 <Separator />
 
                 {/* Collection Details */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="collection_type">Collection Type*</Label>
-                    <div className="col-span-2">
-                      <Select
-                        value={formData.collection_type}
-                        onValueChange={(value) => handleSelectChange("collection_type", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Collection Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {collection_types.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 items-center gap-4">
+                      <Label htmlFor="collection_type">Collection Type*</Label>
+                      <div className="col-span-2">
+                        <Select
+                          value={formData.collection_type?.toString() || ""}
+                          onValueChange={(value) => handleSelectChange("collection_type", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Collection Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {collection_types.map((type) => (
+                              <SelectItem key={type.id} value={type.id.toString()}>
+                                {type.colt_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="data_sanitisation">Data Sanitisation*</Label>
-                    <div className="col-span-2">
-                      <Select
-                        value={formData.data_sanitisation}
-                        onValueChange={(value) => handleSelectChange("data_sanitisation", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Sanitisation Option" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {sanitisation_options.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="grid grid-cols-3 items-center gap-4">
+                      <Label htmlFor="data_sanitisation">Data Sanitisation*</Label>
+                      <div className="col-span-2">
+                        <Select
+                          value={formData.data_sanitisation?.toString() || ""}
+                          onValueChange={(value) => handleSelectChange("data_sanitisation", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Data Sanitisation" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {sanitisation_options.map((option) => (
+                              <SelectItem key={option.id} value={option.id.toString()}>
+                                {option.ds_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
-
+                    </div>
                   <div className="grid grid-cols-3 items-center gap-4">
                     <Label htmlFor="sla">Service Level Agreement</Label>
                     <div className="col-span-2">
@@ -609,9 +708,16 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                   </div>
 
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label>Address</Label>
+                    <Label>Address Line 1</Label>
                     <div className="col-span-2">
                       <p>{currentCustomer?.address || '-'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label>Address Line 2</Label>
+                    <div className="col-span-2">
+                      <p>{currentCustomer?.address_2 || '-'}</p>
                     </div>
                   </div>
 
@@ -678,18 +784,78 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
 
                   <Separator />
                   <div>
-                  <Label htmlFor="instructions">Job Instructions</Label>
+                  <Label htmlFor="equipment_location">Equipment Location</Label>
+                  <textarea
+                    id="equipment_location"
+                    name="equipment_location"
+                    rows={4}
+                    placeholder="Please enter any notes about Equipment Location here..."
+                    className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={formData.equipment_location}
+                    onChange={handleInputChange}
+                  />
+                  </div>
+                  <div>
+                  <Label htmlFor="building_access">Building Access</Label>
+                  <textarea
+                    id="building_access"
+                    name="building_access"
+                    rows={4}
+                    placeholder="Please enter any notes about Building Access here..."
+                    className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={formData.building_access}
+                    onChange={handleInputChange}
+                  />
+                  </div>
+                  <div>
+                  <Label htmlFor="collection_route">Collection Route</Label>
+                  <textarea
+                    id="collection_route"
+                    name="collection_route"
+                    rows={4}
+                    placeholder="Please enter any notes about this job here..."
+                    className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={formData.collection_route}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="collection_route">Parking & Loading</Label>
+                  <textarea
+                    id="parking_loading"
+                    name="parking_loading"
+                    rows={4}
+                    placeholder="Please enter any notes about Parking & Loading here..."
+                    className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={formData.parking_loading}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="equipment_readiness">Equipment Readiness</Label>
+                  <textarea
+                    id="equipment_readiness"
+                    name="equipment_readiness"
+                    rows={4}
+                    placeholder="Please enter any notes about Equipment Readiness here..."
+                    className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={formData.equipment_readiness}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <Separator />
+                <div>
+                  <Label htmlFor="collection_route">Other Information</Label>
                   <textarea
                     id="instructions"
                     name="instructions"
-                    rows={6}
+                    rows={4}
                     placeholder="Please enter any notes about this job here..."
                     className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={formData.instructions}
                     onChange={handleInputChange}
                   />
                 </div>
-
                 </div>
               </div>
             </section>

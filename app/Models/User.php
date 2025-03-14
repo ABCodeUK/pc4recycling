@@ -69,9 +69,42 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
+    // Add or update these methods in your User model
+    
+    /**
+     * Get the staff details associated with the user.
+     */
     public function staffDetails()
     {
         return $this->hasOne(UserStaff::class, 'user_id');
+    }
+    
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['role_debug'];
+    
+    /**
+     * Get the role debug information
+     */
+    public function getRoleDebugAttribute()
+    {
+        if ($this->type !== 'Staff') {
+            return null;
+        }
+        
+        $staffDetails = $this->staffDetails;
+        
+        if (!$staffDetails) {
+            return ['message' => 'No staff details found'];
+        }
+        
+        return [
+            'role_id' => $staffDetails->role_id,
+            'role_name' => $staffDetails->role ? $staffDetails->role->name : null
+        ];
     }
 
     /**

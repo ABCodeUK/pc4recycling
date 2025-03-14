@@ -56,6 +56,7 @@ class Category extends Model
     /**
      * Relationship to Sub Categories.
      */
+    // Relationship looks correct
     public function subCategories()
     {
         return $this->hasMany(CategorySub::class, 'parent_id');

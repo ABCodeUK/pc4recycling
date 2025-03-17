@@ -9,16 +9,19 @@ import {
 } from "@/Components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import { Button } from "@/Components/ui/button";
+import { Label } from "@/Components/ui/label";
+import { Input } from "@/Components/ui/input";
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onComplete: (customerSignature: string, driverSignature: string) => void;
+    onComplete: (customerSignature: string, customerName: string, driverSignature: string) => void;
 }
 
 export default function CollectionSignatureDialog({ isOpen, onClose, onComplete }: Props) {
     const [activeTab, setActiveTab] = useState("customer");
     const [customerSignature, setCustomerSignature] = useState<string | null>(null);
+    const [customerName, setCustomerName] = useState("");
     const customerSignatureRef = useRef<SignatureCanvas>(null);
     const driverSignatureRef = useRef<SignatureCanvas>(null);
 
@@ -27,7 +30,11 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
             alert("Please provide a signature");
             return;
         }
-        // Fix the signature capture
+        if (!customerName.trim()) {
+            alert("Please provide your name");
+            return;
+        }
+        
         const canvas = customerSignatureRef.current?.getCanvas();
         if (canvas) {
             setCustomerSignature(canvas.toDataURL());
@@ -44,10 +51,10 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
             alert("Customer signature is required");
             return;
         }
-        // Fix the signature capture
+        
         const canvas = driverSignatureRef.current?.getCanvas();
         if (canvas) {
-            onComplete(customerSignature, canvas.toDataURL());
+            onComplete(customerSignature, customerName, canvas.toDataURL());
         }
     };
 
@@ -81,6 +88,17 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
                                         style: { touchAction: 'none' }
                                     }}
                                 />
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="customerName">Name</Label>
+                                    <Input
+                                        id="customerName"
+                                        value={customerName}
+                                        onChange={(e) => setCustomerName(e.target.value)}
+                                        placeholder="Enter your name"
+                                    />
+                                </div>
                             </div>
                             <div className="flex justify-between">
                                 <Button

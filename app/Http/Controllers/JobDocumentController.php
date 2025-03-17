@@ -15,7 +15,7 @@ class JobDocumentController extends Controller
         $job = Job::findOrFail($id);
         
         $request->validate([
-            'document' => 'required|file|mimes:pdf|max:10240',
+            'document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'document_type' => 'required|string'
         ]);
     
@@ -63,6 +63,24 @@ class JobDocumentController extends Controller
             'message' => 'Document uploaded successfully',
             'document' => $document
         ]);
+    }
+
+    public function show($jobId, $uuid)
+    {
+        $document = JobDocument::where('job_id', $jobId)
+            ->where('uuid', $uuid)
+            ->firstOrFail();
+
+        // Check if file exists in storage
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'Document file not found');
+        }
+
+        // Return the file
+        return response()->file(
+            Storage::disk('public')->path($document->file_path),
+            ['Content-Type' => $document->mime_type]
+        );
     }
 
     public function destroy(Request $request, $jobId, $documentId)

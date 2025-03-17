@@ -327,7 +327,8 @@ class JobController extends Controller
             // Validate signatures
             $request->validate([
                 'customer_signature' => 'required|string',
-                'driver_signature' => 'required|string'
+                'driver_signature' => 'required|string',
+                'customer_name' => 'required|string'
             ]);
     
             // Create job folder if it doesn't exist
@@ -395,8 +396,11 @@ class JobController extends Controller
                 ]);
             }
     
-            // Update job status
-            $job->update(['job_status' => 'Collected']);
+            // Update job status and customer name
+            $job->update([
+                'job_status' => 'Collected',
+                'customer_signature_name' => $request->customer_name
+            ]);
     
             // Add audit log entry as system note
             JobAuditService::log($job->id, 'Job collected and signatures obtained', 'true', 'Job collected and signatures obtained');

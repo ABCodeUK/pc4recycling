@@ -24,8 +24,8 @@ class JobItem extends Model
         'processing_make',
         'processing_model',
         'processing_specification',
-        'processing_erasure_required',
-        'added'
+        'added',
+        'processing_erasure_required'
     ];
 
     // Add this to define the enum values

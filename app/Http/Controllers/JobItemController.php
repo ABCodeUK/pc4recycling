@@ -109,7 +109,7 @@ class JobItemController extends Controller
                         'processing_model' => $item['processing_model'] ?? null,
                         'processing_specification' => $item['processing_specification'] ?? null,
                         'processing_erasure_required' => $item['processing_erasure_required'] ?? null,
-                        'added' => 'Collection',
+                        'added' => $item['added'] ?? 'Collection', // Use the added value from frontend
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);

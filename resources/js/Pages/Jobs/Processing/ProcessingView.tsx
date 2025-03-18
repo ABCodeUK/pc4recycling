@@ -20,9 +20,9 @@ import { useState } from "react"; // Add this for state management
 import { toast } from "sonner";
 import axios from "axios";
 import { Upload, Trash2, FileText } from "lucide-react";
-import JobItems from "./JobItems/JobItems";
+import JobItems from "./JobItems/JobItems";  // Update the import 
 import { Textarea } from "@/Components/ui/textarea";
-import JobAuditLog from './Components/JobAuditLog';
+import JobAuditLog from '../Collections/Components/JobAuditLog';
 import CollectionSignatureDialog from './Components/CollectionSignatureDialog';
 import { ClientOnly, StaffOnly, Role } from '@/Components/Auth/Can';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,31 +96,8 @@ interface DocumentState {
 // Add this import
 import { router } from '@inertiajs/react';
 
-export default function CollectionsView({ job, customers, documents: initialDocuments }: Props) {
-    // Add new state for signature dialog
-    const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
-
-    // Add handler for signature completion
-    const handleSignatureComplete = async (customerSignature: string, driverSignature: string) => {
-        try {
-            // First, save the signatures
-            const formData = new FormData();
-            formData.append('customer_signature', customerSignature);
-            formData.append('driver_signature', driverSignature);
-
-            await axios.post(`/api/jobs/${job.job_id}/mark-collected`, formData);
-            
-            toast.success('Job marked as collected successfully');
-            router.visit(`/collections/${job.job_id}`);
-        } catch (error) {
-            console.error('Error marking job as collected:', error);
-            toast.error('Failed to mark job as collected');
-        } finally {
-            setIsSignatureDialogOpen(false);
-        }
-    };
-
-  // Initialize documents state with passed data
+export default function ProcessingView({ job, customers, documents: initialDocuments }: Props) {
+  // Remove signature-related state and handlers
   const [documents, setDocuments] = useState<DocumentState>(initialDocuments || {
     collection_manifest: null,
     hazard_waste_note: null,
@@ -293,15 +270,15 @@ export default function CollectionsView({ job, customers, documents: initialDocu
         </header>
         <div className="flex flex-1 flex-col gap-6 p-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="text-3xl font-semibold text-gray-800">Collection: {job.job_id}</div>
+            <div className="text-3xl font-semibold text-gray-800">Processing: {job.job_id}</div>
             <div className="flex flex-wrap items-center gap-3">
               <Role role="Developer|Administrator|Employee|Manager|Director">
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = "/collections")}
+                onClick={() => (window.location.href = "/processing")}
               >
                 <ArrowLeft className="h-6 w-6" />
-                Back to Collections
+                Back to Processing
               </Button></Role>
               <Role role="Drivers">
               <Button
@@ -314,7 +291,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
               </Role>
               <Role role="Developer|Administrator|Employee|Manager|Director">
               <Button
-                onClick={() => (window.location.href = `/collections/${job.id}/edit`)}
+                onClick={() => (window.location.href = `/processing/${job.id}/edit`)}
               >
                 <Edit className="h-6 w-6" />
                 Edit Job
@@ -327,7 +304,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
             {/* Left Column - Collection Details */}
             <section className="bg-white border shadow rounded-lg p-6">
               <h2 className="text-xl font-semibold leading-7 text-gray-900 flex justify-between items-center">
-                Collection Details
+                Job Details
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">Status:</span>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium border ${getStatusColor(job.job_status)}`}>
@@ -729,7 +706,10 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                         </div>
                         <div className="grid grid-cols-1 gap-6">
                           <section>
-                            <JobItems jobId={job.job_id} jobStatus={job.job_status} />
+                            <JobItems 
+                              jobId={job.job_id} 
+                              jobStatus={job.job_status}
+                            />
                           </section>    
                         </div>
                         </div>
@@ -737,24 +717,3 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                         </SidebarProvider>
                       );
                     }
-
-const handleMarkJobCollected = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
-    try {
-        const response = await axios.post(`/api/jobs/${job.id}/mark-collected`, {
-            customer_signature: customerSignature,
-            customer_name: customerName,
-            driver_signature: driverSignature,
-            driver_name: driverName
-        });
-
-        toast.success("Job marked as collected successfully");
-        
-        // Handle redirect based on response
-        if (response.data.redirect) {
-            window.location.href = response.data.redirect;
-        }
-    } catch (error) {
-        console.error('Error marking job as collected:', error);
-        toast.error("Failed to mark job as collected");
-    }
-};

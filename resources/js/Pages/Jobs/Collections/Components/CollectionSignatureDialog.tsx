@@ -11,21 +11,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import { Button } from "@/Components/ui/button";
 import { Label } from "@/Components/ui/label";
 import { Input } from "@/Components/ui/input";
+import { Checkbox } from "@/Components/ui/checkbox"; // Add this import
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onComplete: (customerSignature: string, customerName: string, driverSignature: string) => void;
+    onComplete: (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => void;
 }
 
 export default function CollectionSignatureDialog({ isOpen, onClose, onComplete }: Props) {
     const [activeTab, setActiveTab] = useState("customer");
     const [customerSignature, setCustomerSignature] = useState<string | null>(null);
     const [customerName, setCustomerName] = useState("");
+    const [driverName, setDriverName] = useState("");
+    const [itemsConfirmed, setItemsConfirmed] = useState(false);
+    const [driverConfirmed, setDriverConfirmed] = useState(false); // Add this state
     const customerSignatureRef = useRef<SignatureCanvas>(null);
     const driverSignatureRef = useRef<SignatureCanvas>(null);
 
     const handleCustomerAgree = () => {
+        if (!itemsConfirmed) {
+            alert("Please confirm the items list");
+            return;
+        }
         if (customerSignatureRef.current?.isEmpty()) {
             alert("Please provide a signature");
             return;
@@ -43,8 +51,16 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
     };
 
     const handleComplete = () => {
+        if (!driverConfirmed) {
+            alert("Please confirm collection of all items");
+            return;
+        }
         if (driverSignatureRef.current?.isEmpty()) {
             alert("Please provide a signature");
+            return;
+        }
+        if (!driverName.trim()) {
+            alert("Please provide your name");
             return;
         }
         if (!customerSignature) {
@@ -54,7 +70,7 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
         
         const canvas = driverSignatureRef.current?.getCanvas();
         if (canvas) {
-            onComplete(customerSignature, customerName, canvas.toDataURL());
+            onComplete(customerSignature, customerName, canvas.toDataURL(), driverName);
         }
     };
 
@@ -100,6 +116,16 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
                                     />
                                 </div>
                             </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id="items-confirmed" 
+                                    checked={itemsConfirmed}
+                                    onCheckedChange={(checked) => setItemsConfirmed(checked as boolean)}
+                                />
+                                <Label htmlFor="items-confirmed" className="text-sm">
+                                    I confirm that the items PC4Recycling are collecting are marked on the list.
+                                </Label>
+                            </div>
                             <div className="flex justify-between">
                                 <Button
                                     variant="outline"
@@ -124,6 +150,27 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
                                         style: { touchAction: 'none' }
                                     }}
                                 />
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="driverName">Name</Label>
+                                    <Input
+                                        id="driverName"
+                                        value={driverName}
+                                        onChange={(e) => setDriverName(e.target.value)}
+                                        placeholder="Enter your name"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id="driver-confirmed" 
+                                    checked={driverConfirmed}
+                                    onCheckedChange={(checked) => setDriverConfirmed(checked as boolean)}
+                                />
+                                <Label htmlFor="driver-confirmed" className="text-sm">
+                                    I confirm that I have collected all items listed.
+                                </Label>
                             </div>
                             <div className="flex justify-between">
                                 <Button

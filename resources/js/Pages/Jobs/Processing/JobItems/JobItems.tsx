@@ -8,26 +8,20 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Category, JobItem } from "./types";
 import { ColumnDef } from "@tanstack/react-table";
+import { processingColumns } from "./processing-columns";
 
 // Remove the Category interface since it's now imported from types
 
-// Add import
-import CollectionSignatureDialog from '../Components/CollectionSignatureDialog';
 
 // Update the component props to include jobStatus
 export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatus: string }) {
-  // Add state for signature dialog
   const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
-
-  // Add a new state to track changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
+  const [activeTab, setActiveTab] = useState('processing'); // Move this to top
   const [items, setItems] = useState<JobItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [usedItemNumbers, setUsedItemNumbers] = useState<string[]>([]);
-
-  // Add new state for original items
   const [originalItems, setOriginalItems] = useState<JobItem[]>([]);
 
   // Modify fetchData to store original state
@@ -109,31 +103,28 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     newItems.push(updatedOriginalItem);
 
     // Add additional items to match the original quantity
-    for (let i = 1; i < qty; i++) { // Start from 1 since the original item is already added
-        const newItemNumber = generateUniqueItemNumber(); // Generate a unique item number for each new item
+    for (let i = 1; i < qty; i++) {
+        const newItemNumber = generateUniqueItemNumber();
         const newItem = {
             ...item,
-            id: 0, // Reset ID for new items
+            id: 0,
             item_number: newItemNumber,
-            quantity: 1, // Set quantity to 1 for each new item
+            quantity: 1,
+            added: activeTab === 'processing' ? 'Processing' : 'Collection',
+            original_item_number: item.item_number // Track the original item
         };
         newItems.push(newItem);
-        usedItemNumbers.push(newItemNumber); // Update usedItemNumbers immediately
+        usedItemNumbers.push(newItemNumber);
     }
 
-    // Update the items state with the new items
     const updatedItems = [...items.filter(i => i.item_number !== item.item_number), ...newItems];
     setItems(updatedItems);
     setUsedItemNumbers([...usedItemNumbers]);
-    
-    // Call hasActualChanges after the state update
-    setTimeout(() => {
-      const hasChanges = hasActualChanges();
-      setHasUnsavedChanges(hasChanges);
-    }, 0);
+    setHasUnsavedChanges(true); // Explicitly set unsaved changes when expanding
   };
 
-  // Modify handleAddItem
+
+  // Keep the handleAddItem function as is
   const handleAddItem = () => {
     const newItemNumber = generateUniqueItemNumber();
     const newItem: JobItem = {
@@ -152,15 +143,15 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
       processing_model: null,
       processing_specification: null,
       processing_erasure_required: null,
-      added: 'Collection'
+      added: activeTab === 'processing' ? 'Processing' : 'Collection'  // Capitalize 'Processing'
     };
   
     setItems([...items, newItem]);
     setUsedItemNumbers([...usedItemNumbers, newItemNumber]);
     setHasUnsavedChanges(true);
   };
-
-  // After successful save, update original items
+  
+  // Modify handleSaveChanges to preserve 'Collection' items
   const handleSaveChanges = async () => {
     try {
       const itemNumbers = items.map(item => item.item_number);
@@ -171,20 +162,21 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
         return;
       }
   
+      // In handleSaveChanges
       const itemsToSave = items.map(item => ({
         ...item,
         job_id: jobId,
+        // Capitalize 'Processing' when saving
+        added: item.id === 0 ? (activeTab === 'processing' ? 'Processing' : 'Collection') : item.added || 'Collection',
         make: item.make || null,
         model: item.model || null,
-        erasure_required: item.erasure_required || null  // Fix this line
+        erasure_required: item.erasure_required || null
       }));
   
-      console.log('Items being sent to server:', itemsToSave);
-      
       await axios.post(`/api/jobs/${jobId}/items`, { items: itemsToSave });
       toast.success("Items saved successfully");
       setHasUnsavedChanges(false);
-      setOriginalItems(JSON.parse(JSON.stringify(items))); // Update original state
+      setOriginalItems(JSON.parse(JSON.stringify(items)));
       await fetchData();
     } catch (error) {
       console.error('Error saving items:', error);
@@ -243,7 +235,7 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
   return (
     <section className="bg-white border shadow rounded-lg">
       <header className="p-6 flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Collection Items</h2>
+        <h2 className="text-lg font-semibold">Processing Items</h2>
         {jobStatus === 'Scheduled' && (
           <Button 
             onClick={() => setIsSignatureDialogOpen(true)}
@@ -255,24 +247,26 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
         )}
       </header>
 
-      {/* Add dialog component */}
-      <CollectionSignatureDialog
-        isOpen={isSignatureDialogOpen}
-        onClose={() => setIsSignatureDialogOpen(false)}
-        onComplete={handleMarkJobCollected}
-      />
       <Separator />
       <div className="p-6">
-        <Tabs defaultValue="collection" className="w-full">
+        <Tabs 
+          value={activeTab}
+          defaultValue="processing" 
+          className="w-full" 
+          onValueChange={setActiveTab}
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="collection">Collection</TabsTrigger>
-            <TabsTrigger value="processing" disabled>Processing</TabsTrigger>
+            <TabsTrigger value="processing">Processing</TabsTrigger>
             <TabsTrigger value="completed" disabled>Completed</TabsTrigger>
           </TabsList>
+
           <TabsContent value="collection" className="mt-6">
             <DataTable 
               columns={jobItemColumns as ColumnDef<JobItem>[]} 
-              data={items} 
+              data={items.filter(item => 
+                item.added === 'Collection' && !item.original_item_number
+              )} 
               meta={{
                 categories: memoizedCategories,
                 setItems: handleItemsChange,
@@ -293,9 +287,35 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
               </div>
             )}
           </TabsContent>
-          <TabsContent value="processing">
-            <p>Items in processing</p>
+
+          <TabsContent value="processing" className="mt-6">
+            <DataTable 
+              columns={processingColumns as ColumnDef<JobItem>[]} 
+              data={items.filter(item => 
+                ['Collection', 'Processing'].includes(item.added || '') || 
+                (item.id === 0 && activeTab === 'processing')
+              )} 
+              meta={{
+                categories: memoizedCategories,
+                setItems: handleItemsChange,
+                onExpandItem: handleExpandItem,
+                isEditable: ['Collected', 'Processing'].includes(jobStatus)
+              }}
+            />
+            {['Collected', 'Processing'].includes(jobStatus) && (
+              <div className="flex justify-between mt-4">
+                <Button onClick={handleAddItem}>Add Item</Button>
+                <Button 
+                  onClick={handleSaveChanges}
+                  disabled={!hasUnsavedChanges}
+                  title={!hasUnsavedChanges ? "No changes to save" : ""}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            )}
           </TabsContent>
+
           <TabsContent value="completed">
             <p>Completed items</p>
           </TabsContent>

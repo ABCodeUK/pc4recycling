@@ -96,28 +96,35 @@ Route::prefix('addresses')->group(function () {
 
 // Jobs
 Route::middleware('auth')->group(function () {
-    // Collections
+    // Collections - Basic routes without status check
     Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])->name('collections.next-job-id');
     Route::get('/collections/', [JobController::class, 'index'])->name('collections.index');
     Route::post('/collections', [JobController::class, 'store'])->name('collections.store');
-    Route::get('/collections/{id}', [JobController::class, 'show'])->name('collections.show'); // Add this line
-    Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
-    Route::put('/collections/{id}', [JobController::class, 'update'])->name('collections.update');
     Route::delete('/collections/{id}', [JobController::class, 'destroy'])->name('collections.destroy');
-    Route::get('/collections/next-job-id', [JobController::class, 'getNextJobId'])->name('collections.next-job-id');
 
-    // Processing
-    Route::get('/processing/', [JobController::class, 'index'])->name('processing.index'); // Collections List
-    Route::post('/processing/', [JobController::class, 'store'])->name('processing.store'); // Collections Store
-    Route::put('/processing/{id}', [JobController::class, 'update'])->name('processing.update'); // Collections Update
-    Route::delete('/processing/{id}', [JobController::class, 'destroy'])->name('processing.destroy'); // Collections Delete
-    Route::get('/processing/{id}/edit', [JobController::class, 'edit'])->name('processing.edit'); // Collections Edit
-    // Completed
-    Route::get('/completed/', [JobController::class, 'index'])->name('completed.index'); // Collections List
-    Route::post('/completed/', [JobController::class, 'store'])->name('completed.store'); // Collections Store
-    Route::put('/completed/{id}', [JobController::class, 'update'])->name('completed.update'); // Collections Update
-    Route::delete('/completed/{id}', [JobController::class, 'destroy'])->name('completed.destroy'); // Collections Delete
-    Route::get('/completed/{id}/edit', [JobController::class, 'edit'])->name('completed.edit'); // Collections Edit
+    // Processing - Basic routes without status check
+    Route::get('/processing/', [JobController::class, 'index'])->name('processing.index');
+    Route::get('/processing/next-job-id', [JobController::class, 'getNextJobId'])->name('processing.next-job-id');
+    
+    // Use full class name instead of alias
+    Route::middleware(App\Http\Middleware\JobStatusRedirect::class)->group(function () {
+        // Collections view/edit with status check
+        Route::get('/collections/{id}', [JobController::class, 'show'])->name('collections.show');
+        Route::get('/collections/{id}/edit', [JobController::class, 'edit'])->name('collections.edit');
+        Route::put('/collections/{id}', [JobController::class, 'update'])->name('collections.update');
+        
+        // Processing view/edit with status check
+        Route::get('/processing/{id}', [JobController::class, 'show'])->name('processing.show');
+        Route::get('/processing/{id}/edit', [JobController::class, 'edit'])->name('processing.edit');
+        Route::put('/processing/{id}', [JobController::class, 'update'])->name('processing.update');
+    });
+
+    // Completed routes (keeping for future implementation)
+    Route::get('/completed/', [JobController::class, 'index'])->name('completed.index');
+    Route::post('/completed/', [JobController::class, 'store'])->name('completed.store');
+    Route::put('/completed/{id}', [JobController::class, 'update'])->name('completed.update');
+    Route::delete('/completed/{id}', [JobController::class, 'destroy'])->name('completed.destroy');
+    Route::get('/completed/{id}/edit', [JobController::class, 'edit'])->name('completed.edit');
 
 
 // Job Items routes
@@ -128,7 +135,6 @@ Route::put('/api/jobs/{jobId}/items/{itemId}', [JobItemController::class, 'updat
 Route::delete('/api/jobs/{jobId}/items/{itemId}', [JobItemController::class, 'destroy']);
 Route::get('/api/jobs/{jobId}/generate-item-number', [JobItemController::class, 'generateItemNumber']);
 Route::post('/api/jobs/{jobId}/mark-collected', [JobController::class, 'markAsCollected']);
-// Inside the middleware('auth')->group(function () { ... }) block
 Route::post('/collections/{id}/mark-collected', [JobController::class, 'markAsCollected'])->name('collections.mark-collected');
 });
 

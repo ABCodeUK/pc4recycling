@@ -186,7 +186,7 @@
             @else
                 <div class="signature-line"></div>
             @endif
-            <p>Print Name: _________________ <br> Date: {{ now()->format('d/m/Y H:i') }}</p>
+            <p>Print Name: {{ $job->customer_signature_name ?: '_________________' }} <br> Date: {{ now()->format('d/m/Y H:i') }}</p>
         </div>
         <div class="signature-box">
             <p>Driver Signature:</p>
@@ -197,7 +197,7 @@
             @else
                 <div class="signature-line"></div>
             @endif
-            <p>Print Name: _________________ <br> Date: {{ now()->format('d/m/Y H:i') }}</p>
+            <p>Print Name: {{ $job->driver_signature_name ?: '_________________' }} <br> Date: {{ now()->format('d/m/Y H:i') }}</p>
         </div>
     </div>
 

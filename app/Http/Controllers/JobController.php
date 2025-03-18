@@ -162,17 +162,14 @@ class JobController extends Controller
         $job = Job::with(['client', 'collectionType', 'dataSanitisation'])->findOrFail($id);
         $jobArray = $job->toArray();
         
-        // Handle collection type
         if ($job->collectionType) {
             $jobArray['collection_type'] = $job->collectionType->colt_name;
         }
-        
-        // Handle data sanitisation
         if ($job->dataSanitisation) {
             $jobArray['data_sanitisation'] = $job->dataSanitisation->ds_name;
         }
-        
-        // Get customers with details
+    
+        // Get customers with proper select and map functions
         $customers = User::where('type', 'client')
             ->with('clientDetails')
             ->select('id', 'name', 'email', 'mobile', 'landline')
@@ -197,7 +194,7 @@ class JobController extends Controller
                 ];
             });
     
-        // Get documents for this job
+        // Get documents with proper grouping and mapping
         $documents = JobDocument::where('job_id', $id)
             ->get()
             ->groupBy('document_type')
@@ -205,7 +202,11 @@ class JobController extends Controller
                 return $type === 'other' ? $docs : $docs->first();
             });
     
-        return Inertia::render('Jobs/Collections/CollectionsView', [
+        $viewPath = request()->is('processing/*') 
+            ? 'Jobs/Processing/ProcessingView'
+            : 'Jobs/Collections/CollectionsView';
+    
+        return Inertia::render($viewPath, [
             'job' => $jobArray,
             'customers' => $customers,
             'documents' => [
@@ -323,12 +324,23 @@ class JobController extends Controller
             $job = Job::where('job_id', $jobId)
                 ->with(['client', 'items.category'])
                 ->firstOrFail();
-    
-            // Validate signatures
+
+            // Copy item details to processing fields
+            foreach ($job->items as $item) {
+                $item->update([
+                    'processing_make' => $item->make,
+                    'processing_model' => $item->model,
+                    'processing_specification' => $item->specification,
+                    'processing_erasure_required' => $item->erasure_required
+                ]);
+            }
+
+            // Validate signatures and names
             $request->validate([
                 'customer_signature' => 'required|string',
+                'customer_name' => 'required|string',
                 'driver_signature' => 'required|string',
-                'customer_name' => 'required|string'
+                'driver_name' => 'required|string'
             ]);
     
             // Create job folder if it doesn't exist
@@ -396,18 +408,25 @@ class JobController extends Controller
                 ]);
             }
     
-            // Update job status and customer name
+            // Update job status and names
             $job->update([
                 'job_status' => 'Collected',
-                'customer_signature_name' => $request->customer_name
+                'customer_signature_name' => $request->customer_name,
+                'driver_signature_name' => $request->driver_name
             ]);
     
-            // Add audit log entry as system note
-            JobAuditService::log($job->id, 'Job collected and signatures obtained', 'true', 'Job collected and signatures obtained');
-
+            // Add audit log entry
+            JobAuditService::log($job->id, 'Job collected and signatures obtained', 'true');
+    
+            // Determine redirect based on user role
+            $redirectPath = auth()->user()->type === 'Drivers' 
+                ? '/dashboard'
+                : "/processing/{$job->id}";
+    
             return response()->json([
                 'message' => 'Job marked as collected successfully',
-                'document' => $existingManifest ?? $document ?? null
+                'document' => $existingManifest ?? $document ?? null,
+                'redirect' => $redirectPath
             ]);
     
         } catch (\Exception $e) {

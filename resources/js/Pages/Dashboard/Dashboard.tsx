@@ -19,17 +19,26 @@ import UpcomingJobs from "./Jobs/UpcomingJobs"
 import DriverJobs from "./DriverJobs/DriverJobs"
 import { ClientOnly, StaffOnly, Role } from '@/Components/Auth/Can';
 import { useAuth } from '@/contexts/AuthContext';
+import ClientJobs from "./ClientJobs/ClientJobs"
 
+// Update the DashboardMetrics interface
 interface DashboardMetrics {
   jobsThisYear: number
   jobsLast30Days: number
   upcomingCollections: number
   completedJobsThisYear: number
   recentJobs: any[]
+  // Add new client metrics
+  clientMetrics?: {
+    lifetimeItemsRecycled: number
+    carbonSavings: number
+    jobsThisYear: number
+    jobsLastYear: number
+  }
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, refreshUserData, isInitialized } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     jobsThisYear: 0,
     jobsLast30Days: 0,
@@ -37,6 +46,13 @@ export default function Dashboard() {
     completedJobsThisYear: 0,
     recentJobs: []
   })
+
+  // Add this effect to refresh user data when component mounts
+  useEffect(() => {
+    if (!user?.staffDetails?.role) {
+      refreshUserData();
+    }
+  }, []);
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -50,6 +66,40 @@ export default function Dashboard() {
 
     fetchMetrics()
   }, [])
+
+  // Add this debug section to see what's happening with user data
+  console.log('Dashboard user data:', {
+    user,
+    staffDetails: user?.staffDetails,
+    role: user?.staffDetails?.role,
+    roleName: user?.staffDetails?.role?.name,
+    isInitialized
+  });
+
+  // If user data is not initialized yet, show loading state
+  if (!isInitialized) {
+    return (
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 items-center gap-2 px-4 bg-white border-b">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </header>
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <p>Loading dashboard...</p>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -134,6 +184,46 @@ export default function Dashboard() {
 
           <ClientOnly>
             <h1 className="text-3xl font-semibold text-gray-800">Client Dashboard</h1>
+            
+            {/* Client Metrics Cards */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Lifetime Items Recycled</CardTitle>
+                  <PackageCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{metrics.clientMetrics?.lifetimeItemsRecycled || 0}</div>
+                  <p className="text-xs text-muted-foreground">Total items recycled with us</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Carbon Savings</CardTitle>
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{metrics.clientMetrics?.carbonSavings || 0}</div>
+                  <p className="text-xs text-muted-foreground">kg CO₂ equivalent saved</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Jobs Comparison</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{metrics.clientMetrics?.jobsThisYear || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    vs {metrics.clientMetrics?.jobsLastYear || 0} last year
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <ClientJobs />
           </ClientOnly>
 
           

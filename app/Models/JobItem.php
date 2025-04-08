@@ -25,7 +25,19 @@ class JobItem extends Model
         'processing_model',
         'processing_specification',
         'added',
-        'processing_erasure_required'
+        'processing_erasure_required',
+        'processing_data_status',  // Add this
+        'serial_number',
+        'asset_tag'
+    ];
+
+    // Add the enum values as a constant
+    public const DATA_STATUS_OPTIONS = [
+        'Destroyed (Physical Destruction)',
+        'Wiped Aiken',
+        'Wiped Ziperase',
+        'No Erasure Required',
+        'Drive Removed by Client'
     ];
 
     // Add this to define the enum values
@@ -51,4 +63,8 @@ class JobItem extends Model
     {
         return $this->belongsTo(CategorySub::class, 'sub_category_id');
     }
+
+    protected $casts = [
+        'processing_specification' => 'json',
+    ];
 }

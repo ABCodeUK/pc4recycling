@@ -15,7 +15,7 @@ class JobStatusRedirect
         $job = Job::findOrFail($jobId);
         
         $collectionStatuses = ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed'];
-        $processingStatuses = ['Collected', 'Processing'];
+        $processingStatuses = ['Collected', 'Received at Facility', 'Processing'];
         
         $path = $request->path();
         $isCollectionsRoute = str_contains($path, 'collections');

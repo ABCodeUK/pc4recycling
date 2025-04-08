@@ -101,13 +101,14 @@ export default function CollectionsView({ job, customers, documents: initialDocu
     const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
 
     // Add handler for signature completion
-    const handleSignatureComplete = async (customerSignature: string, driverSignature: string) => {
+    const handleSignatureComplete = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
         try {
-            // First, save the signatures
             const formData = new FormData();
             formData.append('customer_signature', customerSignature);
+            formData.append('customer_signature_name', customerName);
             formData.append('driver_signature', driverSignature);
-
+            formData.append('driver_signature_name', driverName);
+    
             await axios.post(`/api/jobs/${job.job_id}/mark-collected`, formData);
             
             toast.success('Job marked as collected successfully');
@@ -119,6 +120,27 @@ export default function CollectionsView({ job, customers, documents: initialDocu
             setIsSignatureDialogOpen(false);
         }
     };
+
+    const handleMarkJobCollected = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
+      try {
+          const response = await axios.post(`/api/jobs/${job.job_id}/mark-collected`, {
+              customer_signature: customerSignature,
+              customer_name: customerName,
+              driver_signature: driverSignature,
+              driver_name: driverName
+          });
+
+          toast.success("Job marked as collected successfully");
+          
+          // Handle redirect based on response
+          if (response.data.redirect) {
+              window.location.href = response.data.redirect;
+          }
+      } catch (error) {
+          console.error('Error marking job as collected:', error);
+          toast.error("Failed to mark job as collected");
+      }
+  };
 
   // Initialize documents state with passed data
   const [documents, setDocuments] = useState<DocumentState>(initialDocuments || {
@@ -738,23 +760,3 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                       );
                     }
 
-const handleMarkJobCollected = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
-    try {
-        const response = await axios.post(`/api/jobs/${job.id}/mark-collected`, {
-            customer_signature: customerSignature,
-            customer_name: customerName,
-            driver_signature: driverSignature,
-            driver_name: driverName
-        });
-
-        toast.success("Job marked as collected successfully");
-        
-        // Handle redirect based on response
-        if (response.data.redirect) {
-            window.location.href = response.data.redirect;
-        }
-    } catch (error) {
-        console.error('Error marking job as collected:', error);
-        toast.error("Failed to mark job as collected");
-    }
-};

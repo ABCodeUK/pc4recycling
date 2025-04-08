@@ -21,6 +21,7 @@ use App\Http\Controllers\IMEIController;
 use App\Http\Controllers\IMEICheckerController;
 use App\Http\Controllers\MySQLConnectionController;
 use App\Http\Controllers\IceCatController;
+use App\Http\Controllers\ClientDashboardJobsController;
 use App\Http\Controllers\StaffAccountsController;
 use App\Http\Controllers\StaffRolesController;
 use App\Http\Controllers\ClientAccountsController;
@@ -38,14 +39,24 @@ use Inertia\Inertia;
 // Include authentication routes
 require __DIR__.'/auth.php';
 
-// Root route renders the Dashboard, redirect unauthenticated users to login
+// After successful login, ensure user data is properly loaded
 Route::get('/', function () {
-    return Inertia::render('Dashboard/Dashboard');
-})->middleware(['auth', 'verified'])->name('home');  // Changed from 'dashboard' to 'home'
+    // Ensure user is fully loaded with all relationships
+    $user = Auth::user()->fresh()->load('staffDetails.role');
+    
+    return Inertia::render('Dashboard/Dashboard', [
+        'user' => $user
+    ]);
+})->middleware(['auth', 'verified'])->name('home');
 
 // Admin Dashboard route (kept for consistency)
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard/Dashboard');
+    // Ensure user is fully loaded with all relationships
+    $user = Auth::user()->fresh()->load('staffDetails.role');
+    
+    return Inertia::render('Dashboard/Dashboard', [
+        'user' => $user
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Admin Profile routes (requires authentication)
@@ -136,6 +147,7 @@ Route::delete('/api/jobs/{jobId}/items/{itemId}', [JobItemController::class, 'de
 Route::get('/api/jobs/{jobId}/generate-item-number', [JobItemController::class, 'generateItemNumber']);
 Route::post('/api/jobs/{jobId}/mark-collected', [JobController::class, 'markAsCollected']);
 Route::post('/collections/{id}/mark-collected', [JobController::class, 'markAsCollected'])->name('collections.mark-collected');
+Route::post('/api/jobs/{jobId}/mark-received', [JobController::class, 'markAsReceived'])->name('jobs.mark-received');
 });
 
 // Staff Accounts
@@ -298,3 +310,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/jobs/{jobId}/audit/{entryId}', [JobAuditController::class, 'update']);
     Route::delete('/api/jobs/{jobId}/audit/{entryId}', [JobAuditController::class, 'destroy']);
 });
+// Add this route to your web.php file
+Route::get('/api/user', function () {
+    if (Auth::check()) {
+        return Auth::user()->load('staffDetails.role');
+    }
+    return response()->json(null, 401);
+})->middleware('auth');
+// Add this route to your web.php file
+// Replace the existing client-jobs route with this
+Route::get('/api/client-dashboard-jobs', [ClientDashboardJobsController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard.client-dashboard-jobs');

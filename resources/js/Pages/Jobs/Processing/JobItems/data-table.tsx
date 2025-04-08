@@ -22,17 +22,6 @@ import { Button } from "@/Components/ui/button"; // Add this import
 import { Maximize2 } from "lucide-react"; // Import the Maximize2 icon from lucide-react
 import { Category, JobItem } from "./types"; // Adjust the path as necessary
 
-interface DataTableProps<TData> {
-  columns: ColumnDef<TData>[];
-  data: TData[];
-  meta: {
-    categories: Category[];
-    setItems: (items: TData[]) => void;
-    onExpandItem: (item: TData) => void;
-    isEditable: boolean;
-  };
-}
-
 interface EditableCellProps {
   isEditable: boolean;
   children: React.ReactNode;
@@ -45,15 +34,32 @@ const EditableCell: React.FC<EditableCellProps> = ({ isEditable, children }) => 
   return children;
 };
 
+interface DataTableProps<TData> {
+  columns: ColumnDef<TData>[];
+  data: TData[];
+  meta: {
+    categories: Category[];
+    setItems: (items: TData[]) => void;
+    onExpandItem: (item: TData) => void;
+    isEditable: boolean;
+    jobStatus?: string;
+  };
+  columnVisibility?: Record<string, boolean>;
+}
+
 export function DataTable<TData>({
   columns,
   data,
   meta,
+  columnVisibility,
 }: DataTableProps<TData>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    initialState: {
+      columnVisibility: columnVisibility, // Add this line
+    },
     meta: {
       ...meta,
       renderCell: (children: React.ReactNode) => (
@@ -65,13 +71,19 @@ export function DataTable<TData>({
   });
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
+                <TableHead 
+                  key={header.id}
+                  style={{ 
+                    width: header.column.columnDef.size,
+                    minWidth: header.column.columnDef.minSize
+                  }}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -88,7 +100,13 @@ export function DataTable<TData>({
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell 
+                    key={cell.id}
+                    style={{ 
+                      width: cell.column.columnDef.size,
+                      minWidth: cell.column.columnDef.minSize
+                    }}
+                  >
                     <EditableCell isEditable={meta.isEditable}>
                       {flexRender(
                         cell.column.columnDef.cell,

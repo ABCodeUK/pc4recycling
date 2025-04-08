@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Job;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // Add this import
 
 class DashboardController extends Controller
 {
@@ -13,8 +14,8 @@ class DashboardController extends Controller
         try {
             $now = Carbon::now();
             $startOfYear = Carbon::now()->startOfYear();
-            $startOfMonth = Carbon::now()->startOfMonth();
-    
+            $user = Auth::user();
+            
             $metrics = [
                 // Jobs with collection dates in current year
                 'jobsThisYear' => Job::whereYear('collection_date', $now->year)
@@ -42,6 +43,25 @@ class DashboardController extends Controller
                     ->limit(10)
                     ->get()
             ];
+    
+            // Add client-specific metrics if the user is a client
+            if ($user && $user->client) {
+                $metrics['clientMetrics'] = [
+                    'lifetimeItemsRecycled' => \App\Models\JobItem::whereHas('job', function ($query) use ($user) {
+                        $query->where('client_id', $user->client->id);
+                    })->count(),
+                    
+                    'carbonSavings' => 0, // Placeholder for now
+                    
+                    'jobsThisYear' => Job::where('client_id', $user->client->id)
+                        ->whereYear('collection_date', $now->year)
+                        ->count(),
+                        
+                    'jobsLastYear' => Job::where('client_id', $user->client->id)
+                        ->whereYear('collection_date', $now->year - 1)
+                        ->count(),
+                ];
+            }
     
             return response()->json($metrics);
         } catch (\Exception $e) {
@@ -139,4 +159,5 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Failed to fetch driver jobs'], 500);
         }
     }
+   
 }

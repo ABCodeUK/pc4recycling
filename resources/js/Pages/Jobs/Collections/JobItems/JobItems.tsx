@@ -214,18 +214,16 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     }
   }, [jobId]); // Only depend on jobId
 
-  const handleMarkJobCollected = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
+  // Replace handleMarkJobCollected with this new version
+  const handleMarkJobCollected = async (customerSignature: string, driverSignature: string) => {
     try {
-      const data = {
-        customer_signature: customerSignature,
-        customer_name: customerName,
-        driver_signature: driverSignature,
-        driver_name: driverName
-      };
+      const formData = new FormData();
+      formData.append('customer_signature', customerSignature);
+      formData.append('driver_signature', driverSignature);
 
-      await axios.post(`/api/jobs/${jobId}/mark-collected`, data);
+      await axios.post(`/api/jobs/${jobId}/mark-collected`, formData);
       toast.success("Job marked as collected successfully");
-      window.location.reload();
+      window.location.reload(); // Reload to show updated status
     } catch (error) {
       console.error('Error marking job as collected:', error);
       toast.error("Failed to mark job as collected");

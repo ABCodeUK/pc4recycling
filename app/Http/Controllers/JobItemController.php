@@ -76,6 +76,7 @@ class JobItemController extends Controller
                 if ($existingItems->has($item['item_number'])) {
                     // Update existing item
                     $existingItem = $existingItems->get($item['item_number']);
+                    // In both the update and create sections of the store method:
                     $existingItem->update([
                         'quantity' => (int)($item['quantity'] ?? 1),
                         'category_id' => !empty($item['category_id']) ? (int)$item['category_id'] : null,
@@ -87,8 +88,11 @@ class JobItemController extends Controller
                         'image_path' => $item['image_path'] ?? null,
                         'processing_make' => $item['processing_make'] ?? null,
                         'processing_model' => $item['processing_model'] ?? null,
+                        'serial_number' => $item['serial_number'] ?? null,  // Add this
+                        'asset_tag' => $item['asset_tag'] ?? null,         // Add this
                         'processing_specification' => $item['processing_specification'] ?? null,
                         'processing_erasure_required' => $item['processing_erasure_required'] ?? null,
+                        'processing_data_status' => $item['processing_data_status'] ?? null,  // Add this
                         'added' => $existingItem->added ?? 'Collection',
                         'updated_at' => now()
                     ]);
@@ -107,6 +111,8 @@ class JobItemController extends Controller
                         'image_path' => $item['image_path'] ?? null,
                         'processing_make' => $item['processing_make'] ?? null,
                         'processing_model' => $item['processing_model'] ?? null,
+                        'serial_number' => $item['serial_number'] ?? null,  // Add this
+                        'asset_tag' => $item['asset_tag'] ?? null,         // Add this
                         'processing_specification' => $item['processing_specification'] ?? null,
                         'processing_erasure_required' => $item['processing_erasure_required'] ?? null,
                         'added' => $item['added'] ?? 'Collection', // Use the added value from frontend

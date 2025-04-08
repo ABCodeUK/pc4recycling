@@ -23,7 +23,7 @@ import { Upload, Trash2, FileText } from "lucide-react";
 import JobItems from "./JobItems/JobItems";  // Update the import 
 import { Textarea } from "@/Components/ui/textarea";
 import JobAuditLog from '../Collections/Components/JobAuditLog';
-import CollectionSignatureDialog from './Components/CollectionSignatureDialog';
+import CollectionSignatureDialog from './Components/ReceivedSignatureDialog';
 import { ClientOnly, StaffOnly, Role } from '@/Components/Auth/Can';
 import { useAuth } from '@/contexts/AuthContext';
 

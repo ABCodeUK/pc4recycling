@@ -9,12 +9,15 @@ import { toast } from "sonner";
 import { Category, JobItem } from "./types";
 import { ColumnDef } from "@tanstack/react-table";
 import { processingColumns } from "./processing-columns";
+import CollectionSignatureDialog from '../Components/ReceivedSignatureDialog';
 
 // Remove the Category interface since it's now imported from types
 
 
 // Update the component props to include jobStatus
 export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatus: string }) {
+  // Add new state for received dialog
+  const [isReceivedDialogOpen, setIsReceivedDialogOpen] = useState(false);
   const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('processing'); // Move this to top
@@ -137,15 +140,18 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
       make: null,
       model: null,
       erasure_required: null,
+      processing_data_status: null,
       specification: null,
       image_path: null,
       processing_make: null,
       processing_model: null,
       processing_specification: null,
       processing_erasure_required: null,
-      added: activeTab === 'processing' ? 'Processing' : 'Collection'  // Capitalize 'Processing'
+      serial_number: null,
+      asset_tag: null,
+      added: activeTab === 'processing' ? 'Processing' : 'Collection'
     };
-  
+
     setItems([...items, newItem]);
     setUsedItemNumbers([...usedItemNumbers, newItemNumber]);
     setHasUnsavedChanges(true);
@@ -232,20 +238,46 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     return editableStatuses.includes(jobStatus);
   };
 
+  // Add handler for marking job as received
+  const handleMarkJobReceived = async (staffSignature: string, staffName: string) => {
+    try {
+      const data = {
+        staffSignature: staffSignature,
+        staffName: staffName
+      };
+
+      await axios.post(`/api/jobs/${jobId}/mark-received`, data);
+      toast.success("Job marked as received successfully");
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking job as received:', error);
+      toast.error("Failed to mark job as received");
+    } finally {
+      setIsReceivedDialogOpen(false);
+    }
+  };
+
   return (
     <section className="bg-white border shadow rounded-lg">
       <header className="p-6 flex justify-between items-center">
         <h2 className="text-lg font-semibold">Processing Items</h2>
-        {jobStatus === 'Scheduled' && (
+        {jobStatus === 'Collected' && (
           <Button 
-            onClick={() => setIsSignatureDialogOpen(true)}
+            onClick={() => setIsReceivedDialogOpen(true)}
             disabled={hasUnsavedChanges}
             title={hasUnsavedChanges ? "Please save your changes first" : ""}
           >
-            Mark Job Collected
+            Mark Job Received
           </Button>
         )}
       </header>
+
+      {/* Add dialog component */}
+      <CollectionSignatureDialog
+        isOpen={isReceivedDialogOpen}
+        onClose={() => setIsReceivedDialogOpen(false)}
+        onComplete={handleMarkJobReceived}
+      />
 
       <Separator />
       <div className="p-6">
@@ -299,7 +331,11 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
                 categories: memoizedCategories,
                 setItems: handleItemsChange,
                 onExpandItem: handleExpandItem,
-                isEditable: ['Collected', 'Processing'].includes(jobStatus)
+                isEditable: ['Collected', 'Processing'].includes(jobStatus),
+                jobStatus: jobStatus
+              }}
+              columnVisibility={{
+                processing_data_status: ['Processing', 'Completed'].includes(jobStatus)
               }}
             />
             {['Collected', 'Processing'].includes(jobStatus) && (

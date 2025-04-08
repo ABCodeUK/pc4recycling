@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Providers\RouteServiceProvider;  // Add this import
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,8 +33,15 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+    
+        // Load the user with relationships before redirecting
+        // Use fresh() to ensure we get the latest data from the database
+        auth()->user()->fresh()->load('staffDetails.role');
+        
+        // Set a session flag to indicate this is a fresh login
+        session(['fresh_login' => true]);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(RouteServiceProvider::HOME);
     }
 
     /**

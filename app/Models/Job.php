@@ -36,13 +36,22 @@ class Job extends Model
         'building_access',
         'collection_route',
         'parking_loading',
-        'equipment_readiness'
+        'equipment_readiness',
+        'customer_signature',
+        'customer_signature_name',
+        'driver_signature',
+        'driver_signature_name',
+        'staff_signature_name',
+        'collected_at',
+        'received_at'  // Add this line
     ];
 
     protected $casts = [
         'collection_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'collected_at' => 'datetime',  // Add this line
+        'received_at' => 'datetime'    // Add this line
     ];
 
     // Define the valid status options
@@ -52,6 +61,7 @@ class Job extends Model
         'Scheduled',
         'Postponed',
         'Collected',
+        'Received at Facility',
         'Processing',
         'Complete',
         'Canceled'
@@ -109,7 +119,7 @@ class Job extends Model
 
     public function scopeProcessing($query)
     {
-        return $query->whereIn('job_status', ['Collected', 'Processing']);
+        return $query->whereIn('job_status', ['Collected','Received at Facility', 'Processing']);
     }
 
     public function scopeCompleted($query)

@@ -22,7 +22,7 @@ class JobController extends Controller
     {
         $status = match ($request->path()) {
             'collections' => ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed'],
-            'processing' => ['Collected', 'Processing'],
+            'processing' => ['Collected', 'Received at Facility', 'Processing'],
             'completed' => ['Complete', 'Canceled'],
             default => ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed'],
         };
@@ -438,4 +438,63 @@ class JobController extends Controller
             return response()->json(['error' => 'Failed to mark job as collected: ' . $e->getMessage()], 500);
         }
     }
+    // Add this new method after markAsCollected
+public function markAsReceived(Request $request, $jobId)
+{
+    try {
+        Log::info('Starting markAsReceived', ['job_id' => $jobId]);
+        
+        $job = Job::where('job_id', $jobId)->firstOrFail();
+
+        // Validate signature and name
+        $request->validate([
+            'staffSignature' => 'required|string',
+            'staffName' => 'required|string'
+        ]);
+
+        // Create job folder if it doesn't exist
+        $jobFolder = "jobs/{$job->job_id}";
+        if (!Storage::disk('public')->exists($jobFolder)) {
+            Storage::disk('public')->makeDirectory($jobFolder);
+        }
+
+        // Save staff signature
+        $staffSignatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->staffSignature));
+        $staffFilename = "staff-signature-{$job->job_id}.png";
+        Storage::disk('public')->put("{$jobFolder}/{$staffFilename}", $staffSignatureData);
+
+        // Create staff signature document record
+        JobDocument::create([
+            'job_id' => $job->id,
+            'document_type' => 'staff_signature',
+            'original_filename' => $staffFilename,
+            'stored_filename' => $staffFilename,
+            'file_path' => "{$jobFolder}/{$staffFilename}",
+            'mime_type' => 'image/png',
+            'file_size' => strlen($staffSignatureData)
+        ]);
+
+        // Update job status and staff name
+        $job->update([
+            'job_status' => 'Received at Facility',
+            'staff_signature_name' => $request->staffName
+        ]);
+
+        // Add audit log entry
+        JobAuditService::log($job->id, 'Job received at facility and signature obtained', 'true');
+
+        return response()->json([
+            'message' => 'Job marked as received successfully',
+            'redirect' => "/processing/{$job->id}"
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Failed to mark job as received', [
+            'job_id' => $jobId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => 'Failed to mark job as received: ' . $e->getMessage()], 500);
+    }
+}
 }

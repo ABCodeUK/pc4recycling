@@ -11,6 +11,8 @@ use App\Http\Middleware\JobStatusRedirect;
 
 class RouteServiceProvider extends ServiceProvider
 {
+    public const HOME = '/';
+
     public function boot(): void
     {
         // Add this line to register the middleware
@@ -19,6 +21,11 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Add this to ensure user data is loaded with relationships
+        if ($user = auth()->user()) {
+            $user->load('staffDetails.role');
+        }
 
         $this->routes(function () {
             Route::middleware('api')

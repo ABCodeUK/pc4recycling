@@ -9,26 +9,78 @@ import {
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import { Maximize2, Trash2 } from "lucide-react";
-import { Category, JobItem } from "./types";
+import { Category, JobItem, ProcessingDataStatus } from "./types";  // Add ProcessingDataStatus here
 import axios from "axios";
 import { toast } from "sonner";
+import { Label } from "@/Components/ui/label";
+import { useEffect, useRef, memo } from "react";
 
 interface CustomTableMeta extends TableMeta<JobItem> {
   setItems: (items: JobItem[]) => void;
   onExpandItem: (item: JobItem) => void;
   categories: Category[];
   isEditable: boolean;
+  jobStatus?: string;  // Add this
 }
 
 export const processingColumns: ColumnDef<JobItem>[] = [
   {
+    id: "actions",
+    header: ({ table }) => {
+      const meta = table.options.meta as CustomTableMeta | undefined;
+      return meta?.isEditable ? "Actions" : null;
+    },
+    minSize: 100,
+    cell: ({ row, table }: CellContext<JobItem, unknown>) => {
+      const meta = table.options.meta as CustomTableMeta | undefined;
+      const isEditable = meta?.isEditable ?? false;
+      
+      // Don't show actions for Collection items
+      if (!isEditable || row.original.added === 'Collection') return null;
+
+      return (
+        <div className="flex gap-2">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              const isExistingItem = row.original.id > 0;
+              if (isExistingItem) {
+                try {
+                  await axios.delete(`/api/jobs/${row.original.job_id}/items/${row.original.id}`);
+                  const items = [...table.options.data];
+                  const index = items.indexOf(row.original);
+                  items.splice(index, 1);
+                  meta?.setItems?.([...items]);
+                  toast.success("Item deleted successfully");
+                } catch (error) {
+                  console.error('Error deleting item:', error);
+                  toast.error("Failed to delete item");
+                }
+              } else {
+                const items = [...table.options.data];
+                const index = items.indexOf(row.original);
+                items.splice(index, 1);
+                meta?.setItems?.([...items]);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      );
+    }
+  },
+  {
     accessorKey: "item_number",
     header: "Item #",
-    cell: ({ row }) => row.original.item_number
+    cell: ({ row }) => row.original.item_number,
+    minSize: 120,
   },
   {
     accessorKey: "quantity",
     header: "Qty",
+    minSize: 150,
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
@@ -81,8 +133,10 @@ export const processingColumns: ColumnDef<JobItem>[] = [
         <Select
           value={row.original.category_id?.toString() || ""}
           onValueChange={(value) => {
+            // Reset related fields when category changes
             row.original.category_id = parseInt(value);
             row.original.sub_category_id = null;
+            row.original.processing_specification = {}; // Reset specifications
             meta?.setItems?.([...table.options.data]);
           }}
         >
@@ -144,9 +198,11 @@ export const processingColumns: ColumnDef<JobItem>[] = [
       );
     }
   },
+  // In the processing_make column
   {
     accessorKey: "processing_make",
     header: "Make",
+    minSize: 180,
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
@@ -154,8 +210,11 @@ export const processingColumns: ColumnDef<JobItem>[] = [
         <Input
           value={row.original.processing_make || ""}
           onChange={(e) => {
-            row.original.processing_make = e.target.value;
-            meta?.setItems?.([...table.options.data]);
+            const newData = table.options.data.map(item => ({
+              ...item,
+              processing_make: item === row.original ? e.target.value : item.processing_make
+            }));
+            meta?.setItems?.(newData);
           }}
           placeholder="Enter make"
         />
@@ -167,6 +226,7 @@ export const processingColumns: ColumnDef<JobItem>[] = [
   {
     accessorKey: "processing_model",
     header: "Model",
+    minSize: 180,
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
@@ -185,28 +245,51 @@ export const processingColumns: ColumnDef<JobItem>[] = [
     }
   },
   {
-    accessorKey: "processing_specification",
-    header: "Specification",
+    accessorKey: "serial_number",
+    header: "Serial Number",
+    minSize: 180,
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
       return isEditable ? (
         <Input
-          value={row.original.processing_specification || ""}
+          value={row.original.serial_number || ""}
           onChange={(e) => {
-            row.original.processing_specification = e.target.value;
+            row.original.serial_number = e.target.value;
             meta?.setItems?.([...table.options.data]);
           }}
-          placeholder="Enter specification"
+          placeholder="Enter serial number"
         />
       ) : (
-        <span>{row.original.processing_specification || '-'}</span>
+        <span>{row.original.serial_number || '-'}</span>
+      );
+    }
+  },
+  {
+    accessorKey: "asset_tag",
+    header: "Asset Tag",
+    minSize: 180,
+    cell: ({ row, table }: CellContext<JobItem, unknown>) => {
+      const meta = table.options.meta as CustomTableMeta | undefined;
+      const isEditable = meta?.isEditable ?? false;
+      return isEditable ? (
+        <Input
+          value={row.original.asset_tag || ""}
+          onChange={(e) => {
+            row.original.asset_tag = e.target.value;
+            meta?.setItems?.([...table.options.data]);
+          }}
+          placeholder="Enter asset tag"
+        />
+      ) : (
+        <span>{row.original.asset_tag || '-'}</span>
       );
     }
   },
   {
     accessorKey: "processing_erasure_required",
     header: "Erasure Required",
+    minSize: 180,
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
@@ -234,47 +317,118 @@ export const processingColumns: ColumnDef<JobItem>[] = [
     }
   },
   {
-    id: "actions",
+    accessorKey: "processing_data_status",
     header: ({ table }) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
-      return meta?.isEditable ? "Actions" : null;
+      return ['Processing', 'Completed'].includes(meta?.jobStatus || '') ? "Data Status" : null;
     },
+    minSize: 180,
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
-      
-      // Don't show actions for Collection items
-      if (!isEditable || row.original.added === 'Collection') return null;
+      const jobStatus = meta?.jobStatus;
 
+      if (!['Processing', 'Completed'].includes(jobStatus || '')) {
+        return null;
+      }
+      
+      // In the processing_data_status column
+      return isEditable ? (
+        <Select
+          value={row.original.processing_data_status || ''}
+          onValueChange={(value: string) => {
+            row.original.processing_data_status = value as ProcessingDataStatus;
+            meta?.setItems?.([...table.options.data]);
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Destroyed (Physical Destruction)">Destroyed (Physical Destruction)</SelectItem>
+            <SelectItem value="Wiped Aiken">Wiped Aiken</SelectItem>
+            <SelectItem value="Wiped Ziperase">Wiped Ziperase</SelectItem>
+            <SelectItem value="No Erasure Required">No Erasure Required</SelectItem>
+            <SelectItem value="Drive Removed by Client">Drive Removed by Client</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : (
+        <span>{row.original.processing_data_status || '-'}</span>
+      );
+    }
+  },
+  {
+    accessorKey: "processing_specification",
+    header: "Specifications",
+    minSize: 800,
+    cell: ({ row, table }: CellContext<JobItem, unknown>) => {
+      const meta = table.options.meta as CustomTableMeta | undefined;
+      const isEditable = meta?.isEditable ?? false;
+      const categories = meta?.categories ?? [];
+      
+      // Find the current category and its spec fields
+      const category = categories.find(cat => cat.id === row.original.category_id);
+      const specFields = category?.spec_fields ?? [];
+      
+      // Parse the specification JSON if it's a string
+      if (typeof row.original.processing_specification === 'string') {
+        try {
+          row.original.processing_specification = JSON.parse(row.original.processing_specification);
+        } catch (e) {
+          row.original.processing_specification = {};
+        }
+      }
+
+      if (!isEditable) {
+        if (!row.original.processing_specification) return '-';
+        return (
+          <div className="space-y-1">
+            {specFields.map(field => (
+              <div key={field.id} className="text-sm">
+                <span className="font-medium">{field.spec_name}:</span>{' '}
+                {row.original.processing_specification?.[field.spec_name] || '-'}
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      if (!category || specFields.length === 0) {
+        return <span className="text-muted-foreground"></span>;
+      }
+
+      // In the specifications cell
       return (
-        <div className="flex gap-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={async () => {
-              const isExistingItem = row.original.id > 0;
-              if (isExistingItem) {
-                try {
-                  await axios.delete(`/api/jobs/${row.original.job_id}/items/${row.original.id}`);
-                  const items = [...table.options.data];
-                  const index = items.indexOf(row.original);
-                  items.splice(index, 1);
-                  meta?.setItems?.([...items]);
-                  toast.success("Item deleted successfully");
-                } catch (error) {
-                  console.error('Error deleting item:', error);
-                  toast.error("Failed to delete item");
-                }
-              } else {
-                const items = [...table.options.data];
-                const index = items.indexOf(row.original);
-                items.splice(index, 1);
-                meta?.setItems?.([...items]);
-              }
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-row gap-2">
+          {specFields.map(field => (
+            <div key={field.id} className="relative w-[250px]">
+              <span 
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground whitespace-nowrap pointer-events-none"
+              >
+                {field.spec_name}:
+              </span>
+              <Input
+                value={row.original.processing_specification?.[field.spec_name] || ''}
+                onChange={(e) => {
+                  const newData = table.options.data.map(item => {
+                    if (item === row.original) {
+                      return {
+                        ...item,
+                        processing_specification: {
+                          ...item.processing_specification,
+                          [field.spec_name]: e.target.value
+                        }
+                      };
+                    }
+                    return item;
+                  });
+                  meta?.setItems?.(newData);
+                }}
+                className="h-9 w-full pl-[calc(1.5rem+var(--label-width))]"
+                style={{ '--label-width': `${field.spec_name.length * 8}px` } as any}
+              />
+            </div>
+          ))}
         </div>
       );
     }

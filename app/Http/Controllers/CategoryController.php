@@ -33,18 +33,19 @@ class CategoryController extends Controller
     // Method for API requests
     public function getCategories()
     {
-        $categories = Category::with('subCategories')
-            ->orderBy('name')
+        $categories = Category::with(['subCategories', 'specFields'])
             ->get()
             ->map(function ($category) {
                 return [
                     'id' => $category->id,
                     'name' => $category->name,
-                    'sub_categories' => $category->subCategories->map(function ($sub) {
+                    'sub_categories' => $category->subCategories,
+                    'spec_fields' => $category->specFields->map(function ($field) {
                         return [
-                            'id' => $sub->id,
-                            'name' => $sub->name,
-                            'parent_id' => $sub->parent_id
+                            'id' => $field->id,
+                            'spec_name' => $field->spec_name,
+                            'spec_order' => $field->spec_order,
+                            'spec_default' => $field->spec_default,
                         ];
                     })
                 ];

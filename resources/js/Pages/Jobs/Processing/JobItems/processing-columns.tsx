@@ -320,7 +320,7 @@ export const processingColumns: ColumnDef<JobItem>[] = [
     accessorKey: "processing_data_status",
     header: ({ table }) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
-      return ['Processing', 'Completed'].includes(meta?.jobStatus || '') ? "Data Status" : null;
+      return ['Processing', 'Received at Facility', 'Completed'].includes(meta?.jobStatus || '') ? "Data Status" : null;
     },
     minSize: 180,
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
@@ -328,7 +328,7 @@ export const processingColumns: ColumnDef<JobItem>[] = [
       const isEditable = meta?.isEditable ?? false;
       const jobStatus = meta?.jobStatus;
 
-      if (!['Processing', 'Completed'].includes(jobStatus || '')) {
+      if (!['Processing','Received at Facility', 'Completed'].includes(jobStatus || '')) {
         return null;
       }
       

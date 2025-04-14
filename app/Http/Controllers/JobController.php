@@ -325,13 +325,20 @@ class JobController extends Controller
                 ->with(['client', 'items.category'])
                 ->firstOrFail();
 
+            // Reset any existing warehouse/staff signatures
+            $job->update([
+                'staff_signature_name' => null,
+                'received_at' => null
+            ]);
+
             // Copy item details to processing fields
             foreach ($job->items as $item) {
                 $item->update([
                     'processing_make' => $item->make,
                     'processing_model' => $item->model,
                     'processing_specification' => $item->specification,
-                    'processing_erasure_required' => $item->erasure_required
+                    'processing_erasure_required' => $item->erasure_required,
+                    'collected' => 'YES'  // Add this line
                 ]);
             }
 
@@ -381,13 +388,26 @@ class JobController extends Controller
                 'file_size' => strlen($driverSignatureData)
             ]);
     
+            // Update job status and names FIRST (only one update block needed)
+            $job->update([
+                'job_status' => 'Collected',
+                'customer_signature_name' => $request->customer_name,
+                'driver_signature_name' => $request->driver_name,
+                'collected_at' => now()
+            ]);
+    
+            // Refresh the job model with all necessary relationships
+            $job = Job::where('job_id', $jobId)
+                ->with(['client', 'items.category'])
+                ->firstOrFail();
+    
             // Generate collection manifest if it doesn't exist
             $existingManifest = $job->documents()
                 ->where('document_type', 'collection_manifest')
                 ->first();
     
             if (!$existingManifest) {
-                // Generate PDF
+                // Generate PDF with fresh data
                 $pdfService = new PDFService();
                 $pdf = $pdfService->generateCollectionManifest($job);
     
@@ -408,12 +428,55 @@ class JobController extends Controller
                 ]);
             }
     
-            // Update job status and names
+            // Log if we're overwriting existing data
+            if ($job->customer_signature_name || $job->driver_signature_name || $job->collected_at) {
+                Log::info('Overwriting existing collection data', [
+                    'job_id' => $jobId,
+                    'old_customer_name' => $job->customer_signature_name,
+                    'old_driver_name' => $job->driver_signature_name,
+                    'old_collected_at' => $job->collected_at
+                ]);
+            }
+    
+            // Update job status and names FIRST
             $job->update([
                 'job_status' => 'Collected',
                 'customer_signature_name' => $request->customer_name,
-                'driver_signature_name' => $request->driver_name
+                'driver_signature_name' => $request->driver_name,
+                'collected_at' => now()
             ]);
+    
+            // Refresh the job model with all necessary relationships
+            $job = Job::where('job_id', $jobId)
+                ->with(['client', 'items.category'])
+                ->firstOrFail();
+    
+            // Generate collection manifest if it doesn't exist
+            $existingManifest = $job->documents()
+                ->where('document_type', 'collection_manifest')
+                ->first();
+    
+            if (!$existingManifest) {
+                // Generate PDF with fresh data
+                $pdfService = new PDFService();
+                $pdf = $pdfService->generateCollectionManifest($job);
+    
+                // Save PDF file
+                $filename = "{$job->job_id}-Collection-Manifest.pdf";
+                $path = "{$jobFolder}/{$filename}";
+                Storage::disk('public')->put($path, $pdf->output());
+    
+                // Create document record
+                $document = JobDocument::create([
+                    'job_id' => $job->id,
+                    'document_type' => 'collection_manifest',
+                    'original_filename' => $filename,
+                    'stored_filename' => $filename,
+                    'file_path' => $path,
+                    'mime_type' => 'application/pdf',
+                    'file_size' => Storage::disk('public')->size($path)
+                ]);
+            }
     
             // Add audit log entry
             JobAuditService::log($job->id, 'Job collected and signatures obtained', 'true');
@@ -438,18 +501,50 @@ class JobController extends Controller
             return response()->json(['error' => 'Failed to mark job as collected: ' . $e->getMessage()], 500);
         }
     }
-    // Add this new method after markAsCollected
+    public function markAsProcessing(Request $request, $jobId)
+    {
+        try {
+            $job = Job::where('job_id', $jobId)
+                ->with(['client', 'items.category'])  // Include necessary relationships
+                ->firstOrFail();
+            
+            // Update job status
+            $job->update([
+                'job_status' => 'Processing'
+            ]);
+            
+            // Add audit log
+            JobAuditService::log($job->id, 'Job processing started', 'true');
+        
+            return response()->json([
+                'success' => true
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in markAsProcessing', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Failed to mark job as processing', 'message' => $e->getMessage()], 500);
+        }
+    }
 public function markAsReceived(Request $request, $jobId)
 {
     try {
-        Log::info('Starting markAsReceived', ['job_id' => $jobId]);
+        Log::info('Starting markAsReceived', [
+            'job_id' => $jobId,
+            'request_data' => $request->all()
+        ]);
         
-        $job = Job::where('job_id', $jobId)->firstOrFail();
+        $job = Job::where('job_id', $jobId)
+            ->with(['client', 'items.category'])  // Include necessary relationships
+            ->firstOrFail();
 
-        // Validate signature and name
-        $request->validate([
+        // Validate request
+        $validated = $request->validate([
             'staffSignature' => 'required|string',
-            'staffName' => 'required|string'
+            'staffName' => 'required|string',
+            'receivedDate' => 'required|date'
         ]);
 
         // Create job folder if it doesn't exist
@@ -459,7 +554,7 @@ public function markAsReceived(Request $request, $jobId)
         }
 
         // Save staff signature
-        $staffSignatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->staffSignature));
+        $staffSignatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $validated['staffSignature']));
         $staffFilename = "staff-signature-{$job->job_id}.png";
         Storage::disk('public')->put("{$jobFolder}/{$staffFilename}", $staffSignatureData);
 
@@ -474,27 +569,125 @@ public function markAsReceived(Request $request, $jobId)
             'file_size' => strlen($staffSignatureData)
         ]);
 
-        // Update job status and staff name
+        // Update job status and staff details
         $job->update([
             'job_status' => 'Received at Facility',
-            'staff_signature_name' => $request->staffName
+            'staff_signature_name' => $validated['staffName'],
+            'received_at' => $validated['receivedDate']
         ]);
 
-        // Add audit log entry
-        JobAuditService::log($job->id, 'Job received at facility and signature obtained', 'true');
+        // Refresh the job model with all necessary relationships
+        $job = Job::where('job_id', $jobId)
+            ->with(['client', 'items.category'])
+            ->firstOrFail();
+
+        // Generate new Collection Manifest PDF with updated data
+        $pdfService = new PDFService();
+        $pdf = $pdfService->generateCollectionManifest($job);
+
+        // Save Collection Manifest PDF file (overwriting existing)
+        $filename = "{$job->job_id}-Collection-Manifest.pdf";
+        $path = "{$jobFolder}/{$filename}";
+        Storage::disk('public')->put($path, $pdf->output());
+
+        // Update existing document record or create new one for Collection Manifest
+        $document = JobDocument::updateOrCreate(
+            [
+                'job_id' => $job->id,
+                'document_type' => 'collection_manifest'
+            ],
+            [
+                'original_filename' => $filename,
+                'stored_filename' => $filename,
+                'file_path' => $path,
+                'mime_type' => 'application/pdf',
+                'file_size' => Storage::disk('public')->size($path)
+            ]
+        );
+
+        // Generate Hazardous Waste Note PDF
+        $hazardPdf = $pdfService->generateHazardousWasteNote($job);
+        
+        // Save Hazardous Waste Note PDF file
+        $hazardFilename = "{$job->job_id}-Hazard-Waste-Note.pdf";
+        $hazardPath = "{$jobFolder}/{$hazardFilename}";
+        Storage::disk('public')->put($hazardPath, $hazardPdf->output());
+        
+        // Update existing document record or create new one for Hazardous Waste Note
+        $hazardDocument = JobDocument::updateOrCreate(
+            [
+                'job_id' => $job->id,
+                'document_type' => 'hazard_waste_note'
+            ],
+            [
+                'original_filename' => $hazardFilename,
+                'stored_filename' => $hazardFilename,
+                'file_path' => $hazardPath,
+                'mime_type' => 'application/pdf',
+                'file_size' => Storage::disk('public')->size($hazardPath)
+            ]
+        );
+
+        // Add audit log
+        JobAuditService::log($job->id, 'Job received at facility', 'true');
 
         return response()->json([
-            'message' => 'Job marked as received successfully',
-            'redirect' => "/processing/{$job->id}"
+            'success' => true,
+            'document' => $document,
+            'hazardDocument' => $hazardDocument
         ]);
 
     } catch (\Exception $e) {
-        Log::error('Failed to mark job as received', [
+        Log::error('Error in markAsReceived', [
             'job_id' => $jobId,
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ]);
-        return response()->json(['error' => 'Failed to mark job as received: ' . $e->getMessage()], 500);
+        return response()->json(['error' => 'Failed to mark job as received', 'message' => $e->getMessage()], 500);
     }
 }
+public function markAsCompleted(Request $request, $jobId)
+    {
+        try {
+            $job = Job::where('job_id', $jobId)->firstOrFail();
+            
+            $job->update([
+                'job_status' => 'Complete'
+            ]);
+
+            // Add audit log
+            JobAuditService::log($job->id, 'Job processing completed', 'true');
+
+            return response()->json(['success' => true]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in markAsCompleted', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Failed to mark job as completed', 'message' => $e->getMessage()], 500);
+        }
+    }
+    // Add this method after the existing methods
+    
+    /**
+     * Generate a hazardous waste note PDF for a job
+     */
+    public function generateHazardousWasteNote($jobId)
+    {
+        try {
+            $job = Job::with(['client', 'items.category'])->findOrFail($jobId);
+            
+            // Use the PDF service to generate the PDF
+            $pdfService = new PDFService();
+            $pdf = $pdfService->generateHazardousWasteNote($job);
+            
+            // Return the PDF for download
+            return $pdf->download($job->job_id . '-Hazard-Waste-Note.pdf');
+        } catch (\Exception $e) {
+            Log::error('Error generating hazardous waste note: ' . $e->getMessage());
+            return back()->with('error', 'Failed to generate hazardous waste note');
+        }
+    }
 }

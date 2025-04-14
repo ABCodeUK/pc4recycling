@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import { Separator } from "@/Components/ui/separator";
 import { Button } from "@/Components/ui/button";
+import { RefreshCw } from "lucide-react"; // Add this import
 import { DataTable } from "./data-table";
 import { jobItemColumns } from "./columns";
 import React, { useState, useEffect } from "react";
@@ -239,11 +240,12 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
   };
 
   // Add handler for marking job as received
-  const handleMarkJobReceived = async (staffSignature: string, staffName: string) => {
+  const handleMarkJobReceived = async (staffSignature: string, staffName: string, receivedDate: string) => {
     try {
       const data = {
         staffSignature: staffSignature,
-        staffName: staffName
+        staffName: staffName,
+        receivedDate: receivedDate
       };
 
       await axios.post(`/api/jobs/${jobId}/mark-received`, data);
@@ -257,10 +259,68 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     }
   };
 
+  // Add new handler for marking job as processing
+  const handleMarkJobProcessing = async () => {
+    try {
+      await axios.post(`/api/jobs/${jobId}/mark-processing`);
+      toast.success("Job marked as processing successfully");
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking job as processing:', error);
+      toast.error("Failed to mark job as processing");
+    }
+  };
+
+  // Add new handler for marking job as completed
+  const handleMarkJobCompleted = async () => {
+    try {
+      await axios.post(`/api/jobs/${jobId}/mark-completed`);
+      toast.success("Job marked as completed successfully");
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking job as completed:', error);
+      toast.error("Failed to mark job as completed");
+    }
+  };
+
+  // Add handler for Aitken sync (placeholder for now)
+  const handleAitkenSync = async () => {
+    toast.info("Aitken sync functionality coming soon");
+  };
+
   return (
     <section className="bg-white border shadow rounded-lg">
       <header className="p-6 flex justify-between items-center">
         <h2 className="text-lg font-semibold">Processing Items</h2>
+        {jobStatus === 'Processing' && (
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleAitkenSync}
+              variant="outline"
+              disabled={hasUnsavedChanges}
+              title={hasUnsavedChanges ? "Please save your changes first" : ""}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Sync Aitken
+            </Button>
+            <Button 
+              onClick={handleMarkJobCompleted}
+              disabled={hasUnsavedChanges}
+              title={hasUnsavedChanges ? "Please save your changes first" : ""}
+            >
+              Mark Job Complete
+            </Button>
+          </div>
+        )}
+        {jobStatus === 'Received at Facility' && (
+          <Button 
+            onClick={handleMarkJobProcessing}
+            disabled={hasUnsavedChanges}
+            title={hasUnsavedChanges ? "Please save your changes first" : ""}
+          >
+            Mark Job Processing
+          </Button>
+        )}
         {jobStatus === 'Collected' && (
           <Button 
             onClick={() => setIsReceivedDialogOpen(true)}

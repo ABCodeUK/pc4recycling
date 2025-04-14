@@ -15,11 +15,12 @@ import { Checkbox } from "@/Components/ui/checkbox";
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onComplete: (staffSignature: string, staffName: string) => void;
+    onComplete: (staffSignature: string, staffName: string, receivedDate: string) => void;
 }
 
 export default function ReceivedSignatureDialog({ isOpen, onClose, onComplete }: Props) {
     const [staffName, setStaffName] = useState("");
+    const [receivedDate, setReceivedDate] = useState(new Date().toISOString().split('T')[0]); // Add this line
     const [itemsConfirmed, setItemsConfirmed] = useState(false);
     const staffSignatureRef = useRef<SignatureCanvas>(null);
 
@@ -39,7 +40,7 @@ export default function ReceivedSignatureDialog({ isOpen, onClose, onComplete }:
         
         const canvas = staffSignatureRef.current?.getCanvas();
         if (canvas) {
-            onComplete(canvas.toDataURL(), staffName);
+            onComplete(canvas.toDataURL(), staffName, receivedDate); // We're passing the date here
         }
     };
 
@@ -75,6 +76,15 @@ export default function ReceivedSignatureDialog({ isOpen, onClose, onComplete }:
                                 value={staffName}
                                 onChange={(e) => setStaffName(e.target.value)}
                                 placeholder="Enter your name"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="receivedDate">Date Received</Label>
+                            <Input
+                                id="receivedDate"
+                                type="date"
+                                value={receivedDate}
+                                onChange={(e) => setReceivedDate(e.target.value)}
                             />
                         </div>
                     </div>

@@ -1,0 +1,1 @@
+import{j as r}from"./app-Cma8V3l9.js";const o=[{accessorKey:"name",header:"Name"},{accessorKey:"userCount",header:"User Count",cell:({row:e})=>r.jsx("div",{children:e.original.userCount??0})}];export{o as columns};

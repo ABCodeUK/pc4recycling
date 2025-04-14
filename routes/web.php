@@ -148,6 +148,8 @@ Route::get('/api/jobs/{jobId}/generate-item-number', [JobItemController::class, 
 Route::post('/api/jobs/{jobId}/mark-collected', [JobController::class, 'markAsCollected']);
 Route::post('/collections/{id}/mark-collected', [JobController::class, 'markAsCollected'])->name('collections.mark-collected');
 Route::post('/api/jobs/{jobId}/mark-received', [JobController::class, 'markAsReceived'])->name('jobs.mark-received');
+Route::post('/api/jobs/{jobId}/mark-processing', [JobController::class, 'markAsProcessing'])->name('jobs.mark-processing');
+Route::post('/api/jobs/{jobId}/mark-completed', [JobController::class, 'markAsCompleted'])->name('jobs.mark-completed');
 });
 
 // Staff Accounts
@@ -322,3 +324,5 @@ Route::get('/api/user', function () {
 Route::get('/api/client-dashboard-jobs', [ClientDashboardJobsController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard.client-dashboard-jobs');
+// Add this route with your other job routes
+Route::get('/jobs/{jobId}/hazardous-waste-note', [JobController::class, 'generateHazardousWasteNote']) ->name('jobs.hazardous-waste-note');

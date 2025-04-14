@@ -43,15 +43,15 @@ class Job extends Model
         'driver_signature_name',
         'staff_signature_name',
         'collected_at',
-        'received_at'  // Add this line
+        'received_at'
     ];
 
     protected $casts = [
         'collection_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'collected_at' => 'datetime',  // Add this line
-        'received_at' => 'datetime'    // Add this line
+        'collected_at' => 'datetime', 
+        'received_at' => 'datetime' 
     ];
 
     // Define the valid status options

@@ -169,7 +169,7 @@
                     @endif
                 </td>
                 <td class="center">{{ $item->erasure_required ?? 'Unknown' }}</td>
-                <td class="center"> </td>
+                <td class="center"> YES </td>
             </tr>
             @endforeach
         </tbody>
@@ -202,43 +202,42 @@
             @if(Storage::disk('public')->exists("jobs/{$job->job_id}/customer-signature-{$job->job_id}.png"))
                 <img src="{{ public_path("storage/jobs/{$job->job_id}/customer-signature-{$job->job_id}.png") }}" 
                      alt="Customer Signature" 
-                     style="max-width: 200px; height: auto; margin: 10px 0;">
-                <div class="signature-details">
-                    <p>Print Name: <span class="signature-field">{{ $job->customer_signature_name }}</span></p>
-                    <p>Date: <span class="signature-field">{{ $job->collected_at ? $job->collected_at->format('d/m/Y') : '' }}</span></p>
-                </div>
+                     style="max-width: 200px;">
             @endif
+            <div class="signature-details">
+                <p>Name: {{ $job->customer_signature_name }}</p>
+                <p>Date: {{ $job->collected_at ? date('d/m/Y', strtotime($job->collected_at)) : '' }}</p>
+            </div>
         </div>
+
         <div class="signature-box">
             <p>Driver Signature:</p>
             @if(Storage::disk('public')->exists("jobs/{$job->job_id}/driver-signature-{$job->job_id}.png"))
                 <img src="{{ public_path("storage/jobs/{$job->job_id}/driver-signature-{$job->job_id}.png") }}" 
                      alt="Driver Signature" 
-                     style="max-width: 200px; height: auto; margin: 10px 0;">
-                <div class="signature-details">
-                    <p>Print Name: <span class="signature-field">{{ $job->driver_signature_name ?: '' }}</span></p>
-                    <p>Date: <span class="signature-field">{{ $job->collected_at ? $job->collected_at->format('d/m/Y') : '' }}</span></p>
-                </div>
+                     style="max-width: 200px;">
             @endif
+            <div class="signature-details">
+                <p>Name: {{ $job->driver_signature_name }}</p>
+                <p>Date: {{ $job->collected_at ? date('d/m/Y', strtotime($job->collected_at)) : '' }}</p>
+            </div>
         </div>
+
+        <!-- Add staff signature section -->
+        @if($job->staff_signature_name)
         <div class="signature-box">
-            <p>Warehouse Signature:</p>
-            @if($job->staff_signature_name)
+            <p>Received By:</p>
+            @if(Storage::disk('public')->exists("jobs/{$job->job_id}/staff-signature-{$job->job_id}.png"))
                 <img src="{{ public_path("storage/jobs/{$job->job_id}/staff-signature-{$job->job_id}.png") }}" 
                      alt="Staff Signature" 
-                     style="max-width: 200px; height: auto; margin: 10px 0;">
-                <div class="signature-details">
-                    <p>Print Name: <span class="signature-field">{{ $job->staff_signature_name }}</span></p>
-                    <p>Date: <span class="signature-field">{{ $job->received_at ? $job->received_at->format('d/m/Y') : '' }}</span></p>
-                </div>
-            @else
-                <div style="height: 80px;"></div>
-                <div class="signature-details">
-                    <p>Print Name: <span class="signature-field"></span></p>
-                    <p>Date: <span class="signature-field"></span></p>
-                </div>
+                     style="max-width: 200px;">
             @endif
+            <div class="signature-details">
+                <p>Name: {{ $job->staff_signature_name }}</p>
+                <p>Date: {{ $job->received_at ? date('d/m/Y', strtotime($job->received_at)) : '' }}</p>
+            </div>
         </div>
+        @endif
     </div>
 
     <div class="footer">REGISTERED IN ENGLAND & WALES. REGISTRATION NO. 10498346. VAT NO. 257896833</div>

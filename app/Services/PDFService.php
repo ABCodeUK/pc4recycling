@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Job;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use App\Models\JobDocument;
 
 class PDFService
 {
@@ -18,8 +20,23 @@ class PDFService
             'customer' => $job->client,
             'items' => $job->items,
             'customer_signature_name' => $job->customer_signature_name,
-            'driver_signature_name' => $job->driver_signature_name,
-            'collected_at' => $job->collected_at
+            'driver_signature_name' => $job->driver_signature_name
+        ]);
+
+        return $pdf;
+    }
+
+    // Add new method for hazardous waste note
+    public function generateHazardousWasteNote(Job $job)
+    {
+        // Load job with relationships
+        $job->load(['client', 'items.category']);
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdfs.hazardous-waste-note', [
+            'job' => $job,
+            'customer' => $job->client,
+            'items' => $job->items
         ]);
 
         return $pdf;

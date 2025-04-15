@@ -343,13 +343,15 @@ class JobController extends Controller
             }
 
             // Validate signatures and names
+            // Update validation rules
             $request->validate([
                 'customer_signature' => 'required|string',
                 'customer_name' => 'required|string',
                 'driver_signature' => 'required|string',
-                'driver_name' => 'required|string'
+                'driver_name' => 'required|string',
+                'vehicle' => 'required|string'
             ]);
-    
+
             // Create job folder if it doesn't exist
             $jobFolder = "jobs/{$job->job_id}";
             if (!Storage::disk('public')->exists($jobFolder)) {
@@ -388,11 +390,12 @@ class JobController extends Controller
                 'file_size' => strlen($driverSignatureData)
             ]);
     
-            // Update job status and names FIRST (only one update block needed)
+            // Update job status and names
             $job->update([
                 'job_status' => 'Collected',
                 'customer_signature_name' => $request->customer_name,
                 'driver_signature_name' => $request->driver_name,
+                'vehicle' => $request->vehicle,
                 'collected_at' => now()
             ]);
     
@@ -478,6 +481,48 @@ class JobController extends Controller
                 ]);
             }
     
+            // After the Collection Manifest is generated, add this block:
+            if (!$existingManifest) {
+                // Generate PDF with fresh data
+                $pdfService = new PDFService();
+                $pdf = $pdfService->generateCollectionManifest($job);
+    
+                // Save PDF file
+                $filename = "{$job->job_id}-Collection-Manifest.pdf";
+                $path = "{$jobFolder}/{$filename}";
+                Storage::disk('public')->put($path, $pdf->output());
+    
+                // Create document record
+                $document = JobDocument::create([
+                    'job_id' => $job->id,
+                    'document_type' => 'collection_manifest',
+                    'original_filename' => $filename,
+                    'stored_filename' => $filename,
+                    'file_path' => $path,
+                    'mime_type' => 'application/pdf',
+                    'file_size' => Storage::disk('public')->size($path)
+                ]);
+            }
+    
+            // Generate Hazardous Waste Note
+            $hazardPdf = $pdfService->generateHazardousWasteNote($job);
+            
+            // Save Hazardous Waste Note
+            $hazardFilename = "{$job->job_id}-Hazard-Waste-Note.pdf";
+            $hazardPath = "{$jobFolder}/{$hazardFilename}";
+            Storage::disk('public')->put($hazardPath, $hazardPdf->output());
+            
+            // Create document record for Hazardous Waste Note
+            $hazardDocument = JobDocument::create([
+                'job_id' => $job->id,
+                'document_type' => 'hazard_waste_note',
+                'original_filename' => $hazardFilename,
+                'stored_filename' => $hazardFilename,
+                'file_path' => $hazardPath,
+                'mime_type' => 'application/pdf',
+                'file_size' => Storage::disk('public')->size($hazardPath)
+            ]);
+    
             // Add audit log entry
             JobAuditService::log($job->id, 'Job collected and signatures obtained', 'true');
     
@@ -489,6 +534,7 @@ class JobController extends Controller
             return response()->json([
                 'message' => 'Job marked as collected successfully',
                 'document' => $existingManifest ?? $document ?? null,
+                'hazardDocument' => $hazardDocument ?? null,
                 'redirect' => $redirectPath
             ]);
     
@@ -613,20 +659,16 @@ public function markAsReceived(Request $request, $jobId)
         $hazardPath = "{$jobFolder}/{$hazardFilename}";
         Storage::disk('public')->put($hazardPath, $hazardPdf->output());
         
-        // Update existing document record or create new one for Hazardous Waste Note
-        $hazardDocument = JobDocument::updateOrCreate(
-            [
-                'job_id' => $job->id,
-                'document_type' => 'hazard_waste_note'
-            ],
-            [
-                'original_filename' => $hazardFilename,
-                'stored_filename' => $hazardFilename,
-                'file_path' => $hazardPath,
-                'mime_type' => 'application/pdf',
-                'file_size' => Storage::disk('public')->size($hazardPath)
-            ]
-        );
+        // Create document record for Hazardous Waste Note
+        $hazardDocument = JobDocument::create([
+            'job_id' => $job->id,
+            'document_type' => 'hazard_waste_note',
+            'original_filename' => $hazardFilename,
+            'stored_filename' => $hazardFilename,
+            'file_path' => $hazardPath,
+            'mime_type' => 'application/pdf',
+            'file_size' => Storage::disk('public')->size($hazardPath)
+        ]);
 
         // Add audit log
         JobAuditService::log($job->id, 'Job received at facility', 'true');

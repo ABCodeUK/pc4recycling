@@ -27,16 +27,22 @@ class PDFService
     }
 
     // Add new method for hazardous waste note
-    public function generateHazardousWasteNote(Job $job)
+    public function generateHazardousWasteNote(Job $job, bool $includeStaffSignature = false)
     {
-        // Load job with relationships
-        $job->load(['client', 'items.category']);
+        // Load job with relationships including subcategories
+        $job->load([
+            'client', 
+            'items.category',
+            'items.subCategory'
+        ]);
 
         // Generate PDF
         $pdf = Pdf::loadView('pdfs.hazardous-waste-note', [
             'job' => $job,
             'customer' => $job->client,
-            'items' => $job->items
+            'items' => $job->items,
+            'includeStaffSignature' => $includeStaffSignature,
+            'collectionDate' => $job->collected_at // Pass the collection timestamp
         ]);
 
         return $pdf;

@@ -15,7 +15,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import CollectionSignatureDialog from '../Components/CollectionSignatureDialog';
 
 // Update the component props to include jobStatus
-export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatus: string }) {
+export default function JobItems({ jobId, jobStatus, job }: { jobId: string; jobStatus: string; job: any }) {
   // Add state for signature dialog
   const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
 
@@ -214,24 +214,31 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     }
   }, [jobId]); // Only depend on jobId
 
-  const handleMarkJobCollected = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
-    try {
-      const data = {
-        customer_signature: customerSignature,
-        customer_name: customerName,
-        driver_signature: driverSignature,
-        driver_name: driverName
-      };
-
-      await axios.post(`/api/jobs/${jobId}/mark-collected`, data);
-      toast.success("Job marked as collected successfully");
-      window.location.reload();
-    } catch (error) {
-      console.error('Error marking job as collected:', error);
-      toast.error("Failed to mark job as collected");
-    } finally {
-      setIsSignatureDialogOpen(false);
-    }
+  const handleMarkJobCollected = async (
+      customerSignature: string, 
+      customerName: string, 
+      driverSignature: string, 
+      driverName: string,
+      vehicle: string
+  ) => {
+      try {
+          const data = {
+              customer_signature: customerSignature,
+              customer_name: customerName,
+              driver_signature: driverSignature,
+              driver_name: driverName,
+              vehicle: vehicle
+          };
+  
+          await axios.post(`/api/jobs/${jobId}/mark-collected`, data);
+          toast.success("Job marked as collected successfully");
+          window.location.reload();
+      } catch (error) {
+          console.error('Error marking job as collected:', error);
+          toast.error("Failed to mark job as collected");
+      } finally {
+          setIsSignatureDialogOpen(false);
+      }
   };
 
   // Add a function to check if editing is allowed
@@ -257,9 +264,9 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
 
       {/* Add dialog component */}
       <CollectionSignatureDialog
-        isOpen={isSignatureDialogOpen}
-        onClose={() => setIsSignatureDialogOpen(false)}
-        onComplete={handleMarkJobCollected}
+          isOpen={isSignatureDialogOpen}
+          onClose={() => setIsSignatureDialogOpen(false)}
+          onComplete={handleMarkJobCollected}
       />
       <Separator />
       <div className="p-6">

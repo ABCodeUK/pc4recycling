@@ -16,14 +16,16 @@ import { Checkbox } from "@/Components/ui/checkbox"; // Add this import
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onComplete: (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => void;
+    onComplete: (customerSignature: string, customerName: string, driverSignature: string, driverName: string, vehicle: string) => void;
+    defaultVehicle?: string;  // Add this line
 }
 
-export default function CollectionSignatureDialog({ isOpen, onClose, onComplete }: Props) {
+export default function CollectionSignatureDialog({ isOpen, onClose, onComplete, defaultVehicle }: Props) {
     const [activeTab, setActiveTab] = useState("customer");
     const [customerSignature, setCustomerSignature] = useState<string | null>(null);
     const [customerName, setCustomerName] = useState("");
     const [driverName, setDriverName] = useState("");
+    const [vehicle, setVehicle] = useState(defaultVehicle || "");
     const [itemsConfirmed, setItemsConfirmed] = useState(false);
     const [driverConfirmed, setDriverConfirmed] = useState(false); // Add this state
     const customerSignatureRef = useRef<SignatureCanvas>(null);
@@ -63,6 +65,10 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
             alert("Please provide your name");
             return;
         }
+        if (!vehicle.trim()) {
+            alert("Please provide a vehicle registration");
+            return;
+        }
         if (!customerSignature) {
             alert("Customer signature is required");
             return;
@@ -70,7 +76,7 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
         
         const canvas = driverSignatureRef.current?.getCanvas();
         if (canvas) {
-            onComplete(customerSignature, customerName, canvas.toDataURL(), driverName);
+            onComplete(customerSignature, customerName, canvas.toDataURL(), driverName, vehicle);
         }
     };
 
@@ -159,6 +165,17 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete 
                                         value={driverName}
                                         onChange={(e) => setDriverName(e.target.value)}
                                         placeholder="Enter your name"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="Vehicle">Vehicle Reg</Label>
+                                    <Input
+                                        id="vehicle"
+                                        value={vehicle}
+                                        onChange={(e) => setVehicle(e.target.value)}
+                                        placeholder="Enter your Vehicle Reg"
                                     />
                                 </div>
                             </div>

@@ -61,8 +61,8 @@ export function DataTable<TData, TValue>({
   const isSinglePage = table.getPageCount() === 1;
 
   return (
-    <div>
-      <div className="rounded-md border">
+    <div className="">
+      <div className="overflow-auto border rounded-lg">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

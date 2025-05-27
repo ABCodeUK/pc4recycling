@@ -30,8 +30,21 @@ class HandleInertiaRequests extends Middleware
     {
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user() ? 
-                    $request->user()->fresh()->load('staffDetails.role')->toArray() : null,
+                'user' => function () use ($request) {
+                    if ($user = $request->user()) {
+                        $user = $user->fresh();
+                        
+                        // Load relationships based on user type
+                        if ($user->type === 'Staff') {
+                            $user->load('staffDetails.role');
+                        } elseif ($user->type === 'Client') {
+                            $user->load('clientDetails');
+                        }
+                        
+                        return $user->toArray();
+                    }
+                    return null;
+                },
             ],
             'flash' => [
                 'message' => fn () => $request->session()->get('message')

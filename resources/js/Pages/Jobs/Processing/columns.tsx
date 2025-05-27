@@ -37,15 +37,23 @@ export interface Job {
   data_sanitisation: string;
   sla: string | null;
   instructions: string | null;
-  items_count: number; // Add this property
+  items_count: number;
+  process_items_count: number;
+  processed_at: string | null;
+  technician_signature_name: string | null;
 }
 
 export const columns: ColumnDef<Job>[] = [
   {
     accessorKey: "job_id",
     header: () => <span className="font-bold">ID</span>,
-    cell: (info) => (
-      <span className="text-primary">{String(info.getValue())}</span>
+    cell: ({ row }) => (
+      <a 
+        href={`/processing/${row.original.id}`}
+        className="text-primary font-medium"
+      >
+        {row.original.job_id}
+      </a>
     ),
   },
   {
@@ -84,24 +92,37 @@ export const columns: ColumnDef<Job>[] = [
   },
   {
     accessorKey: "processed_at",
-    header: () => <span className="font-bold">Date Processed</span>,
-    cell: () => "-",
+    header: () => <span className="font-bold">Processing Started</span>,
+    cell: (info) => {
+      const timestamp = info.getValue() as string;
+      if (!timestamp) return null;
+      
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('en-GB', { 
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+      });
+    },
   },
   // Update the items column in the columns array
   {
     accessorKey: "items",
     header: () => <span className="font-bold">Items</span>,
-    cell: ({ row }) => `${row.original.items_count || 0} items`,
+    cell: ({ row }) => `${row.original.process_items_count || 0} items`,
   },
   {
-    accessorKey: "staff_collecting",
-    header: () => <span className="font-bold">Staff</span>,
-    cell: (info) => (
-      <div className="flex items-center gap-2">
-        <User className="h-4 w-4" />
-        <span>TBC</span>
-      </div>
-    ),
+    accessorKey: "technician_signature_name",
+    header: () => <span className="font-bold">Technician</span>,
+    cell: (info) => {
+      const technicianName = info.getValue() as string;
+      return (
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4" />
+          <span>{technicianName || 'TBC'}</span>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "job_status",

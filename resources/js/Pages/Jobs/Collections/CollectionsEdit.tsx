@@ -43,6 +43,8 @@ interface Props {
       job_status: string;
       staff_collecting: string;
       vehicle: string;
+      driver_type?: string;
+      driver_carrier_registration?: string;
       address: string;
       address_2: string;
       town_city: string;
@@ -91,6 +93,13 @@ interface Props {
       county: string;
       postcode: string;
   }[];
+  staff_members: {
+    id: number;
+    name: string;
+    driver_type?: string;
+    carrier_registration?: string;
+    external_vehicle_registration?: string;  // Add this
+}[];
   collection_types: Array<{
       id: number;
       colt_name: string;
@@ -100,10 +109,7 @@ interface Props {
     ds_name: string;
   }>;
   status_options: string[];
-  staff_members: {
-      id: number;
-      name: string;
-  }[];
+  // Update the staff_members type in Props interface
 }
 
 // Then update the handleDeleteJob function
@@ -132,6 +138,7 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
     job_status: job.job_status || "",
     staff_collecting: job.staff_collecting || "",
     vehicle: job.vehicle || "",
+    driver_carrier_registration: job.driver_carrier_registration || "", 
     address: job.address || "",
     address_2: job.address_2 || "",
     town_city: job.town_city || "",
@@ -147,7 +154,8 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
     building_access: job.building_access || "",
     collection_route: job.collection_route || "",
     parking_loading: job.parking_loading || "",
-    equipment_readiness: job.equipment_readiness || "",   
+    equipment_readiness: job.equipment_readiness || "",
+    driver_type: job.driver_type || "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,23 +169,33 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add handleStaffSelect function
+  // Update handleStaffSelect function
   const handleStaffSelect = (value: string) => {
-    if (value === "manual") {
-      setFormData(prev => ({
-        ...prev,
-        staff_collecting: "",
-      }));
-      return;
-    }
+      if (value === "manual") {
+          setFormData(prev => ({
+              ...prev,
+              staff_collecting: "",
+              vehicle: "",
+              driver_type: "",
+              carrier_registration: "",
+          }));
+          return;
+      }
   
-    const selectedStaff = staff_members.find(staff => staff.id.toString() === value);
-    if (selectedStaff) {
-      setFormData(prev => ({
-        ...prev,
-        staff_collecting: selectedStaff.name,
-      }));
-    }
+      const selectedStaff = staff_members.find(staff => staff.id.toString() === value);
+      if (selectedStaff) {
+          setFormData(prev => ({
+              ...prev,
+              staff_collecting: selectedStaff.name,
+              driver_type: selectedStaff.driver_type || "",
+              vehicle: selectedStaff.driver_type === 'external' 
+                  ? (selectedStaff.external_vehicle_registration || "") 
+                  : import.meta.env.VITE_DEFAULT_VEHICLE_REGISTRATION || "TESTREG",
+              driver_carrier_registration: selectedStaff.driver_type === 'external'
+                  ? (selectedStaff.carrier_registration || "")
+                  : "",
+          }));
+      }
   };
 
   // Update handleAddressSelect function
@@ -258,12 +276,12 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
   const handleSaveChanges = async () => {
       try {
           setIsSubmitting(true);
-          // Convert collection_type back to a number before sending
           const dataToSend = {
               ...formData,
-              collection_type: formData.collection_type ? parseInt(formData.collection_type) : null
+              collection_type: formData.collection_type ? parseInt(formData.collection_type) : null,
           };
           
+          console.log('Saving data:', dataToSend); // Add this to debug
           const response = await axios.put(`/collections/${job.id}`, dataToSend);
           if (response.status === 200) {
               toast.success("Changes saved successfully!");
@@ -468,6 +486,18 @@ export default function CollectionsEdit({ job, customers, addresses, collection_
                         id="vehicle"
                         name="vehicle"
                         value={formData.vehicle}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="driver_carrier_registration">Carrier Registration</Label>
+                    <div className="col-span-2">
+                      <Input
+                        id="driver_carrier_registration"
+                        name="driver_carrier_registration"
+                        value={formData.driver_carrier_registration}
                         onChange={handleInputChange}
                       />
                     </div>

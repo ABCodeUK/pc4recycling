@@ -22,6 +22,10 @@ class User extends Authenticatable
         'landline',
         'mobile',
         'type',
+        'driver_type',
+        'carrier_registration',
+        'external_vehicle_registration',
+        'contract',
         'active',
         'parent_id',
     ];

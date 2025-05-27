@@ -136,10 +136,10 @@
             <img src="{{ public_path('images/logos/pc4-logo.jpg') }}" alt="PC4 Logo" class="logo">
         </div>
         <div class="company-info">
-            <strong>PC4Recycling LTD</strong><br>
+            <strong>PC4Recycling Limited</strong><br>
             Brookfield Industrial Estate<br>
             Tansley, Derbyshire, DE4 5ND<br>
-            Waste Permit Number: NC2/061922/2021
+            Waste Permit Number: EXP/LP3547YD
         </div>
     </div>
     
@@ -244,6 +244,36 @@
                 @endif
             </tbody>
         </table>
+        
+        <table style="margin-bottom:5px;">
+            <thead>
+                <tr>
+                    <th>EWC Code</th>
+                    <th>UN Identification Number</th>
+                    <th>Proper Shipping Name</th>
+                    <th>UN Class</th>
+                    <th>Packaging Group</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $uniqueEwcCodes = $groupedItems->map(function($items) {
+                        $firstItem = $items->first();
+                        return $firstItem->category->ewcCode ? $firstItem->category->ewcCode->ewc_code : '';
+                    })->unique()->filter();
+                @endphp
+                
+                @foreach($uniqueEwcCodes as $ewcCode)
+                    <tr>
+                        <td>{{ $ewcCode }}</td>
+                        <td>3509</td>
+                        <td>Packaging discarded, Empty, Uncleaned</td>
+                        <td>9</td>
+                        <td>Not Assigned</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 
     <div class="cdsection">
@@ -267,6 +297,7 @@
                             @endif
                             </p>
                             <p>
+                                <strong>Driver Name:</strong> {{ $job->driver_signature_name ?? 'Not signed' }} <br>
                                 <strong>Date:</strong> {{ $job->collected_at ? $job->collected_at->format('d/m/Y g:i A') : now()->format('d/m/Y g:i A') }}
                             </p>
                         </div>
@@ -292,6 +323,7 @@
                                 @endif
                             </p>
                             <p>
+                                <strong>Customer Name:</strong> {{ $job->customer_signature_name ?? 'Not signed' }} <br>
                                 <strong>Date:</strong> {{ $job->collected_at ? $job->collected_at->format('d/m/Y g:i A') : now()->format('d/m/Y g:i A') }}
                             </p>
                         </div>

@@ -20,10 +20,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <div className="flex w-full max-w-sm flex-col gap-6">
                 {/* Logo */}
                 <div className="flex justify-center">
-<a href="/">                    <img
-                        src="/images/logos/logo-colour.svg"
+                <a href="/">                    <img
+                        src="/images/logos/PC4-Logo-Colour.svg"
                         alt="ITAM.ai"
-                        className="h-8 w-auto"
+                        className="h-14 w-auto"
                     />
                     </a>
                 </div>

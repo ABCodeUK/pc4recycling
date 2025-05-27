@@ -12,7 +12,16 @@ class SubCategoryController extends Controller
      */
     public function index($parent_id)
     {
-        $subCategories = CategorySub::where('parent_id', $parent_id)->get();
+        $subCategories = CategorySub::where('parent_id', $parent_id)
+            ->get()
+            ->map(function ($subCategory) {
+                return [
+                    'id' => $subCategory->id,
+                    'name' => $subCategory->name,
+                    'default_weight' => $subCategory->default_weight,
+                    'parent_id' => $subCategory->parent_id
+                ];
+            });
         return response()->json($subCategories);
     }
 

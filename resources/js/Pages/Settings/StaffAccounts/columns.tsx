@@ -5,16 +5,18 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/Components/ui/button";
 
 // Define the Staff type
+// Update the Staff type to include driver_type
 export type Staff = {
   id: number;
   name: string;
   email: string;
-  mobile: string | null;   // Optional field
-  role: string | null;     // Role name (optional if no role is assigned)
-  active: boolean;         // Active status (true or false)
+  mobile: string | null;
+  role: string | null;
+  active: boolean;
+  driver_type: string | null;  // Add this line
 };
 
-// Define the columns for the staff table
+// Add the new column after the role column
 export const columns: ColumnDef<Staff>[] = [
   {
     accessorKey: "name",
@@ -35,6 +37,15 @@ export const columns: ColumnDef<Staff>[] = [
     accessorKey: "role",
     header: "Role",
     cell: ({ row }) => <div>{row.original.role || "Unassigned"}</div>,
+  },
+  {
+    accessorKey: "driver_type",
+    header: "Type",
+    cell: ({ row }) => (
+      <div>
+        {row.original.driver_type === 'external' ? 'External' : 'Internal'}
+      </div>
+    ),
   },
   {
     accessorKey: "active",

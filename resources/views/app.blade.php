@@ -24,6 +24,14 @@
         <link rel="icon" type="image/png" sizes="512x512" href="/images/favicons/favicons/web-app-512x512.png">
     </head>
     <body class="font-sans antialiased">
+        @inertiaHead
         @inertia
+
+        <!-- Pass authenticated user data to JavaScript -->
+        <script>
+            window.Laravel = {
+                user: @json(auth()->user())
+            };
+        </script>
     </body>
 </html>

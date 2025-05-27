@@ -48,8 +48,10 @@ export default function ClientJobs({ parentId }: { parentId: number }) {
     const fetchJobs = async () => {
       try {
         const response = await axios.get(`/customers/${parentId}/jobs`);
-        setData(response.data);
+        console.log('Fetched jobs:', response.data); // Add this debug line
+        setData(response.data.jobs || response.data); // Handle both possible response formats
       } catch (error) {
+        console.error('Error fetching jobs:', error); // Add error logging
         toast.error("Failed to fetch jobs.");
       }
     };
@@ -112,11 +114,11 @@ export default function ClientJobs({ parentId }: { parentId: number }) {
     }
   };
 
-  const filteredData = data.filter(
+  const filteredData = Array.isArray(data) ? data.filter(
     (item) =>
       item.job_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      (item.address && item.address.toLowerCase().includes(searchTerm.toLowerCase()))
+  ) : [];
 
   return (
     <section className="bg-white border shadow rounded-lg">

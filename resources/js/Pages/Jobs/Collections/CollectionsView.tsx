@@ -32,6 +32,8 @@ interface Props {
   job: {
     id: number;
     job_id: string;
+    job_quote: string;
+    quote_information: string;
     client_id: number;
     collection_date: string;
     job_status: string;
@@ -53,6 +55,8 @@ interface Props {
     collection_route: string;
     parking_loading: string;
     equipment_readiness: string;
+    driver_type?: string;
+    driver_carrier_registration?: string;
   };
   customers: { 
     id: number; 
@@ -101,25 +105,32 @@ export default function CollectionsView({ job, customers, documents: initialDocu
     const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
 
     // Add handler for signature completion
-    const handleSignatureComplete = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
-        try {
-            const formData = new FormData();
-            formData.append('customer_signature', customerSignature);
-            formData.append('customer_signature_name', customerName);
-            formData.append('driver_signature', driverSignature);
-            formData.append('driver_signature_name', driverName);
-    
-            await axios.post(`/api/jobs/${job.job_id}/mark-collected`, formData);
-            
-            toast.success('Job marked as collected successfully');
-            router.visit(`/collections/${job.job_id}`);
-        } catch (error) {
-            console.error('Error marking job as collected:', error);
-            toast.error('Failed to mark job as collected');
-        } finally {
-            setIsSignatureDialogOpen(false);
-        }
-    };
+    const handleSignatureComplete = async (
+      customerSignature: string, 
+      customerName: string, 
+      driverSignature: string, 
+      driverName: string,
+      vehicle: string
+  ) => {
+      try {
+          const formData = new FormData();
+          formData.append('customer_signature', customerSignature);
+          formData.append('customer_name', customerName);
+          formData.append('driver_signature', driverSignature);
+          formData.append('driver_name', driverName);
+          formData.append('vehicle', vehicle);
+          
+          await axios.post(`/api/jobs/${job.id}/mark-collected`, formData);
+          
+          toast.success('Job marked as collected successfully');
+          router.visit(`/collections/${job.id}`);
+      } catch (error) {
+          console.error('Error marking job as collected:', error);
+          toast.error('Failed to mark job as collected');
+      } finally {
+          setIsSignatureDialogOpen(false);
+      }
+  };
 
     const handleMarkJobCollected = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
       try {
@@ -286,7 +297,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
 
   // Format the collection date
   const formattedDate = job.collection_date ? new Date(job.collection_date).toLocaleDateString() : '-';
-
+  
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -378,8 +389,9 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                 </div>
                 <DetailRow label="Collection Date" value={formattedDate} />
                 <Separator className="my-2" />
-                <DetailRow label="Staff Collecting" value={job.staff_collecting || "-"} />
-                <DetailRow label="Vehicle" value={job.vehicle || "-"} />
+                <DetailRow label="Collection By" value={job.staff_collecting || "-"} />
+                <DetailRow label="Vehicle Registration" value={job.vehicle || "-"} />
+                  <DetailRow label="Carrier Registration" value={job.driver_carrier_registration || "-"} />
                 <Separator className="my-2" />
                 <DetailRow label="Address Line 1" value={job.address} />
                 <DetailRow label="Address Line 2" value={job.address_2} />
@@ -413,6 +425,14 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                   <dt className="text-sm font-medium text-gray-500">Other Information</dt>
                   <dd className="mt-2 text-sm text-gray-900">
                     {job.instructions || "No instructions provided."}
+                  </dd>
+                </div>
+                <Separator className="my-2" />
+                <div className="py-1">
+                  <dt className="text-sm font-medium text-gray-500">Quote Information</dt>
+                  <dd className="mt-2 text-sm text-gray-900">
+                  <DetailRow label="Quoted Price" value={`£${job.job_quote || "-"} +VAT`} />
+                  <DetailRow label="Quote Information" value={job.quote_information || "-"} />
                   </dd>
                 </div>
               </dl>
@@ -451,23 +471,14 @@ export default function CollectionsView({ job, customers, documents: initialDocu
             </Role>
             </div>
 
-            {/* Update the grid layout here */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {/* Existing Job Documents section */}
+                          {/* Job Documents section visible to all */}
                           <section className="bg-white border shadow rounded-lg p-6">
-                            <Role role="Developer|Administrator|Employee|Manager|Director">
-                              <h2 className="text-xl font-semibold leading-7 text-gray-900">
-                                Job Documents
-                              </h2>
-                            </Role>
-                            <Role role="Drivers">
                             <h2 className="text-xl font-semibold leading-7 text-gray-900">
-                              Collection Images
+                              Job Documents
                             </h2>
-                            </Role>
                             <Separator className="my-4" />
                             <div className="space-y-6">
-                            <Role role="Developer|Administrator|Employee|Manager|Director">
                               {/* Collection Manifest */}
                               <div className="space-y-4">
                                 <div className="flex justify-between items-center">
@@ -484,6 +495,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                               <FileText className="h-4 w-4" />
                                               {documents.collection_manifest.original_filename}
                                           </a>
+                                          <Role role="Developer|Administrator|Employee|Manager|Director">
                                           <Button
                                             variant="ghost"
                                             size="icon"
@@ -491,23 +503,26 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                         >
                                         <Trash2 className="h-4 w-4 text-red-500" />
                                       </Button>
+                                      </Role>
                                     </>
                                   ) : (
-                                    <div className="flex gap-2 items-center">
-                                      <Input
-                                        type="file"
-                                        accept=".pdf"
-                                        onChange={(e) => handleFileSelect(e, 'collection_manifest')}
-                                      />
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleFileUpload('collection_manifest')}
-                                        disabled={!selectedFiles.collection_manifest}
-                                      >
-                                        <Upload className="h-4 w-4" />
-                                      </Button>
-                                    </div>
+                                    <Role role="Developer|Administrator|Employee|Manager|Director">
+                                      <div className="flex gap-2 items-center">
+                                        <Input
+                                          type="file"
+                                          accept=".pdf"
+                                          onChange={(e) => handleFileSelect(e, 'collection_manifest')}
+                                        />
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => handleFileUpload('collection_manifest')}
+                                          disabled={!selectedFiles.collection_manifest}
+                                        >
+                                          <Upload className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </Role>
                                   )}
                                 </div>
                               </div>
@@ -527,6 +542,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                           <FileText className="h-4 w-4" />
                                           {documents.hazard_waste_note.original_filename}
                                         </a>
+                                        <Role role="Developer|Administrator|Employee|Manager|Director">
                                         <Button
                                           variant="ghost"
                                           size="icon"
@@ -534,6 +550,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                         >
                                           <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
+                                        </Role>
                                       </>
                                     ) : (
                                       <div className="flex gap-2 items-center">
@@ -572,6 +589,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                           <FileText className="h-4 w-4" />
                                           {documents.data_destruction_certificate.original_filename}
                                         </a>
+                                        <Role role="Developer|Administrator|Employee|Manager|Director">
                                         <Button
                                           variant="ghost"
                                           size="icon"
@@ -579,9 +597,11 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                         >
                                           <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
+                                        </Role>
                                       </>
                                     ) : (
-                                      <div className="flex gap-2 items-center">
+                                      <Role role="Developer|Administrator|Employee|Manager|Director"><div className="flex gap-2 items-center">
+                                        
                                         <Input
                                           type="file"
                                           accept=".pdf"
@@ -595,7 +615,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                         >
                                           <Upload className="h-4 w-4" />
                                         </Button>
-                                      </div>
+                                      </div></Role>
                                     )}
                                   </div>
                                 </div>
@@ -639,6 +659,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                           <FileText className="h-4 w-4" />
                                           {doc.original_filename}
                                         </a>
+                                        <Role role="Developer|Administrator|Employee|Manager|Director">
                                         <Button
                                           variant="ghost"
                                           size="icon"
@@ -646,14 +667,16 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                         >
                                           <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
+                                        </Role>
                                       </div>
+
                                     ))}
                                   </div>
                                 )}
                               </div>
                             </div>
                             <Separator className="my-4" />
-                            </Role>
+
                           </div>
                           
                           {/* Collection Images Gallery */}
@@ -693,7 +716,8 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                         });
                                       });
                                     }}
-                                  />
+                                  />                                        
+                                  <Role role="Developer|Administrator|Employee|Manager|Director">
                                   <div className="flex items-center justify-center gap-4 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary transition-colors bg-gray-50/50">
                                     <div className="flex items-center gap-3">
                                       <Upload className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
@@ -705,6 +729,7 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                                       </div>
                                     </div>
                                   </div>
+                                  </Role>
                                 </label>
                               </div>
                               
@@ -751,7 +776,12 @@ export default function CollectionsView({ job, customers, documents: initialDocu
                         </div>
                         <div className="grid grid-cols-1 gap-6">
                           <section>
-                            <JobItems jobId={job.job_id} jobStatus={job.job_status} />
+                            <JobItems 
+                                jobId={job.job_id} 
+                                jobStatus={job.job_status}
+                                job={job}  // Add this line
+                            />
+
                           </section>    
                         </div>
                         </div>

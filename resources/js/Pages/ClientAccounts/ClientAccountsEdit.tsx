@@ -57,6 +57,7 @@ export default function ClientAccountsEdit({
     landline?: string;
     mobile?: string;
     position?: string;
+    contract?: string;
     active?: boolean;
   };
   client_details: {
@@ -88,6 +89,7 @@ export default function ClientAccountsEdit({
     position: client_details.contact_position || "", // Change this line
     landline: user_edit.landline || "",
     mobile: user_edit.mobile || "",
+    contract: user_edit.contract || "",
     active: user_edit.active || false,
     type: "client", // Add this line
     address: client_details.address || "",
@@ -429,6 +431,48 @@ export default function ClientAccountsEdit({
       <h2 className="text-xl font-semibold leading-7 text-gray-900">More Details</h2>
       <Separator />
       <div className="grid gap-4 mt-4">
+      <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="customer_type_id" className="text-left">Contract</Label>
+          <div className="col-span-2">
+            <Select
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, contract: value === "null" ? "" : value }))
+              }
+              value={formData.contract || "null"}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Contract Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NO">No</SelectItem>
+                <SelectItem value="YES">Yes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="customer_type_id" className="text-left">Customer Type</Label>
+          <div className="col-span-2">
+            <Select
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, customer_type_id: value === "null" ? "" : value }))
+              }
+              value={formData.customer_type_id || "null"}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Customer Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="null">None</SelectItem>
+                {customer_types.map((type) => (
+                  <SelectItem key={type.id} value={String(type.id)}>
+                    {type.ct_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <div className="grid grid-cols-3 items-center gap-4">
           <Label htmlFor="lead_source_id" className="text-left">Lead Source</Label>
           <div className="col-span-2">
@@ -446,29 +490,6 @@ export default function ClientAccountsEdit({
                 {lead_sources.map((source) => (
                   <SelectItem key={source.id} value={String(source.id)}>
                     {source.ls_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 items-center gap-4">
-          <Label htmlFor="customer_type_id" className="text-left">Customer Type</Label>
-          <div className="col-span-2">
-            <Select
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, customer_type_id: value === "null" ? "" : value }))
-              }
-              value={formData.customer_type_id || "null"}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Customer Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="null">None</SelectItem>
-                {customer_types.map((type) => (
-                  <SelectItem key={type.id} value={String(type.id)}>
-                    {type.ct_name}
                   </SelectItem>
                 ))}
               </SelectContent>

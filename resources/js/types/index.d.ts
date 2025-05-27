@@ -2,6 +2,10 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    type: 'Client' | 'Staff'; // Add this line
+    client_details?: {
+        privacy_policy: string | null;
+    };
     email_verified_at?: string;
 }
 

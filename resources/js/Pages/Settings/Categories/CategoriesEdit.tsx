@@ -344,7 +344,11 @@ export default function EditCategory({
                         }
                         placeholder="Select HP Codes"
                       />
-                      
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="spec_fields" className="text-left">Spec Fields</Label>
+                    <div className="col-span-2">
                       <MultipleSelector
                         value={formData.spec_fields
                           .map((id: string) => {

@@ -51,6 +51,9 @@ export default function StaffAccountsEdit({
     position?: string;
     active?: boolean;
     role_id: string;
+    driver_type?: string;
+    carrier_registration?: string;
+    external_vehicle_registration?: string;
   };
   roles: { id: number; name: string }[];
 }) {
@@ -65,6 +68,9 @@ export default function StaffAccountsEdit({
     position: user_edit.position || "",
     active: user_edit.active || false,
     role_id: String(user_edit.role_id) || "",
+    driver_type: user_edit.driver_type || "",
+    carrier_registration: user_edit.carrier_registration || "",
+    external_vehicle_registration: user_edit.external_vehicle_registration || "",
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -317,6 +323,66 @@ export default function StaffAccountsEdit({
                     />
                   </div>
                 </div>
+
+                {/* Add Driver Fields here */}
+                {formData.role_id && roles.find(r => r.id === parseInt(formData.role_id))?.name === 'Drivers' && (
+                  <>
+                    <div className="grid grid-cols-3 items-center gap-4">
+                      <Label htmlFor="driver_type" className="text-left">Driver Type</Label>
+                      <div className="col-span-2">
+                        <Select
+                          value={formData.driver_type}
+                          onValueChange={(value) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              driver_type: value,
+                              carrier_registration: value === 'internal' ? '' : prev.carrier_registration,
+                              external_vehicle_registration: value === 'internal' ? '' : prev.external_vehicle_registration
+                            }));
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select driver type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="internal">Internal</SelectItem>
+                            <SelectItem value="external">External</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {formData.driver_type === 'external' && (
+                      <>
+                        <div className="grid grid-cols-3 items-center gap-4">
+                          <Label htmlFor="carrier_registration" className="text-left">Carrier Registration</Label>
+                          <div className="col-span-2">
+                            <Input
+                              id="carrier_registration"
+                              name="carrier_registration"
+                              value={formData.carrier_registration}
+                              onChange={handleInputChange}
+                              placeholder="Enter carrier registration"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                          <Label htmlFor="external_vehicle_registration" className="text-left">Vehicle Registration</Label>
+                          <div className="col-span-2">
+                            <Input
+                              id="external_vehicle_registration"
+                              name="external_vehicle_registration"
+                              value={formData.external_vehicle_registration}
+                              onChange={handleInputChange}
+                              placeholder="Enter vehicle registration"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </section>
 
@@ -458,3 +524,5 @@ export default function StaffAccountsEdit({
     </SidebarProvider>
   );
 }
+
+// Remove everything below this line

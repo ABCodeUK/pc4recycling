@@ -17,13 +17,20 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     onComplete: (customerSignature: string, customerName: string, driverSignature: string, driverName: string, vehicle: string) => void;
-    defaultVehicle?: string;  // Add this line
+    defaultVehicle?: string;
+    defaultCustomerName?: string;
 }
 
-export default function CollectionSignatureDialog({ isOpen, onClose, onComplete, defaultVehicle }: Props) {
+export default function CollectionSignatureDialog({ 
+    isOpen, 
+    onClose, 
+    onComplete, 
+    defaultVehicle,
+    defaultCustomerName  // Add this parameter
+}: Props) {
     const [activeTab, setActiveTab] = useState("customer");
     const [customerSignature, setCustomerSignature] = useState<string | null>(null);
-    const [customerName, setCustomerName] = useState("");
+    const [customerName, setCustomerName] = useState(defaultCustomerName || "");  // Use the default value
     const [driverName, setDriverName] = useState("");
     const [vehicle, setVehicle] = useState(defaultVehicle || "");
     const [itemsConfirmed, setItemsConfirmed] = useState(false);
@@ -113,7 +120,7 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete,
                             </div>
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="customerName">Name</Label>
+                                    <Label htmlFor="customerName">Customer Name</Label>
                                     <Input
                                         id="customerName"
                                         value={customerName}
@@ -158,25 +165,25 @@ export default function CollectionSignatureDialog({ isOpen, onClose, onComplete,
                                 />
                             </div>
                             <div className="space-y-4">
-                                <div>
-                                    <Label htmlFor="driverName">Name</Label>
-                                    <Input
-                                        id="driverName"
-                                        value={driverName}
-                                        onChange={(e) => setDriverName(e.target.value)}
-                                        placeholder="Enter your name"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <Label htmlFor="Vehicle">Vehicle Reg</Label>
-                                    <Input
-                                        id="vehicle"
-                                        value={vehicle}
-                                        onChange={(e) => setVehicle(e.target.value)}
-                                        placeholder="Enter your Vehicle Reg"
-                                    />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="driverName">Driver Name</Label>
+                                        <Input
+                                            id="driverName"
+                                            value={driverName}
+                                            onChange={(e) => setDriverName(e.target.value)}
+                                            placeholder="Enter your name"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="Vehicle">Vehicle Reg</Label>
+                                        <Input
+                                            id="vehicle"
+                                            value={vehicle}
+                                            onChange={(e) => setVehicle(e.target.value)}
+                                            placeholder="Enter your Vehicle Reg"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2">

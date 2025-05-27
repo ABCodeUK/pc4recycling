@@ -156,6 +156,7 @@ export const jobItemColumns: ColumnDef<JobItem>[] = [
   },
   {
     accessorKey: "make",
+    header: "Make",
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
@@ -175,6 +176,7 @@ export const jobItemColumns: ColumnDef<JobItem>[] = [
   },
   {
     accessorKey: "model",
+    header: "Model",
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;
@@ -193,7 +195,68 @@ export const jobItemColumns: ColumnDef<JobItem>[] = [
     },
   },
   {
+    accessorKey: "serial_number",
+    header: "Serial Number",
+    cell: ({ row, table }: CellContext<JobItem, unknown>) => {
+      const meta = table.options.meta as CustomTableMeta | undefined;
+      const isEditable = meta?.isEditable ?? false;
+      return isEditable ? (
+        <Input
+          value={row.original.serial_number || ""}
+          onChange={(e) => {
+            row.original.serial_number = e.target.value;
+            meta?.setItems?.([...table.options.data]);
+          }}
+          placeholder="Enter serial number"
+        />
+      ) : (
+        <span>{row.original.serial_number || '-'}</span>
+      );
+    },
+  },
+  {
+    accessorKey: "asset_tag",
+    header: "Asset Tag",
+    cell: ({ row, table }: CellContext<JobItem, unknown>) => {
+      const meta = table.options.meta as CustomTableMeta | undefined;
+      const isEditable = meta?.isEditable ?? false;
+      return isEditable ? (
+        <Input
+          value={row.original.asset_tag || ""}
+          onChange={(e) => {
+            row.original.asset_tag = e.target.value;
+            meta?.setItems?.([...table.options.data]);
+          }}
+          placeholder="Enter asset tag"
+        />
+      ) : (
+        <span>{row.original.asset_tag || '-'}</span>
+      );
+    },
+  },
+  {
+    accessorKey: "weight",
+    header: "Weight (kg)",
+    cell: ({ row, table }: CellContext<JobItem, unknown>) => {
+      const meta = table.options.meta as CustomTableMeta | undefined;
+      const isEditable = meta?.isEditable ?? false;
+      return isEditable ? (
+        <Input
+          value={row.original.weight || ""}
+          onChange={(e) => {
+            row.original.weight = e.target.value;
+            meta?.setItems?.([...table.options.data]);
+          }}
+          placeholder="Enter weight"
+        />
+      ) : (
+        <span>{row.original.weight || '-'}</span>
+      );
+    },
+  },
+  {
     accessorKey: "erasure_required",
+    header: "Erasure Required", 
     cell: ({ row, table }: CellContext<JobItem, unknown>) => {
       const meta = table.options.meta as CustomTableMeta | undefined;
       const isEditable = meta?.isEditable ?? false;

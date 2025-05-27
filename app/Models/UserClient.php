@@ -30,6 +30,8 @@ class UserClient extends Model
         'customer_type_id',
         'sic_code',
         'customer_notes',
+        'privacy_policy',
+        'privacy_policy_date',
     ];
 
     /**

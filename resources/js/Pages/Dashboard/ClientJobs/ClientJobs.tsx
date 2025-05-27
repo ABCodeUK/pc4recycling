@@ -14,12 +14,15 @@ export default function ClientJobs() {
   const [searchTerm, setSearchTerm] = useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  // In the useEffect where you fetch jobs, update the endpoint
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         const response = await axios.get('/api/client-dashboard-jobs');
-        setData(response.data);
+        // Filter out Quote Draft jobs before setting the data
+        const filteredJobs = response.data.filter(
+          (job: ClientJob) => !job.job_status.toLowerCase().includes('quote')
+        );
+        setData(filteredJobs);
       } catch (error) {
         toast.error("Failed to fetch jobs.");
       }
@@ -60,10 +63,10 @@ export default function ClientJobs() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold leading-7 text-gray-900">
-              Your Collection Requests
+              Your Collections
             </h2>
             <p className="text-sm text-muted-foreground">
-              View your current collection requests and their status.
+              View your collections and their status.
             </p>
           </div>
         </div>

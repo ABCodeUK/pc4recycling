@@ -6,7 +6,7 @@ use App\Models\Job;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\JobDocument;
-use App\Models\JobItem; // Add this import
+use App\Models\JobItem;
 use App\Services\JobAuditService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,8 +21,9 @@ class JobController extends Controller
     public function index(Request $request)
     {
         $status = match ($request->path()) {
-            'collections' => ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed'],
-            'processing' => ['Collected', 'Received at Facility', 'Processing'],
+            'quotes' => ['Quote Requested', 'Quote Provided', 'Quote Rejected'],
+            'collections' => ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed','Collected'],
+            'processing' => ['Received at Facility', 'Processing'],
             'completed' => ['Complete', 'Canceled'],
             default => ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed'],
         };
@@ -35,16 +36,24 @@ class JobController extends Controller
                 // Count items with "added" = "Collection"
                 $itemsCount = JobItem::where('job_id', $job->id)
                     ->where('added', 'Collection')
-                    ->count();
+                    ->sum('quantity');
+                
+                // Count all items (both Collection and Processing)
+                $processitemsCount = JobItem::where('job_id', $job->id)
+                    ->whereIn('added', ['Collection', 'Processing'])
+                    ->sum('quantity');
                 
                 return [
                     'id' => $job->id,
                     'job_id' => $job->job_id,
+                    'job_quote' => $job->job_quote,
                     'client_id' => $job->client_id,
                     'collection_date' => $job->collection_date,
+                    'quote_information' => $job->quote_information,
                     'job_status' => $job->job_status,
                     'staff_collecting' => $job->staff_collecting,
                     'vehicle' => $job->vehicle,
+                    'driver_carrier_registration' => $job->driver_carrier_registration,  // Add this line
                     'address' => $job->address,
                     'address_2' => $job->address_2,
                     'town_city' => $job->town_city,
@@ -64,7 +73,13 @@ class JobController extends Controller
                     'created_at' => $job->created_at,
                     'updated_at' => $job->updated_at,
                     'items_count' => $itemsCount,
+                    'process_items_count' => $processitemsCount,
                     'client' => $job->client,
+                    'collected_at' => $job->collected_at,
+                    'processed_at' => $job->processed_at,
+                    'received_at' => $job->received_at,
+                    'completed_at' => $job->completed_at,
+                    'technician_signature_name' => $job->technician_signature_name,
                 ];
             });
     
@@ -120,16 +135,20 @@ class JobController extends Controller
             });
     
         // Get staff members
+        // In the edit or create method where staff members are loaded
         $staff = User::where('type', 'Staff')
-            ->where('active', true)
-            ->with('staffDetails.role')
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ];
-            });
+        ->where('active', true)
+        ->with('staffDetails.role')
+        ->get()
+        ->map(function ($user) {
+        return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'driver_type' => $user->driver_type,
+        'external_vehicle_registration' => $user->external_vehicle_registration,
+        'carrier_registration' => $user->carrier_registration,
+        ];
+        });
     
         // Get sub-clients for the current client
         $subClients = User::where('parent_id', $job->client_id)
@@ -145,7 +164,15 @@ class JobController extends Controller
                 ];
             });
 
-        return Inertia::render('Jobs/Collections/CollectionsEdit', [
+        // Fix the match statement syntax
+        $viewPath = match (explode('/', request()->path())[0]) {
+            'quotes' => 'Jobs/Quotes/QuotesEdit',
+            'processing' => 'Jobs/Processing/ProcessingEdit',
+            'completed' => 'Jobs/Completed/CompletedEdit',
+            default => 'Jobs/Collections/CollectionsEdit'
+        };
+
+        return Inertia::render($viewPath, [
             'job' => $jobArray,
             'customers' => $customers,
             'addresses' => UserAddress::where('parent_id', $job->client_id)->get(),
@@ -202,9 +229,12 @@ class JobController extends Controller
                 return $type === 'other' ? $docs : $docs->first();
             });
     
-        $viewPath = request()->is('processing/*') 
-            ? 'Jobs/Processing/ProcessingView'
-            : 'Jobs/Collections/CollectionsView';
+        $viewPath = match (explode('/', request()->path())[0]) {
+            'quotes' => 'Jobs/Quotes/QuotesView',
+            'processing' => 'Jobs/Processing/ProcessingView',
+            'completed' => 'Jobs/Completed/CompletedView',
+            default => 'Jobs/Collections/CollectionsView'
+        };
     
         return Inertia::render($viewPath, [
             'job' => $jobArray,
@@ -225,11 +255,14 @@ class JobController extends Controller
             
             $validated = $request->validate([
                 'job_id' => 'required|string',
+                'job_quote' => 'nullable|string',
                 'client_id' => 'required|exists:users,id',
                 'collection_date' => 'nullable|date',
+                'quote_information' => 'nullable|string',
                 'job_status' => 'required|string',
                 'staff_collecting' => 'nullable|string',
                 'vehicle' => 'nullable|string',
+                'driver_carrier_registration' => 'nullable|string',
                 'address' => 'nullable|string',
                 'address_2' => 'nullable|string',
                 'town_city' => 'nullable|string',
@@ -271,7 +304,9 @@ class JobController extends Controller
             $validated = $request->validate([
                 'job_id' => 'required|string|unique:clients_jobs,job_id',
                 'client_id' => 'required|exists:users,id',
+                'job_quote' => 'nullable|string',
                 'collection_date' => 'nullable|date',
+                'quote_information' => 'nullable|string',
                 'job_status' => 'required|string',
                 'staff_collecting' => 'nullable|string',
                 'vehicle' => 'nullable|string',
@@ -296,7 +331,7 @@ class JobController extends Controller
             $job = Job::create($validated);
             
             // Add audit log for job creation
-            JobAuditService::log($job->id, 'job_created', 'true');
+            JobAuditService::log($job->id, 'Job Created', 'true');
             
             return response()->json($job, 201);
         } catch (\Exception $e) {
@@ -336,14 +371,16 @@ class JobController extends Controller
                 $item->update([
                     'processing_make' => $item->make,
                     'processing_model' => $item->model,
+                    'processing_serial_number' => $item->serial_number,
+                    'processing_asset_tag' => $item->asset_tag,
+                    'processing_weight' => $item->weight,
                     'processing_specification' => $item->specification,
                     'processing_erasure_required' => $item->erasure_required,
-                    'collected' => 'YES'  // Add this line
+                    'collected' => 'YES'
                 ]);
             }
 
             // Validate signatures and names
-            // Update validation rules
             $request->validate([
                 'customer_signature' => 'required|string',
                 'customer_name' => 'required|string',
@@ -363,32 +400,40 @@ class JobController extends Controller
             $customerFilename = "customer-signature-{$job->job_id}.png";
             Storage::disk('public')->put("{$jobFolder}/{$customerFilename}", $customerSignatureData);
     
-            // Create customer signature document record
-            JobDocument::create([
-                'job_id' => $job->id,
-                'document_type' => 'customer_signature',
-                'original_filename' => $customerFilename,
-                'stored_filename' => $customerFilename,
-                'file_path' => "{$jobFolder}/{$customerFilename}",
-                'mime_type' => 'image/png',
-                'file_size' => strlen($customerSignatureData)
-            ]);
+            // Create or update customer signature document record
+            JobDocument::updateOrCreate(
+                [
+                    'job_id' => $job->id,
+                    'document_type' => 'customer_signature'
+                ],
+                [
+                    'original_filename' => $customerFilename,
+                    'stored_filename' => $customerFilename,
+                    'file_path' => "{$jobFolder}/{$customerFilename}",
+                    'mime_type' => 'image/png',
+                    'file_size' => strlen($customerSignatureData)
+                ]
+            );
     
             // Save driver signature
             $driverSignatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->driver_signature));
             $driverFilename = "driver-signature-{$job->job_id}.png";
             Storage::disk('public')->put("{$jobFolder}/{$driverFilename}", $driverSignatureData);
     
-            // Create driver signature document record
-            JobDocument::create([
-                'job_id' => $job->id,
-                'document_type' => 'driver_signature',
-                'original_filename' => $driverFilename,
-                'stored_filename' => $driverFilename,
-                'file_path' => "{$jobFolder}/{$driverFilename}",
-                'mime_type' => 'image/png',
-                'file_size' => strlen($driverSignatureData)
-            ]);
+            // Create or update driver signature document record
+            JobDocument::updateOrCreate(
+                [
+                    'job_id' => $job->id,
+                    'document_type' => 'driver_signature'
+                ],
+                [
+                    'original_filename' => $driverFilename,
+                    'stored_filename' => $driverFilename,
+                    'file_path' => "{$jobFolder}/{$driverFilename}",
+                    'mime_type' => 'image/png',
+                    'file_size' => strlen($driverSignatureData)
+                ]
+            );
     
             // Update job status and names
             $job->update([
@@ -404,159 +449,86 @@ class JobController extends Controller
                 ->with(['client', 'items.category'])
                 ->firstOrFail();
     
-            // Generate collection manifest if it doesn't exist
-            $existingManifest = $job->documents()
-                ->where('document_type', 'collection_manifest')
-                ->first();
+            // Generate collection manifest
+            $pdfService = new PDFService();
+            $pdf = $pdfService->generateCollectionManifest($job);
     
-            if (!$existingManifest) {
-                // Generate PDF with fresh data
-                $pdfService = new PDFService();
-                $pdf = $pdfService->generateCollectionManifest($job);
+            // Save PDF file
+            $filename = "{$job->job_id}-Collection-Manifest.pdf";
+            $path = "{$jobFolder}/{$filename}";
+            Storage::disk('public')->put($path, $pdf->output());
     
-                // Save PDF file
-                $filename = "{$job->job_id}-Collection-Manifest.pdf";
-                $path = "{$jobFolder}/{$filename}";
-                Storage::disk('public')->put($path, $pdf->output());
-    
-                // Create document record
-                $document = JobDocument::create([
+            // Create or update document record
+            JobDocument::updateOrCreate(
+                [
                     'job_id' => $job->id,
-                    'document_type' => 'collection_manifest',
+                    'document_type' => 'collection_manifest'
+                ],
+                [
                     'original_filename' => $filename,
                     'stored_filename' => $filename,
                     'file_path' => $path,
                     'mime_type' => 'application/pdf',
                     'file_size' => Storage::disk('public')->size($path)
-                ]);
-            }
-    
-            // Log if we're overwriting existing data
-            if ($job->customer_signature_name || $job->driver_signature_name || $job->collected_at) {
-                Log::info('Overwriting existing collection data', [
-                    'job_id' => $jobId,
-                    'old_customer_name' => $job->customer_signature_name,
-                    'old_driver_name' => $job->driver_signature_name,
-                    'old_collected_at' => $job->collected_at
-                ]);
-            }
-    
-            // Update job status and names FIRST
-            $job->update([
-                'job_status' => 'Collected',
-                'customer_signature_name' => $request->customer_name,
-                'driver_signature_name' => $request->driver_name,
-                'collected_at' => now()
-            ]);
-    
-            // Refresh the job model with all necessary relationships
-            $job = Job::where('job_id', $jobId)
-                ->with(['client', 'items.category'])
-                ->firstOrFail();
-    
-            // Generate collection manifest if it doesn't exist
-            $existingManifest = $job->documents()
-                ->where('document_type', 'collection_manifest')
-                ->first();
-    
-            if (!$existingManifest) {
-                // Generate PDF with fresh data
-                $pdfService = new PDFService();
-                $pdf = $pdfService->generateCollectionManifest($job);
-    
-                // Save PDF file
-                $filename = "{$job->job_id}-Collection-Manifest.pdf";
-                $path = "{$jobFolder}/{$filename}";
-                Storage::disk('public')->put($path, $pdf->output());
-    
-                // Create document record
-                $document = JobDocument::create([
-                    'job_id' => $job->id,
-                    'document_type' => 'collection_manifest',
-                    'original_filename' => $filename,
-                    'stored_filename' => $filename,
-                    'file_path' => $path,
-                    'mime_type' => 'application/pdf',
-                    'file_size' => Storage::disk('public')->size($path)
-                ]);
-            }
-    
-            // After the Collection Manifest is generated, add this block:
-            if (!$existingManifest) {
-                // Generate PDF with fresh data
-                $pdfService = new PDFService();
-                $pdf = $pdfService->generateCollectionManifest($job);
-    
-                // Save PDF file
-                $filename = "{$job->job_id}-Collection-Manifest.pdf";
-                $path = "{$jobFolder}/{$filename}";
-                Storage::disk('public')->put($path, $pdf->output());
-    
-                // Create document record
-                $document = JobDocument::create([
-                    'job_id' => $job->id,
-                    'document_type' => 'collection_manifest',
-                    'original_filename' => $filename,
-                    'stored_filename' => $filename,
-                    'file_path' => $path,
-                    'mime_type' => 'application/pdf',
-                    'file_size' => Storage::disk('public')->size($path)
-                ]);
-            }
-    
-            // Generate Hazardous Waste Note
+                ]
+            );
+
+            // Generate hazardous waste note
             $hazardPdf = $pdfService->generateHazardousWasteNote($job);
             
-            // Save Hazardous Waste Note
-            $hazardFilename = "{$job->job_id}-Hazard-Waste-Note.pdf";
+            // Save hazardous waste note PDF
+            $hazardFilename = "{$job->job_id}-Hazardous-Waste-Note.pdf";
             $hazardPath = "{$jobFolder}/{$hazardFilename}";
             Storage::disk('public')->put($hazardPath, $hazardPdf->output());
             
-            // Create document record for Hazardous Waste Note
-            $hazardDocument = JobDocument::create([
-                'job_id' => $job->id,
-                'document_type' => 'hazard_waste_note',
-                'original_filename' => $hazardFilename,
-                'stored_filename' => $hazardFilename,
-                'file_path' => $hazardPath,
-                'mime_type' => 'application/pdf',
-                'file_size' => Storage::disk('public')->size($hazardPath)
-            ]);
-    
-            // Add audit log entry
+            // Create or update hazardous waste note document record
+            JobDocument::updateOrCreate(
+                [
+                    'job_id' => $job->id,
+                    'document_type' => 'hazard_waste_note'
+                ],
+                [
+                    'original_filename' => $hazardFilename,
+                    'stored_filename' => $hazardFilename,
+                    'file_path' => $hazardPath,
+                    'mime_type' => 'application/pdf',
+                    'file_size' => Storage::disk('public')->size($hazardPath)
+                ]
+            );
+
+            // Add audit log
             JobAuditService::log($job->id, 'Job collected and signatures obtained', 'true');
-    
-            // Determine redirect based on user role
-            $redirectPath = auth()->user()->type === 'Drivers' 
-                ? '/dashboard'
-                : "/processing/{$job->id}";
     
             return response()->json([
                 'message' => 'Job marked as collected successfully',
-                'document' => $existingManifest ?? $document ?? null,
-                'hazardDocument' => $hazardDocument ?? null,
-                'redirect' => $redirectPath
+                'job' => $job
             ]);
-    
+            
         } catch (\Exception $e) {
-            Log::error('Failed to mark job as collected', [
+            Log::error('Error in markAsCollected', [
                 'job_id' => $jobId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return response()->json(['error' => 'Failed to mark job as collected: ' . $e->getMessage()], 500);
+            
+            return response()->json([
+                'error' => 'Failed to mark job as collected',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
     public function markAsProcessing(Request $request, $jobId)
     {
         try {
             $job = Job::where('job_id', $jobId)
-                ->with(['client', 'items.category'])  // Include necessary relationships
+                ->with(['client', 'items.category'])
                 ->firstOrFail();
             
-            // Update job status
+            // Update job status and technician name
             $job->update([
-                'job_status' => 'Processing'
+                'job_status' => 'Processing',
+                'processed_at' => now(),
+                'technician_signature_name' => auth()->user()->name
             ]);
             
             // Add audit log
@@ -572,6 +544,34 @@ class JobController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['error' => 'Failed to mark job as processing', 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function markAsQuotwRejected(Request $request, $jobId)
+    {
+        try {
+            $job = Job::where('job_id', $jobId)
+                ->with(['client', 'items.category'])
+                ->firstOrFail();
+            
+            // Update job status and technician name
+            $job->update([
+                'job_status' => 'Quote Rejected',
+
+            ]);
+            
+            // Add audit log
+            JobAuditService::log($job->id, 'Quote Rejected', 'true');
+        
+            return response()->json([
+                'success' => true
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in markAsQuoteRejected', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Failed to mark quote as rejected', 'message' => $e->getMessage()], 500);
         }
     }
 public function markAsReceived(Request $request, $jobId)
@@ -688,29 +688,67 @@ public function markAsReceived(Request $request, $jobId)
         return response()->json(['error' => 'Failed to mark job as received', 'message' => $e->getMessage()], 500);
     }
 }
-public function markAsCompleted(Request $request, $jobId)
-    {
-        try {
-            $job = Job::where('job_id', $jobId)->firstOrFail();
-            
-            $job->update([
-                'job_status' => 'Complete'
-            ]);
+public function provideQuote(Request $request, $jobId)
+{
+    $request->validate([
+        'job_quote' => 'required|numeric',
+        'collection_date' => 'required|date',
+        'quote_information' => 'nullable|string' // Changed from required to nullable
+    ]);
 
-            // Add audit log
-            JobAuditService::log($job->id, 'Job processing completed', 'true');
+    $job = Job::where('job_id', $jobId)->firstOrFail();
+    
+    $job->update([
+        'job_quote' => $request->job_quote,
+        'collection_date' => $request->collection_date,
+        'quote_information' => $request->quote_information ?? '', // Use empty string as fallback
+        'job_status' => 'Quote Provided'
+    ]);
 
-            return response()->json(['success' => true]);
+    // Add audit log
+    app(JobAuditService::class)->log(
+        $job->id,
+        auth()->id(),
+        "Quote provided for £{$request->job_quote}",
+        false
+    );
 
-        } catch (\Exception $e) {
-            Log::error('Error in markAsCompleted', [
-                'job_id' => $jobId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json(['error' => 'Failed to mark job as completed', 'message' => $e->getMessage()], 500);
-        }
+    return response()->json(['message' => 'Quote provided successfully']);
+}
+
+// Add this method if it doesn't exist, or update it if it does
+public function markCompleted(Request $request, $jobId, PDFService $pdfService)
+{
+    $job = Job::where('job_id', $jobId)->firstOrFail();
+    
+    try {
+        // Update job status
+        $job->update([
+            'job_status' => 'Complete',
+            'completed_at' => now()
+        ]);
+
+        // Generate and save the Data Destruction Certificate
+        $certificatePath = $pdfService->generateDataDestructionCertificate($job);
+
+        // Create audit log entry
+        app(JobAuditService::class)->log($job->id, 'Job marked as complete', 'true');
+        
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job marked as complete successfully',
+            'certificatePath' => $certificatePath
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error marking job as complete: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to mark job as complete'
+        ], 500);
     }
+}
     // Add this method after the existing methods
     
     /**
@@ -733,3 +771,4 @@ public function markAsCompleted(Request $request, $jobId)
         }
     }
 }
+

@@ -22,7 +22,7 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
     header: () => <span className="font-bold">ID</span>,
     cell: ({ row }) => (
       <a 
-        href={`/collections/${row.original.id}`}
+        href={`/my-collections/${row.original.id}`}
         className="font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
       >
         {row.original.job_id}
@@ -97,7 +97,7 @@ export const clientJobColumns: ColumnDef<ClientJob>[] = [
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.location.href = `/collections/${job.id}`}
+            onClick={() => window.location.href = `/my-collections/${job.id}`}
           >
             <Eye className="h-4 w-4" />
           </Button>

@@ -32,6 +32,8 @@ interface Props {
   job: {
     id: number;
     job_id: string;
+    job_quote: string;
+    quote_information: string;
     client_id: number;
     collection_date: string;
     job_status: string;
@@ -53,6 +55,8 @@ interface Props {
     collection_route: string;
     parking_loading: string;
     equipment_readiness: string;
+    driver_type?: string;
+    driver_carrier_registration?: string;
   };
   customers: { 
     id: number; 
@@ -333,8 +337,9 @@ export default function ProcessingView({ job, customers, documents: initialDocum
                 </div>
                 <DetailRow label="Collection Date" value={formattedDate} />
                 <Separator className="my-2" />
-                <DetailRow label="Staff Collecting" value={job.staff_collecting || "-"} />
-                <DetailRow label="Vehicle" value={job.vehicle || "-"} />
+                <DetailRow label="Collection By" value={job.staff_collecting || "-"} />
+                <DetailRow label="Vehicle Reistraton" value={job.vehicle || "-"} />
+                <DetailRow label="Carrier Registration" value={job.driver_carrier_registration || "-"} />
                 <Separator className="my-2" />
                 <DetailRow label="Address Line 1" value={job.address} />
                 <DetailRow label="Address Line 2" value={job.address_2} />
@@ -368,6 +373,13 @@ export default function ProcessingView({ job, customers, documents: initialDocum
                   <dt className="text-sm font-medium text-gray-500">Other Information</dt>
                   <dd className="mt-2 text-sm text-gray-900">
                     {job.instructions || "No instructions provided."}
+                  </dd>
+                </div>
+                <Separator className="my-2" />
+                <div className="py-1">
+                  <dd className="mt-2 text-sm text-gray-900">
+                  <DetailRow label="Quoted Price" value={`£${job.job_quote || "-"} +VAT`} />
+                  <DetailRow label="Quote Information" value={job.quote_information || "-"} />
                   </dd>
                 </div>
               </dl>

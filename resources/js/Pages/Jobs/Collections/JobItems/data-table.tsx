@@ -63,11 +63,11 @@ export function DataTable<TData>({
       ),
     },
   });
-
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
+    <div className="border rounded-lg">
+      <div className="max-h-[80vh] overflow-auto rounded-lg">
+        <Table>
+          <TableHeader className="sticky top-0 z-50">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -108,6 +108,6 @@ export function DataTable<TData>({
           )}
         </TableBody>
       </Table>
-    </div>
+    </div></div>
   );
 }

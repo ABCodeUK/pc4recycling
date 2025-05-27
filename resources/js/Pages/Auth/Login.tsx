@@ -25,9 +25,9 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                 {/* Logo */}
                 <div className="flex justify-center">
 <a href="/">                    <img
-                        src="/images/logos/logo-colour.svg"
+                        src="/images/logos/PC4-Logo-Colour.svg"
                         alt="ITAM.ai"
-                        className="h-8 w-auto"
+                        className="h-14 w-auto"
                     />
                     </a>
                 </div>

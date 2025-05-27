@@ -73,6 +73,7 @@ export default function Processing({ jobs = [], collection_types, sanitisation_o
     data_sanitisation: "",
     sla: "",
     instructions: "",
+    processed_at: "",
   });
   const [formErrors, setFormErrors] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -172,9 +173,6 @@ export default function Processing({ jobs = [], collection_types, sanitisation_o
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="max-w-sm"
                 />
-                <Button onClick={() => window.location.href = "/collections/create"}>
-                  Create New Job
-                </Button>
               </div>
             </header>
             <Separator className="my-4" />

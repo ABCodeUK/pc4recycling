@@ -39,7 +39,15 @@ class CategoryController extends Controller
                 return [
                     'id' => $category->id,
                     'name' => $category->name,
-                    'sub_categories' => $category->subCategories,
+                    'default_weight' => $category->default_weight,
+                    'sub_categories' => $category->subCategories->map(function ($subCategory) {
+                        return [
+                            'id' => $subCategory->id,
+                            'name' => $subCategory->name,
+                            'default_weight' => $subCategory->default_weight,
+                            'parent_id' => $subCategory->parent_id
+                        ];
+                    }),
                     'spec_fields' => $category->specFields->map(function ($field) {
                         return [
                             'id' => $field->id,

@@ -7,10 +7,16 @@ import {
   Calendar,
   Ticket,
   Wrench,
+  FileUser,
+  Leaf,
+  ReceiptText,
+  PoundSterling,
 } from "lucide-react";
 
 import { NavMain } from "@/Components/nav-main";
 import { NavRecycling } from "@/Components/nav-recycling";
+import { NavClient } from "@/Components/nav-client";
+import { NavStaff } from "@/Components/nav-staff";
 import { NavSecond } from "@/Components/nav-second";
 import { NavSettings } from "@/Components/nav-settings";
 import { NavTools } from "@/Components/nav-tools";
@@ -38,14 +44,31 @@ import type { User } from "@/types";
 
 // Remove the local User interface and update usePage usage
 import { useSidebar } from "@/Components/ui/sidebar";
+import { useState, useEffect } from "react";
+import { PrivacyPolicyDialog } from "@/Components/PrivacyPolicyDialog";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { collapsed } = useSidebar();
   const { user } = usePage<{
     auth: {
-      user: User;
+      user: User & {
+        client_details?: {
+          privacy_policy: string | null;
+        };
+      };
     }
   }>().props.auth;
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+
+  useEffect(() => {
+    if (user?.type === 'Client' && (!user.client_details?.privacy_policy || user.client_details.privacy_policy !== 'Accepted')) {
+      setShowPrivacyPolicy(true);
+    }
+  }, [user]);
+
+  const handlePrivacyPolicyAccept = () => {
+    setShowPrivacyPolicy(false);
+  };
 
   const currentPath = window.location.pathname;
 
@@ -65,11 +88,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/",
         icon: Home,
       },
+    ],
+    navClient: [
+      {
+        title: "Quotes",
+        url: "/my-quotes/",
+        icon: PoundSterling,
+      },
+      {
+        title: "Collections",
+        url: "/my-collections/",
+        icon: Recycle,
+      },
+      {
+        title: "Sustainability",
+        url: "/sustainability/",
+        icon: Leaf,
+      },
+      {
+        title: "Information",
+        url: "/information/",
+        icon: FileUser,
+      },
+      {
+        title: "Support Tickets",
+        url: "/support/",
+        icon: Ticket,
+      },
+
+    ],
+    navStaff: [
       {
         title: "Customers",
-        url: "/customers/",
+        url: "/customers/", // Fix typo from "/custoemrs/"
         icon: Users,
-        roles: "Developer|Administrator|Employee|Manager|Director",
       },
     ],
     navRecycling: [
@@ -78,6 +130,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "",
         icon: Recycle,
         items: [
+          {
+            title: "Quotes",
+            url: "/quotes/",
+          },
           {
             title: "Collections",
             url: "/collections/",
@@ -95,6 +151,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ],
     navSecond: [
       {
+        title: "Contracts",
+        url: "/contracts/",
+        icon: ReceiptText,
+      },
+      {
         title: "Calendar",
         url: "/calendar/",
         icon: Calendar,
@@ -105,6 +166,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Ticket,
       },
     ],
+  
     navTools: [
       {
         title: "Tools",
@@ -124,10 +186,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "",
         icon: SlidersVertical,
         items: [
-//          {
-//            title: "General",
-//            url: "/settings/general/",
-//          },
           {
             title: "Staff Accounts",
             url: "/settings/staff/",
@@ -136,10 +194,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Categories",
             url: "/settings/categories/",
           },
-//          {
-//            title: "Items",
-//            url: "/settings/items/",
-//          },
+          {
+            title: "Documents",
+           url: "/settings/documents/",
+          },
           {
             title: "Variables",
             url: "/settings/variables/",
@@ -148,6 +206,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Connections",
             url: "/settings/connections/",
           },
+          {
+            title: "Terms & Conditions",
+            url: "/settings/terms/",
+          },
         ],
       },
     ],
@@ -155,37 +217,52 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const updatedData: NavigationData = {
     navMain: markActive(data.navMain),
+    navClient: markActive(data.navClient),
+    navStaff: markActive(data.navStaff),
     navRecycling: markActive(data.navRecycling),
     navSecond: markActive(data.navSecond),
     navTools: markActive(data.navTools),
     navSettings: markActive(data.navSettings),
   };
 
+  // In the return statement, update the order of navigation components
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <div className="p-2">
-          <img
-            src={collapsed ? "/images/logos/icon.svg" : "/images/logos/logo-colour.svg"}
-            alt="ITAM logo"
-            className="w-auto h-8"
-          />
-        </div>
-      </SidebarHeader>
+    <>
+      <PrivacyPolicyDialog 
+        open={showPrivacyPolicy} 
+        onAccept={handlePrivacyPolicyAccept} 
+      />
+      <Sidebar collapsible="icon" {...props}>
+        <SidebarHeader>
+          <div className="p-2">
+            <img
+              src={collapsed ? "/images/logos/PC4-Icon-Colour.svg" : "/images/logos/PC4-Logo-Colour.svg"}
+              alt="ITAM logo"
+              className="w-auto h-12"
+            />
+          </div>
+        </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <NavMain items={updatedData.navMain} />
-          <Role role="Developer|Administrator|Employee|Manager|Director"><NavRecycling items={updatedData.navRecycling} /></Role>
-          <Role role="Developer|Administrator|Employee|Manager|Director"><NavSecond items={updatedData.navSecond} /></Role>
-          <Role role="Developer|Administrator|Employee|Manager|Director"><NavTools items={updatedData.navTools} /></Role>
-          <Role role="Developer|Administrator|"><NavSettings items={updatedData.navSettings} /></Role>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+        <SidebarContent>
+          <SidebarGroup>
+              <NavMain items={updatedData.navMain} />
+              <ClientOnly>
+              <NavClient items={updatedData.navClient} />
+              </ClientOnly>
+              <Role role="Developer|Administrator|Employee|Manager|Director">
+              <NavStaff items={updatedData.navStaff} />
+              <NavRecycling items={updatedData.navRecycling} />
+              <NavSecond items={updatedData.navSecond} />
+              <NavTools items={updatedData.navTools} />
+              <NavSettings items={updatedData.navSettings} />
+            </Role>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser user={user} />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+    </>
   );
 }

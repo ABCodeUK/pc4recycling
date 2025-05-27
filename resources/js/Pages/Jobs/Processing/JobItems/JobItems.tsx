@@ -10,16 +10,10 @@ import { toast } from "sonner";
 import { Category, JobItem } from "./types";
 import { ColumnDef } from "@tanstack/react-table";
 import { processingColumns } from "./processing-columns";
-import CollectionSignatureDialog from '../Components/ReceivedSignatureDialog';
-
-// Remove the Category interface since it's now imported from types
-
 
 // Update the component props to include jobStatus
 export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatus: string }) {
-  // Add new state for received dialog
-  const [isReceivedDialogOpen, setIsReceivedDialogOpen] = useState(false);
-  const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
+
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('processing'); // Move this to top
   const [items, setItems] = useState<JobItem[]>([]);
@@ -128,28 +122,32 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
   };
 
 
-  // Keep the handleAddItem function as is
   const handleAddItem = () => {
     const newItemNumber = generateUniqueItemNumber();
     const newItem: JobItem = {
-      id: 0,
-      job_id: 0,
+      id: 0, // Use 0 for new items
+      job_id: parseInt(jobId as string),
       item_number: newItemNumber,
       quantity: 1,
       category_id: null,
       sub_category_id: null,
       make: null,
       model: null,
-      erasure_required: null,
-      processing_data_status: null,
-      specification: null,
+      serial_number: null,
+      weight: null,
+      asset_tag: null,
       image_path: null,
+      erasure_required: null,
+      specification: null,
       processing_make: null,
       processing_model: null,
+      processing_serial_number: null,
+      processing_asset_tag: null,
+      processing_weight: null,
       processing_specification: null,
       processing_erasure_required: null,
-      serial_number: null,
-      asset_tag: null,
+      processing_data_status: null,
+      item_status: null,
       added: activeTab === 'processing' ? 'Processing' : 'Collection'
     };
 
@@ -157,7 +155,16 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     setUsedItemNumbers([...usedItemNumbers, newItemNumber]);
     setHasUnsavedChanges(true);
   };
-  
+
+  const generateUniqueItemNumber = () => {
+    let counter = items.length + 1;
+    let newItemNumber;
+    do {
+      newItemNumber = `${jobId}-${counter.toString().padStart(2, '0')}`;
+      counter++;
+    } while (usedItemNumbers.includes(newItemNumber));
+    return newItemNumber;
+  };
   // Modify handleSaveChanges to preserve 'Collection' items
   const handleSaveChanges = async () => {
     try {
@@ -169,12 +176,14 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
         return;
       }
   
-      // In handleSaveChanges
       const itemsToSave = items.map(item => ({
         ...item,
         job_id: jobId,
-        // Capitalize 'Processing' when saving
-        added: item.id === 0 ? (activeTab === 'processing' ? 'Processing' : 'Collection') : item.added || 'Collection',
+        added: item.added || (activeTab === 'processing' ? 'Processing' : 'Collection'),
+        // Ensure these fields are included in the save
+        processing_data_status: item.processing_data_status || null,
+        item_status: item.item_status || null,
+        // Other fields
         make: item.make || null,
         model: item.model || null,
         erasure_required: item.erasure_required || null
@@ -187,23 +196,10 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
       await fetchData();
     } catch (error) {
       console.error('Error saving items:', error);
-      if (error instanceof Error && 'response' in error) {
-        const axiosError = error as { response: { data: any } };
-        console.error('Server error:', axiosError.response.data);
-      }
       toast.error("Failed to save items");
     }
   };
 
-  const generateUniqueItemNumber = () => {
-    let counter = 1; // Start counter from 1
-    let newItemNumber;
-    do {
-      newItemNumber = `${jobId}-${counter.toString().padStart(2, '0')}`;
-      counter++;
-    } while (usedItemNumbers.includes(newItemNumber));
-    return newItemNumber;
-  };
   // Memoize categories to prevent loss during re-renders
   const memoizedCategories = React.useMemo(() => categories, [categories]);
 
@@ -213,50 +209,10 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     }
   }, [jobId]); // Only depend on jobId
 
-  const handleMarkJobCollected = async (customerSignature: string, customerName: string, driverSignature: string, driverName: string) => {
-    try {
-      const data = {
-        customer_signature: customerSignature,
-        customer_name: customerName,
-        driver_signature: driverSignature,
-        driver_name: driverName
-      };
-
-      await axios.post(`/api/jobs/${jobId}/mark-collected`, data);
-      toast.success("Job marked as collected successfully");
-      window.location.reload();
-    } catch (error) {
-      console.error('Error marking job as collected:', error);
-      toast.error("Failed to mark job as collected");
-    } finally {
-      setIsSignatureDialogOpen(false);
-    }
-  };
-
   // Add a function to check if editing is allowed
   const isEditingAllowed = () => {
     const editableStatuses = ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed'];
     return editableStatuses.includes(jobStatus);
-  };
-
-  // Add handler for marking job as received
-  const handleMarkJobReceived = async (staffSignature: string, staffName: string, receivedDate: string) => {
-    try {
-      const data = {
-        staffSignature: staffSignature,
-        staffName: staffName,
-        receivedDate: receivedDate
-      };
-
-      await axios.post(`/api/jobs/${jobId}/mark-received`, data);
-      toast.success("Job marked as received successfully");
-      window.location.reload();
-    } catch (error) {
-      console.error('Error marking job as received:', error);
-      toast.error("Failed to mark job as received");
-    } finally {
-      setIsReceivedDialogOpen(false);
-    }
   };
 
   // Add new handler for marking job as processing
@@ -271,17 +227,24 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
     }
   };
 
-  // Add new handler for marking job as completed
   const handleMarkJobCompleted = async () => {
     try {
-      await axios.post(`/api/jobs/${jobId}/mark-completed`);
-      toast.success("Job marked as completed successfully");
-      window.location.reload();
+        const response = await axios.post(`/api/jobs/${jobId}/mark-completed`);
+        
+        // Check if the certificate was generated
+        if (response.data.document) {
+            toast.success("Job marked as completed and Data Destruction Certificate generated");
+            // Update the documents state in ProcessingView
+            window.location.reload();
+        } else {
+            toast.success("Job marked as completed successfully");
+            window.location.reload();
+        }
     } catch (error) {
-      console.error('Error marking job as completed:', error);
-      toast.error("Failed to mark job as completed");
+        console.error('Error marking job as completed:', error);
+        toast.error("Failed to mark job as completed");
     }
-  };
+};
 
   // Add handler for Aitken sync (placeholder for now)
   const handleAitkenSync = async () => {
@@ -308,7 +271,7 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
               disabled={hasUnsavedChanges}
               title={hasUnsavedChanges ? "Please save your changes first" : ""}
             >
-              Mark Job Complete
+              Mark Job as Complete
             </Button>
           </div>
         )}
@@ -318,26 +281,11 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
             disabled={hasUnsavedChanges}
             title={hasUnsavedChanges ? "Please save your changes first" : ""}
           >
-            Mark Job Processing
+            Start Processing Job
           </Button>
         )}
-        {jobStatus === 'Collected' && (
-          <Button 
-            onClick={() => setIsReceivedDialogOpen(true)}
-            disabled={hasUnsavedChanges}
-            title={hasUnsavedChanges ? "Please save your changes first" : ""}
-          >
-            Mark Job Received
-          </Button>
-        )}
-      </header>
 
-      {/* Add dialog component */}
-      <CollectionSignatureDialog
-        isOpen={isReceivedDialogOpen}
-        onClose={() => setIsReceivedDialogOpen(false)}
-        onComplete={handleMarkJobReceived}
-      />
+      </header>
 
       <Separator />
       <div className="p-6">
@@ -374,7 +322,7 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
                   disabled={!hasUnsavedChanges}
                   title={!hasUnsavedChanges ? "No changes to save" : ""}
                 >
-                  Save Changes
+                  Save Items
                 </Button>
               </div>
             )}
@@ -406,7 +354,7 @@ export default function JobItems({ jobId, jobStatus }: { jobId: string; jobStatu
                   disabled={!hasUnsavedChanges}
                   title={!hasUnsavedChanges ? "No changes to save" : ""}
                 >
-                  Save Changes
+                  Save Items
                 </Button>
               </div>
             )}

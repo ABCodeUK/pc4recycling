@@ -83,17 +83,22 @@ class JobItemController extends Controller
                         'sub_category_id' => !empty($item['sub_category_id']) ? (int)$item['sub_category_id'] : null,
                         'make' => $item['make'] ?? null,
                         'model' => $item['model'] ?? null,
+                        'serial_number' => $item['serial_number'] ?? null, 
+                        'asset_tag' => $item['asset_tag'] ?? null,
+                        'weight' => $item['weight'] ?? null, 
                         'specification' => $item['specification'] ?? null,
                         'erasure_required' => $item['erasure_required'] ?? null,
                         'image_path' => $item['image_path'] ?? null,
                         'processing_make' => $item['processing_make'] ?? null,
                         'processing_model' => $item['processing_model'] ?? null,
-                        'serial_number' => $item['serial_number'] ?? null,  // Add this
-                        'asset_tag' => $item['asset_tag'] ?? null,         // Add this
+                        'processing_serial_number' => $item['processing_serial_number']?? null,
+                        'processing_asset_tag' => $item['processing_asset_tag']?? null, 
+                        'processing_weight' => $item['processing_weight']?? null,
                         'processing_specification' => $item['processing_specification'] ?? null,
                         'processing_erasure_required' => $item['processing_erasure_required'] ?? null,
-                        'processing_data_status' => $item['processing_data_status'] ?? null,  // Add this
-                        'added' => $existingItem->added ?? 'Collection',
+                        'processing_data_status' => $item['processing_data_status'] ?? null,
+                        'item_status' => $item['item_status'] ?? null,
+                        'added' => $item['added'] ?? 'Collection',
                         'updated_at' => now()
                     ]);
                 } else {
@@ -106,16 +111,22 @@ class JobItemController extends Controller
                         'sub_category_id' => !empty($item['sub_category_id']) ? (int)$item['sub_category_id'] : null,
                         'make' => $item['make'] ?? null,
                         'model' => $item['model'] ?? null,
+                        'serial_number' => $item['serial_number'] ?? null,
+                        'asset_tag' => $item['asset_tag'] ?? null,
+                        'weight' => $item['weight'] ?? null,
                         'specification' => $item['specification'] ?? null,
                         'erasure_required' => $item['erasure_required'] ?? null,
                         'image_path' => $item['image_path'] ?? null,
                         'processing_make' => $item['processing_make'] ?? null,
                         'processing_model' => $item['processing_model'] ?? null,
-                        'serial_number' => $item['serial_number'] ?? null,  // Add this
-                        'asset_tag' => $item['asset_tag'] ?? null,         // Add this
+                        'processing_serial_number' => $item['processing_serial_number']?? null,
+                        'processing_asset_tag' => $item['processing_asset_tag']?? null,
+                        'processing_weight' => $item['processing_weight']?? null,
                         'processing_specification' => $item['processing_specification'] ?? null,
                         'processing_erasure_required' => $item['processing_erasure_required'] ?? null,
-                        'added' => $item['added'] ?? 'Collection', // Use the added value from frontend
+                        'processing_data_status' => $item['processing_data_status'] ?? null,
+                        'added' => $item['added'] ?? 'Collection',
+                        'item_status' => $item['item_status'] ?? null,
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);

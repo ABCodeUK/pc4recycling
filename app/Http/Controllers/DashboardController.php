@@ -73,8 +73,8 @@ class DashboardController extends Controller
     public function getUpcomingJobs()
     {
         try {
-            $now = Carbon::now();
-            $fourteenDaysFromNow = Carbon::now()->addDays(14);
+            $now = Carbon::now()->startOfDay();
+            $fourteenDaysFromNow = Carbon::now()->addDays(14)->endOfDay();
             
             $jobs = Job::with('client')
                 ->whereIn('job_status', ['Needs Scheduling', 'Scheduled'])
@@ -120,8 +120,8 @@ class DashboardController extends Controller
     public function getDriverJobs(Request $request)
     {
         try {
-            $now = Carbon::now();
-            $thirtyDaysFromNow = Carbon::now()->addDays(30);
+            $now = Carbon::now()->startOfDay();
+            $thirtyDaysFromNow = Carbon::now()->addDays(30)->endOfDay();
             $user = $request->user();
             
             $jobs = Job::with('client')

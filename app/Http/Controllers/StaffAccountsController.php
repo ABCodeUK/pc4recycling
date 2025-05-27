@@ -16,7 +16,7 @@ class StaffAccountsController extends Controller
     public function index()
     {
         $staff = User::where('type', 'Staff')
-            ->with('staffDetails.role') // Include staff details and role
+            ->with('staffDetails.role')
             ->get()
             ->map(function ($user) {
                 return [
@@ -24,9 +24,9 @@ class StaffAccountsController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'mobile' => $user->mobile,
-                    'role' => $user->staffDetails->role->name ?? null, // Get the role name or null
-                    'active' => $user->active, // Include the active status
-
+                    'role' => $user->staffDetails->role->name ?? null,
+                    'active' => $user->active,
+                    'driver_type' => $user->driver_type, // Add this line
                 ];
             });
     
@@ -45,21 +45,24 @@ class StaffAccountsController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Redirect to client edit if user type is 'Client'
         if ($user->type === 'Client') {
             return redirect()->route('client.edit', ['id' => $user->id]);
         }
 
-        // Fetch all available roles
         $roles = StaffRole::all(['id', 'name']);
 
-        // Handle staff types normally
         return Inertia::render('Settings/StaffAccounts/StaffAccountsEdit', [
-            'user_edit' => $user->only(['id', 'name', 'email', 'mobile', 'type', 'position', 'active']),
-            'roles' => $roles, // Pass roles to the view
-            'user_edit.role_id' => $user->staffDetails->role_id ?? null, // Pass the role_id directly
+            'user_edit' => array_merge($user->only([
+                'id', 'name', 'email', 'mobile', 'type', 
+                'position', 'active', 'driver_type', 'carrier_registration', 'external_vehicle_registration'
+            ]), [
+                'role_id' => $user->staffDetails->role_id ?? null,
+            ]),
+            'roles' => $roles,
         ]);
     }
+
+    
 
     /**
      * Remove the specified staff account from storage.
@@ -82,26 +85,33 @@ class StaffAccountsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Validate the request data, including the active field
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'mobile' => 'nullable|string',
             'active' => 'required|boolean',
             'role_id' => 'required|exists:users_roles,id',
+            'driver_type' => 'nullable|string|in:internal,external',
+            'carrier_registration' => 'nullable|string',
+            'external_vehicle_registration' => 'nullable|string',
         ]);
     
         $user = User::findOrFail($id);
-    
-        // Update the user with the validated data
+        
+        // Get the role name
+        $role = StaffRole::find($validated['role_id']);
+        $isDriver = $role && $role->name === 'Drivers';
+        
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'mobile' => $validated['mobile'],
             'active' => $validated['active'],
+            'driver_type' => $isDriver ? $validated['driver_type'] : null,
+            'carrier_registration' => ($isDriver && $validated['driver_type'] === 'external') ? $validated['carrier_registration'] : null,
+            'external_vehicle_registration' => ($isDriver && $validated['driver_type'] === 'external') ? $validated['external_vehicle_registration'] : null,
         ]);
     
-        // Update role in the users_staff table
         if ($user->type === 'Staff') {
             $user->staffDetails()->updateOrCreate(
                 ['user_id' => $user->id],
@@ -109,7 +119,7 @@ class StaffAccountsController extends Controller
             );
         }
     
-        return response()->json($user);
+        return response()->json(['message' => 'Staff account updated successfully']);
     }
 
     /**

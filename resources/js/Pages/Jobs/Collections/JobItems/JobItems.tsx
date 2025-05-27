@@ -8,20 +8,16 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Category, JobItem } from "./types";
 import { ColumnDef } from "@tanstack/react-table";
-
-// Remove the Category interface since it's now imported from types
-
-// Add import
+import ReceivedSignatureDialog from '../Components/ReceivedSignatureDialog';
 import CollectionSignatureDialog from '../Components/CollectionSignatureDialog';
 
 // Update the component props to include jobStatus
 export default function JobItems({ jobId, jobStatus, job }: { jobId: string; jobStatus: string; job: any }) {
   // Add state for signature dialog
   const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false);
-
+  const [isReceivedDialogOpen, setIsReceivedDialogOpen] = useState(false);
   // Add a new state to track changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
   const [items, setItems] = useState<JobItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +27,7 @@ export default function JobItems({ jobId, jobStatus, job }: { jobId: string; job
   const [originalItems, setOriginalItems] = useState<JobItem[]>([]);
 
   // Modify fetchData to store original state
+  // Modify fetchData to handle filtering
   const fetchData = async () => {
     if (!jobId) return;
   
@@ -42,9 +39,11 @@ export default function JobItems({ jobId, jobStatus, job }: { jobId: string; job
       ]);
   
       setCategories(categoriesRes.data);
-      const activeItems = itemsRes.data.items.filter((item: JobItem) => !item.deleted_at);
+      const activeItems = itemsRes.data.items
+        .filter((item: JobItem) => !item.deleted_at)
+        .filter((item: JobItem) => item.added === 'Collection' || !item.added); // Filter for Collection items
       setItems(activeItems);
-      setOriginalItems(JSON.parse(JSON.stringify(activeItems))); // Store deep copy of original state
+      setOriginalItems(JSON.parse(JSON.stringify(activeItems)));
       setUsedItemNumbers(itemsRes.data.existingItemNumbers);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -145,14 +144,20 @@ export default function JobItems({ jobId, jobStatus, job }: { jobId: string; job
       sub_category_id: null,
       make: null,
       model: null,
+      serial_number: null,
+      weight: null,
+      asset_tag: null,
       erasure_required: null,
       specification: null,
       image_path: null,
       processing_make: null,
       processing_model: null,
+      processing_serial_number: null,
+      processing_asset_tag: null,
+      processing_weight: null,
       processing_specification: null,
       processing_erasure_required: null,
-      added: 'Collection'
+      added: 'Collection',
     };
   
     setItems([...items, newItem]);
@@ -241,6 +246,27 @@ export default function JobItems({ jobId, jobStatus, job }: { jobId: string; job
       }
   };
 
+
+  // Add handler for marking job as received
+  const handleMarkJobReceived = async (staffSignature: string, staffName: string, receivedDate: string) => {
+    try {
+      const data = {
+        staffSignature: staffSignature,
+        staffName: staffName,
+        receivedDate: receivedDate
+      };
+
+      await axios.post(`/api/jobs/${jobId}/mark-received`, data);
+      toast.success("Job marked as received successfully");
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking job as received:', error);
+      toast.error("Failed to mark job as received");
+    } finally {
+      setIsReceivedDialogOpen(false);
+    }
+  };
+
   // Add a function to check if editing is allowed
   const isEditingAllowed = () => {
     const editableStatuses = ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed'];
@@ -257,16 +283,31 @@ export default function JobItems({ jobId, jobStatus, job }: { jobId: string; job
             disabled={hasUnsavedChanges}
             title={hasUnsavedChanges ? "Please save your changes first" : ""}
           >
-            Mark Job Collected
+            Mark Job as Collected
+          </Button>
+        )}
+                {jobStatus === 'Collected' && (
+          <Button 
+            onClick={() => setIsReceivedDialogOpen(true)}
+            disabled={hasUnsavedChanges}
+            title={hasUnsavedChanges ? "Please save your changes first" : ""}
+          >
+            Mark Job as Received
           </Button>
         )}
       </header>
 
-      {/* Add dialog component */}
       <CollectionSignatureDialog
           isOpen={isSignatureDialogOpen}
           onClose={() => setIsSignatureDialogOpen(false)}
           onComplete={handleMarkJobCollected}
+          defaultVehicle={job.vehicle}
+          defaultCustomerName={job.onsite_contact}  // Add this line to pass the onsite_contact
+      />
+      <ReceivedSignatureDialog
+        isOpen={isReceivedDialogOpen}
+        onClose={() => setIsReceivedDialogOpen(false)}
+        onComplete={handleMarkJobReceived}
       />
       <Separator />
       <div className="p-6">
@@ -295,7 +336,7 @@ export default function JobItems({ jobId, jobStatus, job }: { jobId: string; job
                   disabled={!hasUnsavedChanges}
                   title={!hasUnsavedChanges ? "No changes to save" : ""}
                 >
-                  Save Changes
+                  Save Items
                 </Button>
               </div>
             )}

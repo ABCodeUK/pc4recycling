@@ -124,7 +124,7 @@ export default function Completed({ jobs = [], collection_types, sanitisation_op
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.location.href = `/collections/${job.id}/`}
+              onClick={() => window.location.href = `/completed/${job.id}/`}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -172,9 +172,6 @@ export default function Completed({ jobs = [], collection_types, sanitisation_op
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="max-w-sm"
                 />
-                <Button onClick={() => window.location.href = "/collections/create"}>
-                  Create New Job
-                </Button>
               </div>
             </header>
             <Separator className="my-4" />

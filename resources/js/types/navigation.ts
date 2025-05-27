@@ -11,6 +11,8 @@ export interface NavItem {
 
 export interface NavigationData {
   navMain: NavItem[];
+  navClient: NavItem[]; 
+  navStaff: NavItem[];  // Add this line
   navRecycling: NavItem[];
   navSecond: NavItem[];
   navTools: NavItem[];

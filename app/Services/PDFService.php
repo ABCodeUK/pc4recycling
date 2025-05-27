@@ -86,4 +86,40 @@ class PDFService
 
         return $path;
     }
+
+    public function generateDataDestructionCertificate(Job $job)
+    {
+        // Load job with relationships
+        $job->load(['client', 'items']);
+    
+        // Generate PDF
+        $pdf = Pdf::loadView('pdfs.data-destruction-certificate', [
+            'job' => $job,
+            'customer' => $job->client,
+            'items' => $job->items
+        ]);
+    
+        $filename = "{$job->job_id}-Data-Destruction-Certificate.pdf";
+        $path = "jobs/{$job->job_id}/{$filename}";
+    
+        // Save to storage, replacing existing file if it exists
+        Storage::disk('public')->put($path, $pdf->output());
+    
+        // Create a new document record
+        $document = JobDocument::create([
+            'job_id' => $job->id,
+            'document_type' => 'data_destruction_certificate',
+            'original_filename' => $filename,
+            'stored_filename' => $filename,
+            'file_path' => $path,
+            'mime_type' => 'application/pdf',
+            'file_size' => Storage::disk('public')->size($path),
+            'uuid' => \Str::uuid() // Add a UUID for secure access
+        ]);
+    
+        return [
+            'path' => $path,
+            'document' => $document
+        ];
+    }
 }

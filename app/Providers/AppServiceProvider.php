@@ -9,17 +9,11 @@ use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         // Prefetch assets using Vite
@@ -31,12 +25,15 @@ class AppServiceProvider extends ServiceProvider
                 if (Auth::check()) {
                     $user = Auth::user();
                     return [
+                        'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
-                        'avatar' => $user->avatar ?? '/default-avatar.png', // Default avatar if not set
+                        'type' => $user->type,
+                        'avatar' => $user->avatar ?? '/default-avatar.png',
+                        'clientDetails' => $user->type === 'Client' ? $user->clientDetails : null,
                     ];
                 }
-                return null; // Return null if the user is not authenticated
+                return null;
             },
         ]);
     }

@@ -18,17 +18,31 @@ class JobItem extends Model
         'sub_category_id',
         'make',
         'model',
+        'serial_number',
+        'asset_tag',
+        'weight',
         'specification',
         'erasure_required',
         'image_path',
         'processing_make',
         'processing_model',
+        'processing_serial_number',
+        'processing_asset_tag',
+        'processing_weight',
         'processing_specification',
-        'added',
         'processing_erasure_required',
-        'processing_data_status',  // Add this
-        'serial_number',
-        'asset_tag'
+        'processing_data_status',
+        'item_status', 
+        'added',
+
+    ];
+
+    // Add the new constant for item status options
+    public const ITEM_STATUS_OPTIONS = [
+        'Reusing',
+        'Repurposing Parts',
+        'Recycling',
+        'N/A'
     ];
 
     // Add the enum values as a constant

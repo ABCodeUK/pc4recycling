@@ -66,7 +66,7 @@ class ClientAccountsController extends Controller
         }
 
         return Inertia::render('ClientAccounts/ClientAccountsEdit', [
-            'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active']),
+            'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active', 'contract']),
             'client_details' => $user->clientDetails ? $user->clientDetails->only([
                 'industry_id', 'lead_source_id', 'customer_type_id', 'address','address_2', 'town_city', 'county', 'postcode',
                 'contact_name', 'contact_position', 'sic_code', 'customer_notes',
@@ -110,7 +110,8 @@ class ClientAccountsController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'landline' => 'nullable|string|max:255',
             'mobile' => 'nullable|string|max:255',
-            'position' => 'nullable|string|max:255', // This should be removed
+            'position' => 'nullable|string|max:255',
+            'contract' => 'nullable|string|max:255',
             'active' => 'required|boolean',
             'type' => 'required|string',
             'industry_id' => 'nullable|exists:variable_industries,id',
@@ -134,9 +135,9 @@ class ClientAccountsController extends Controller
             'email' => $validated['email'],
             'landline' => $validated['landline'],
             'mobile' => $validated['mobile'],
+            'contract' => $validated['contract'], // Add this line
             'active' => $validated['active'],
             'type' => $validated['type'],
-            // Remove position from here
         ]);
     
         // Update or create client details

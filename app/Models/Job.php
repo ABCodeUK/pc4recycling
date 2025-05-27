@@ -16,11 +16,15 @@ class Job extends Model
 
     protected $fillable = [
         'job_id',
+        'job_quote',
         'client_id',
         'collection_date',
+        'quote_information',
         'job_status',
         'staff_collecting',
         'vehicle',
+        'driver_type',
+        'driver_carrier_registration',
         'address',
         'address_2',
         'town_city',
@@ -42,8 +46,11 @@ class Job extends Model
         'driver_signature',
         'driver_signature_name',
         'staff_signature_name',
+        'technician_signature_name',
         'collected_at',
-        'received_at'
+        'received_at',
+        'processed_at',
+        'completed_at'
     ];
 
     protected $casts = [
@@ -51,13 +58,20 @@ class Job extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'collected_at' => 'datetime', 
-        'received_at' => 'datetime' 
+        'received_at' => 'datetime' ,
+        'processed_at' => 'datetime',
+        'completed_at' => 'datetime'
     ];
 
     // Define the valid status options
     public static $statuses = [
-        'Needs Scheduling',
+        'Quote Draft',
+        'Quote Requested',
+        'Quote Provided',
+        'Quote Rejected',
+        'Request Draft',
         'Request Pending',
+        'Needs Scheduling',
         'Scheduled',
         'Postponed',
         'Collected',
@@ -111,7 +125,10 @@ class Job extends Model
     {
         return $this->hasMany(JobDocument::class);
     }
-
+    public function scopeQuotes($query)
+    {
+        return $query->whereIn('job_status', ['Quote Draft', 'Quote Requested', 'Quote Provided', 'Quote Rejected']);
+    }
     public function scopeCollections($query)
     {
         return $query->whereIn('job_status', ['Needs Scheduling', 'Request Pending', 'Scheduled', 'Postponed']);

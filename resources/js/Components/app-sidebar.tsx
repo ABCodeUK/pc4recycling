@@ -39,13 +39,22 @@ import { type NavItem, type NavigationData } from "@/types/navigation";
 
 // Remove the duplicate interfaces here
 
-// Import the User type from the types file
-import type { User } from "@/types";
-
 // Remove the local User interface and update usePage usage
 import { useSidebar } from "@/Components/ui/sidebar";
 import { useState, useEffect } from "react";
 import { PrivacyPolicyDialog } from "@/Components/PrivacyPolicyDialog";
+
+interface User {
+  id: number;
+  type: "Staff" | "Client";
+  name: string;
+  email: string;
+  sustainability?: number;
+  contract?: boolean;
+  client_details?: {
+    privacy_policy: string | null;
+  };
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { collapsed } = useSidebar();
@@ -90,21 +99,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
     ],
     navClient: [
-      {
-        title: "Quotes",
-        url: "/my-quotes/",
-        icon: PoundSterling,
-      },
+      // Only show Quotes if user contract is false
+      ...(user.contract === false ? [
+        {
+          title: "Quotes",
+          url: "/my-quotes/",
+          icon: PoundSterling,
+        }
+      ] : []),
       {
         title: "Collections",
         url: "/my-collections/",
         icon: Recycle,
       },
-      {
-        title: "Sustainability",
-        url: "/sustainability/",
-        icon: Leaf,
-      },
+      // Only show Sustainability if user has sustainability enabled
+      ...(user.sustainability ? [
+        {
+          title: "Sustainability",
+          url: "/sustainability/",
+          icon: Leaf,
+        }
+      ] : []),
       {
         title: "Information",
         url: "/information/",

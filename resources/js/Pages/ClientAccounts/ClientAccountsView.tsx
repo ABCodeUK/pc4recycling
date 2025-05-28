@@ -33,6 +33,7 @@ export default function ClientAccountsView({
     mobile?: string;
     position?: string;
     active?: boolean;
+    sustainability?: string;
   };
   client_details: {
     customer_type_id?: number | null;
@@ -43,7 +44,7 @@ export default function ClientAccountsView({
     county?: string | null;
     postcode?: string | null;
     contact_name?: string | null;
-    contact_position?: string | null; // Add this line
+    contact_position?: string | null;
     sic_code?: string | null;
     customer_notes?: string | null;
     lead_source_id?: string | null;
@@ -193,6 +194,11 @@ export default function ClientAccountsView({
                   <DetailRow
                     label="Customer Notes"
                     value={client_details.customer_notes || ""}
+                  />
+                  <Separator />
+                  <DetailRow
+                    label="Sustainability"
+                    value={user_edit.sustainability === "1" ? "Enabled" : "Disabled"}
                   />
                 </dl>
               </section>

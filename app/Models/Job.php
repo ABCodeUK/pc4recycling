@@ -50,7 +50,10 @@ class Job extends Model
         'collected_at',
         'received_at',
         'processed_at',
-        'completed_at'
+        'completed_at',
+        'requested_from_date',
+        'requested_to_date',
+        'requested_time',
     ];
 
     protected $casts = [
@@ -60,7 +63,9 @@ class Job extends Model
         'collected_at' => 'datetime', 
         'received_at' => 'datetime' ,
         'processed_at' => 'datetime',
-        'completed_at' => 'datetime'
+        'completed_at' => 'datetime',
+        'requested_from_date' => 'date',
+        'requested_to_date' => 'date'
     ];
 
     // Define the valid status options

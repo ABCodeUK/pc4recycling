@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use App\Models\JobItem;
+use App\Models\JobDocument;
 use App\Models\VariableCollectionType;
 use App\Models\VariableDataSanitisation;
 use Illuminate\Http\Request;
@@ -109,27 +110,32 @@ class ClientJobController extends Controller
             $query->whereIn('added', ['Collection', 'Processing'])
                 ->orderBy('created_at', 'desc');
         }])->findOrFail($id);
-
+    
         // Ensure the user can only view their own jobs
         if (Auth::user()->id !== $job->client_id) {
             abort(403, 'Unauthorized action.');
         }
-
+    
         // Format documents to match frontend expectations
-        $formattedDocuments = [
-            'collection_manifest' => $job->documents->where('type', 'collection_manifest')->first(),
-            'hazard_waste_note' => $job->documents->where('type', 'hazard_waste_note')->first(),
-            'data_destruction_certificate' => $job->documents->where('type', 'data_destruction_certificate')->first(),
-            'other' => $job->documents->whereNotIn('type', ['collection_manifest', 'hazard_waste_note', 'data_destruction_certificate'])->all()
-        ];
-
+        $documents = JobDocument::where('job_id', $id)
+            ->get()
+            ->groupBy('document_type')
+            ->map(function ($docs, $type) {
+                return $type === 'other' ? $docs : $docs->first();
+            });
+    
         return Inertia::render('ClientArea/Jobs/ClientJobsView', [
             'job' => $job,
-            'documents' => $formattedDocuments,
+            'documents' => [
+                'collection_manifest' => $documents['collection_manifest'] ?? null,
+                'hazard_waste_note' => $documents['hazard_waste_note'] ?? null,
+                'data_destruction_certificate' => $documents['data_destruction_certificate'] ?? null,
+                'other' => $documents['other'] ?? [],
+            ],
             'collection_types' => VariableCollectionType::select('id', 'colt_name')->get(),
             'sanitisation_options' => VariableDataSanitisation::select('id', 'ds_name')->get(),
             'status_options' => Job::$statuses,
-            'customers' => [$job->client] // Only include the current client
+            'customers' => [$job->client]
         ]);
     }
 }

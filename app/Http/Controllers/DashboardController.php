@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Job;
+use App\Models\JobItem; // Add this import
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Add this import
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -44,20 +45,28 @@ class DashboardController extends Controller
                     ->get()
             ];
     
-            // Add client-specific metrics if the user is a client
-            if ($user && $user->client) {
+            // Add client-specific metrics using user ID directly
+            if ($user) {
+                $completedJobs = Job::where('client_id', $user->id)
+                    ->where('job_status', 'Complete');
+                    
+                // Get IDs of completed jobs first
+                $completedJobIds = $completedJobs->pluck('id')->toArray();
+                
                 $metrics['clientMetrics'] = [
-                    'lifetimeItemsRecycled' => \App\Models\JobItem::whereHas('job', function ($query) use ($user) {
-                        $query->where('client_id', $user->client->id);
-                    })->count(),
+                    'lifetimeItemsRecycled' => JobItem::whereIn('job_id', $completedJobIds)
+                        ->where('added', 'Processing')
+                        ->count(),
                     
-                    'carbonSavings' => 0, // Placeholder for now
+                    'carbonSavings' => JobItem::whereIn('job_id', $completedJobIds)
+                        ->where('added', 'Processing')
+                        ->sum('weight') * 1.5,
                     
-                    'jobsThisYear' => Job::where('client_id', $user->client->id)
+                    'jobsThisYear' => (clone $completedJobs)
                         ->whereYear('collection_date', $now->year)
                         ->count(),
                         
-                    'jobsLastYear' => Job::where('client_id', $user->client->id)
+                    'jobsLastYear' => (clone $completedJobs)
                         ->whereYear('collection_date', $now->year - 1)
                         ->count(),
                 ];

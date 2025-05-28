@@ -15,7 +15,7 @@ import { Separator } from "@/Components/ui/separator";
 import { Button } from "@/Components/ui/button";
 import { Label } from "@/Components/ui/label";
 import { Input } from "@/Components/ui/input"; // Add this import
-import { Edit, ArrowLeft} from "lucide-react";
+import { Edit, ArrowLeft, Anchor} from "lucide-react";
 import EditCollectionDetailsDialog from './Components/EditCollectionDetailsDialog';
 import EditMoreInformationDialog from './Components/EditMoreInformationDialog';
 import { useState } from "react"; // Add this for state management
@@ -33,8 +33,8 @@ interface Props {
     id: number;
     job_id: string;
     client_id: number;
-    job_quote?: string;  // Added this property
-    quote_information?: string;  // Added this property
+    job_quote?: string; 
+    quote_information?: string; 
     collection_date: string;
     job_status: string;
     staff_collecting: string;
@@ -57,6 +57,9 @@ interface Props {
     equipment_readiness: string;
     driver_type?: string;
     driver_carrier_registration?: string;
+    requested_from_date?: string;
+    requested_to_date?: string;
+    requested_time?: string;
   };
   sub_clients: {
     id: number;
@@ -121,6 +124,9 @@ import { router } from '@inertiajs/react';
 export default function ClientQuotesView({ job, customers, addresses, sub_clients, documents: initialDocuments }: Props) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditMoreInfoDialogOpen, setIsEditMoreInfoDialogOpen] = useState(false);
+  const [requestedFromDate, setRequestedFromDate] = useState(job.requested_from_date || '');
+  const [requestedToDate, setRequestedToDate] = useState(job.requested_to_date || '');
+  const [requestedTime, setRequestedTime] = useState(job.requested_time || '');
   
   // Remove signature-related state and handlers
   const [documents, setDocuments] = useState<DocumentState>(initialDocuments || {
@@ -230,7 +236,23 @@ export default function ClientQuotesView({ job, customers, addresses, sub_client
       }));
     }
   };
-  
+  const handleFromDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFromDate = e.target.value;
+    if (requestedToDate && new Date(newFromDate) > new Date(requestedToDate)) {
+      toast.error("From date cannot be after the To date");
+      return;
+    }
+    setRequestedFromDate(newFromDate);
+  };
+
+  const handleToDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newToDate = e.target.value;
+    if (requestedFromDate && new Date(newToDate) < new Date(requestedFromDate)) {
+      toast.error("To date cannot be before the From date");
+      return;
+    }
+    setRequestedToDate(newToDate);
+  };
   
   const handleDeleteDocument = (documentId: number, type: string) => {
     router.delete(`/collections/${job.id}/documents/${documentId}`, {
@@ -263,7 +285,9 @@ export default function ClientQuotesView({ job, customers, addresses, sub_client
       <dd className="text-sm text-gray-900 text-left">{value || "-"}</dd>
     </div>
   );
-  
+  const scrollToSubmitSection = () => {
+    document.getElementById('submit-quote-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
   const getAccountStatusColor = (status?: string) => {
     return status === 'Active' 
       ? 'bg-green-100 text-green-700 border-green-200'
@@ -271,7 +295,11 @@ export default function ClientQuotesView({ job, customers, addresses, sub_client
   };
   const handleSubmitQuoteRequest = async () => {
     try {
-      await axios.post(`/api/quotes/${job.id}/submit-request`);
+      await axios.post(`/api/quotes/${job.id}/submit-request`, {
+        requested_from_date: requestedFromDate,
+        requested_to_date: requestedToDate,
+        requested_time: requestedTime
+      });
       toast.success("Quote request submitted successfully");
       window.location.reload();
     } catch (error) {
@@ -364,19 +392,17 @@ export default function ClientQuotesView({ job, customers, addresses, sub_client
               <Separator className="my-4" />
               
               {/* Show different content based on status */}
+
+
               {job.job_status === 'Quote Draft' && (
                 <>
-                  <div className="mb-6">
+                  <div className="">
                     <p className="text-gray-700">
-                      Please fill in the information below as best possible including the list of items that you would like us to collect from you. Once done, please click the "Submit Quote Request" button below to send your request to us.
+                      Please fill in the information on this page as best possible including the list of items that you would like us to collect from you and then submit your request.
+                    </p><br></br>
+                    <p className="text-gray-700">
+                    <b>Please note: We will not receive your quote request until you have submitted the quote request using the button at the bottom of the page</b>.
                     </p>
-                  </div>
-                  
-                  {/* Add Submit Quote Request Button */}
-                  <div className="flex gap-4 mt-4">
-                    <Button onClick={handleSubmitQuoteRequest}>
-                      Submit Quote Request
-                    </Button>
                   </div>
                 </>
               )}
@@ -490,7 +516,10 @@ export default function ClientQuotesView({ job, customers, addresses, sub_client
     onsite_number: job.onsite_number,
     onsite_email: job.onsite_email
   }}
-
+  addresses={addresses}      
+  job={job}     
+  sub_clients={sub_clients}   
+  customers={customers}
 />
 <EditMoreInformationDialog
         isOpen={isEditMoreInfoDialogOpen}
@@ -524,145 +553,186 @@ export default function ClientQuotesView({ job, customers, addresses, sub_client
       <h2 className="text-xl font-semibold leading-7 text-gray-900">More Information</h2>
       {job.job_status === 'Quote Draft' && (
       <Button
-      variant="outline"
-      onClick={() => setIsEditMoreInfoDialogOpen(true)}
-    >
-      Update
-    </Button>
-      )}
+        variant="outline"
+        onClick={() => setIsEditMoreInfoDialogOpen(true)}
+      >
+        Update
+      </Button>
+    )}
+  </div>
+  <Separator className="my-4" />
+  <dl className="grid gap-2">
+    {['Quote Requested', 'Quote Received', 'Quote Provided'].includes(job.job_status) && (
+      <>
+        <DetailRow 
+          label="Requested Dates" 
+          value={job.requested_from_date && job.requested_to_date ? 
+            `${new Date(job.requested_from_date).toLocaleDateString()} - ${new Date(job.requested_to_date).toLocaleDateString()}` : 
+            '-'} 
+        />
+        <DetailRow label="Requested Time" value={job.requested_time || '-'} />
+        <Separator className="my-2" />
+      </>
+    )}
+    <DetailRow label="Equipment Location" value={job.equipment_location || "-"} />
+    <DetailRow label="Building Access" value={job.building_access || "-"} />
+    <DetailRow label="Parking & Loading" value={job.parking_loading || "-"} />
+    <DetailRow label="Equipment Readiness" value={job.equipment_readiness || "-"} />
+    <Separator className="my-2" />
+    <div className="py-1">
+      <dt className="text-sm font-medium text-gray-500">Other Information</dt>
+      <dd className="mt-2 text-sm text-gray-900">
+        {job.instructions || "No instructions provided."}
+      </dd>
     </div>
-    <Separator className="my-4" />
-              <dl className="grid gap-2">
-                <DetailRow label="Equipment Location" value={job.equipment_location || "-"} />
-                <DetailRow label="Building Access" value={job.building_access || "-"} />
-                <DetailRow label="Parking & Loading" value={job.parking_loading || "-"} />
-                <DetailRow label="Equipment Readiness" value={job.equipment_readiness || "-"} />
-                <Separator className="my-2" />
-                <div className="py-1">
-                  <dt className="text-sm font-medium text-gray-500">Other Information</dt>
-                  <dd className="mt-2 text-sm text-gray-900">
-                    {job.instructions || "No instructions provided."}
-                  </dd>
-                </div>
-              </dl>
-            </section>
+  </dl>
+</section>
 
             {/* Right Column - Customer Details */}
             <section className="bg-white border shadow rounded-lg p-6">
 
-<h2 className="text-xl font-semibold leading-7 text-gray-900">
-  Job Documents
-</h2>
+{/* Job Documents section */}
 
-<Separator className="my-4" />
-<div className="space-y-6">
-
-{/* Collection Manifest */}
-<div className="space-y-4">
-
-</div>
-
-{/* Other Documents */}
-<div className="space-y-4">
-<h3 className="text-sm font-medium text-gray-500">Relevant Documents</h3>
-<div className="space-y-4">
-  
-  {documents.other
-    .filter(doc => !doc.original_filename.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-    .length > 0 && (
-    <div className="space-y-2">
-      {documents.other
-        .filter(doc => !doc.original_filename.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-        .map((doc) => (
-        <div key={doc.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-          <a 
-            href={`/documents/${job.id}/${doc.uuid}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:text-primary/90 flex items-center gap-2"
+  <h2 className="text-xl font-semibold leading-7 text-gray-900">Job Documents</h2>
+  <Separator className="my-4" />
+  <div className="space-y-6">
+    {/* Other Documents */}
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium text-gray-500">Relevant Documents</h3>
+      <div className="space-y-4">
+        <div className="flex gap-2 items-center">
+          <Input
+            type="file"
+            accept=".pdf"
+            onChange={(e) => handleFileSelect(e, 'other')}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleFileUpload('other')}
+            disabled={!selectedFiles.other}
           >
-            <FileText className="h-4 w-4" />
-            {doc.original_filename}
-          </a>
+            <Upload className="h-4 w-4" />
+          </Button>
         </div>
-      ))}
+        
+        {documents.other
+          .filter(doc => !doc.original_filename.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+          .length > 0 && (
+          <div className="space-y-2">
+            {documents.other
+              .filter(doc => !doc.original_filename.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+              .map((doc) => (
+              <div key={doc.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                <a 
+                  href={`/documents/${job.id}/${doc.uuid}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/90 flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  {doc.original_filename}
+                </a>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteDocument(doc.id, 'other')}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  )}
-</div>
-</div>
-<Separator className="my-4" />
+    <Separator className="my-4" />
 
-</div>
-
-{/* Collection Images Gallery */}
-<div className="mt-6">
-
-<h3 className="text-sm font-medium text-gray-500 mb-4">Collection Images</h3>
-
-<div className="space-y-6">
-{/* Modern Image Upload Button */}
-<div className="flex justify-center w-full">
-  <label className="relative group cursor-pointer w-full">
-    <input
-      type="file"
-      accept="image/*"
-      multiple
-      className="hidden"
-      onChange={(e) => {
-        const files = Array.from(e.target.files || []);
-        files.forEach(file => {
-          const formData = new FormData();
-          formData.append('document', file);
-          formData.append('document_type', 'other');
-          
-          axios.post(`/collections/${job.id}/documents`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          }).then(response => {
-            if (response.data) {
-              setDocuments(prev => ({
-                ...prev,
-                other: [...prev.other, response.data.document]
-              }));
-              toast.success(`Uploaded ${file.name}`);
-            }
-          }).catch(error => {
-            console.error('Upload error:', error);
-            toast.error(`Failed to upload ${file.name}`);
-          });
-        });
-      }}
-    />
-    
-  </label>
-</div>
-
-{/* Images Grid */}
-<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-  {documents.other
-    .filter(doc => doc.original_filename.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-    .map((image) => (
-      <div key={image.id} className="relative group aspect-square">
-        <img
-          src={`/storage/${image.file_path}`}
-          alt={image.original_filename}
-          className="w-full h-full object-cover rounded-lg shadow-sm"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-end justify-between p-2">
-          <a
-            href={`/storage/${image.file_path}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-          >
-            <FileText className="h-3.5 w-3.5 text-white" />
-          </a>
+    {/* Collection Images Gallery */}
+    <div className="mt-6">
+      <h3 className="text-sm font-medium text-gray-500 mb-4">Collection Images</h3>
+      <div className="space-y-6">
+        {/* Modern Image Upload Button */}
+        <div className="flex justify-center w-full">
+          <label className="relative group cursor-pointer w-full">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                files.forEach(file => {
+                  const formData = new FormData();
+                  formData.append('document', file);
+                  formData.append('document_type', 'other');
+                  
+                  axios.post(`/collections/${job.id}/documents`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                  }).then(response => {
+                    if (response.data) {
+                      setDocuments(prev => ({
+                        ...prev,
+                        other: [...prev.other, response.data.document]
+                      }));
+                      toast.success(`Uploaded ${file.name}`);
+                    }
+                  }).catch(error => {
+                    console.error('Upload error:', error);
+                    toast.error(`Failed to upload ${file.name}`);
+                  });
+                });
+              }}
+            />                                        
+            <div className="flex items-center justify-center gap-4 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary transition-colors bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <Upload className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
+                <div>
+                  <span className="text-sm font-medium text-primary">Upload images</span>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Drag and drop or click to select
+                  </p>
+                </div>
+              </div>
+            </div>
+          </label>
+        </div>
+        
+        {/* Images Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {documents.other
+            .filter(doc => doc.original_filename.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+            .map((image) => (
+              <div key={image.id} className="relative group aspect-square">
+                <img
+                  src={`/storage/${image.file_path}`}
+                  alt={image.original_filename}
+                  className="w-full h-full object-cover rounded-lg shadow-sm"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-end justify-between p-2">
+                  <a
+                    href={`/storage/${image.file_path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-white" />
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteDocument(image.id, 'other')}
+                    className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-red-500/30 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-white" />
+                  </Button>
+                </div>
+              </div>
+          ))}
         </div>
       </div>
-  ))}
-</div>
-</div>
-</div>
-
+    </div>
+  </div>
 </section>
 
             </div>
@@ -677,9 +747,75 @@ export default function ClientQuotesView({ job, customers, addresses, sub_client
                             />
                           </section>    
                         </div>
+                        {/* Quote Information Section - Only show for specific statuses */}
+          {['Quote Draft'].includes(job.job_status) && (
+            <section className="bg-white border shadow rounded-lg p-6">
+              <h2 className="text-xl font-semibold leading-7 text-gray-900 flex justify-between items-center">
+                <span>Submit Quote Request</span>
+              </h2>
+              <Separator className="my-4" />
+              
+              {/* Show different content based on status */}
+
+
+              {job.job_status === 'Quote Draft' && (
+                <>
+                  <div className="mb-6">
+                    <p className="text-gray-700">
+                      If you have filled out the 
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="requested_from_date">From Date</Label>
+        <Input
+          type="date"
+          id="requested_from_date"
+          value={requestedFromDate}
+          onChange={handleFromDateChange}
+          max={requestedToDate || undefined}
+        />
+      </div>
+      <div>
+        <Label htmlFor="requested_to_date">To Date</Label>
+        <Input
+          type="date"
+          id="requested_to_date"
+          value={requestedToDate}
+          onChange={handleToDateChange}
+          min={requestedFromDate || undefined}
+        />
+      </div>
+    </div>
+    <div>
+      <Label htmlFor="requested_time">Preferred Time</Label>
+      <Input
+        type="text"
+        id="requested_time"
+        value={requestedTime}
+        onChange={(e) => setRequestedTime(e.target.value)}
+        placeholder="e.g. Morning, Afternoon, or specific time"
+      />
+    </div>
+                  
+                  {/* Add Submit Quote Request Button */}
+                  <div className="flex gap-4 mt-4">
+                    <Button onClick={handleSubmitQuoteRequest}>
+                      Submit Quote Request
+                    </Button>
+                  </div>
+                </>
+              )}
+            </section>
+          )}
                         </div>
                         
                           </SidebarInset>
                         </SidebarProvider>
                       );
                     }
+
+
+
+  

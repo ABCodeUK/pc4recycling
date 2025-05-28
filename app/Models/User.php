@@ -27,6 +27,7 @@ class User extends Authenticatable
         'external_vehicle_registration',
         'contract',
         'active',
+        'sustainability',
         'parent_id',
     ];
 

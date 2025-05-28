@@ -32,6 +32,9 @@ import {
 // Add this import at the top with other imports
 import { Edit, Trash2 } from "lucide-react";
 
+// Add these to your existing imports
+import { Switch } from "@/Components/ui/switch";
+
 export default function ClientSubClients({ parentId }: { parentId: number }) {
   const [data, setData] = useState<SubClient[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,14 +51,14 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
   const [formErrors, setFormErrors] = useState({
     name: "",
     email: "",
-    // Remove password from formErrors
+    active: ""
   });
 
   const resetFormErrors = () => {
     setFormErrors({
       name: "",
       email: "",
-      // Remove password from resetFormErrors
+      active: ""
     });
   };
 
@@ -135,6 +138,74 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
       }
     }
   };
+
+
+// Add these state variables after your existing useState declarations
+const [passwordForm, setPasswordForm] = useState({
+  newPassword: "",
+  confirmPassword: "",
+});
+
+// Add these handler functions after your existing handlers
+const handleSendResetEmail = async (userId: number) => {
+  try {
+    const response = await axios.post(`/customers/${userId}/send-reset-email`);
+    if (response.status === 200) {
+      toast.success("Password reset email sent successfully.");
+    } else {
+      toast.error("Failed to send password reset email.");
+    }
+  } catch (error) {
+    toast.error("An error occurred while sending the password reset email.");
+  }
+};
+
+const handleManualPasswordReset = async (userId: number) => {
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    toast.error("Passwords do not match.");
+    return;
+  }
+
+  try {
+    await axios.post(`/customers/${userId}/reset-password`, {
+      password: passwordForm.newPassword,
+      password_confirmation: passwordForm.confirmPassword,
+    });
+    toast.success("Password reset successfully.");
+    setPasswordForm({ newPassword: "", confirmPassword: "" });
+  } catch (error: any) {
+    if (error.response?.data?.errors) {
+      Object.values(error.response.data.errors).forEach((err: any) => {
+        toast.error(err[0]);
+      });
+    } else {
+      toast.error("An error occurred while resetting the password.");
+    }
+  }
+};
+
+const handleActiveToggle = async (userId: number, currentActive: boolean) => {
+  try {
+    const response = await axios.put(`/sub-clients/${userId}`, {
+      ...editFormData, // Preserve all existing data
+      active: !currentActive
+    });
+    setData(prev =>
+      prev.map(item =>
+        item.id === userId ? { ...item, active: !currentActive } : item
+      )
+    );
+    // Add this line to update the editFormData state
+    setEditFormData(prev => prev ? { ...prev, active: !currentActive } : null);
+    toast.success("Account status updated successfully!");
+    setFormErrors(prev => ({ ...prev, active: "" }));
+  } catch (error: any) {
+    if (error.response?.data?.errors?.active) {
+      setFormErrors(prev => ({ ...prev, active: error.response.data.errors.active[0] }));
+    }
+    toast.error("Failed to update account status.");
+  }
+};
 
   const handleDelete = async (id: number) => {
     try {
@@ -360,6 +431,89 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
               />
             </div>
           </div>
+
+          <Separator className="my-4" />
+
+          {/* Password Reset Section */}
+          <div className="space-y-4">
+            <h3 className="text-base font-medium">Reset Password</h3>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleSendResetEmail(editFormData?.id || 0)}
+              >
+                Email Password Reset
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline">Manual Password Reset</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Manual Password Reset</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Enter the new password below to manually reset the sub-client's password.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        value={passwordForm.newPassword}
+                        onChange={(e) =>
+                          setPasswordForm((prev) => ({
+                            ...prev,
+                            newPassword: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) =>
+                          setPasswordForm((prev) => ({
+                            ...prev,
+                            confirmPassword: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleManualPasswordReset(editFormData?.id || 0)}
+                    >
+                      Save
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+
+          {/* Account Status Section */}
+          <div className="space-y-4">
+            <h3 className="text-base font-medium">Account Status</h3>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={editFormData?.active || false}
+                onCheckedChange={(checked) =>
+                  handleActiveToggle(editFormData?.id || 0, editFormData?.active || false)
+                }
+              />
+              <span>{editFormData?.active ? "Active" : "Disabled"}</span>
+            </div>
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
@@ -371,3 +525,6 @@ export default function ClientSubClients({ parentId }: { parentId: number }) {
     </section>
   );
 }
+
+
+

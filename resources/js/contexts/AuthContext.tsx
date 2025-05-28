@@ -23,6 +23,7 @@ export interface User {
   email: string;
   type: string;
   active: boolean;
+  sustainability: number;
   staffDetails?: StaffDetails;
   role_debug?: RoleDebug;
 }

@@ -419,13 +419,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-quotes/{id}', [ClientQuoteController::class, 'show'])->name('client.quotes.show');
 });
 
+
+Route::post('/api/quotes/{id}/submit-request', [ClientQuoteController::class, 'submitQuoteRequest'])->name('quotes.submit-request');
 Route::post('/api/quotes/{id}/mark-rejected', [ClientQuoteController::class, 'markQuoteRejected'])->name('quotes.mark-rejected');
 Route::post('/api/quotes/{id}/mark-accepted', [ClientQuoteController::class, 'markQuoteAccepted'])->name('quotes.mark-accepted');
 Route::get('/client-quotes/next-job-id', [ClientQuoteController::class, 'getNextJobId']);
 Route::get('/my-quotes', [ClientQuoteController::class, 'index'])->name('client.quotes.index');
 Route::post('/my-quotes/request-quote', [ClientQuoteController::class, 'createQuote'])->name('client.quotes.create');
-Route::post('/api/quotes/{id}/submit-request', [ClientQuoteController::class, 'submitQuoteRequest'])->name('quotes.submit-request');
-Route::delete('/api/quotes/{id}', [ClientQuoteController::class, 'destroy'])->name('quotes.destroy');
 Route::put('/client/quotes/{id}/update', [ClientQuoteController::class, 'updateCollectionDetails'])->name('client.quotes.update');
+Route::delete('/api/quotes/{id}', [ClientQuoteController::class, 'destroy'])->name('quotes.destroy');
 Route::delete('/client/quotes/{id}', [ClientQuoteController::class, 'destroy'])->name('client.quotes.destroy');
 Route::put('/client/quotes/{id}/collection-details', [ClientQuoteController::class, 'updateCollectionDetails']);

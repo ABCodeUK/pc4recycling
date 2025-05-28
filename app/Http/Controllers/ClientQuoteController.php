@@ -142,7 +142,23 @@ class ClientQuoteController extends Controller
             'collection_types' => VariableCollectionType::select('id', 'colt_name')->get(),
             'sanitisation_options' => VariableDataSanitisation::select('id', 'ds_name')->get(),
             'status_options' => Job::$statuses,
-            'customers' => [$job->client], // Only include the current client
+            'customers' => [User::with(['clientDetails'])
+                ->select('id', 'name', 'email', 'landline', 'mobile')
+                ->where('id', $job->client_id)
+                ->get()
+                ->map(function($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'landline' => $user->landline,
+                        'mobile' => $user->mobile,
+                        'address' => $user->clientDetails->address ?? '',
+                        'address_2' => $user->clientDetails->address_2 ?? '',
+                        'town_city' => $user->clientDetails->town_city ?? '',
+                        'postcode' => $user->clientDetails->postcode ?? ''
+                    ];
+                })->first()],
             'addresses' => $addresses,
             'sub_clients' => $sub_clients
         ]);
@@ -251,7 +267,7 @@ class ClientQuoteController extends Controller
             return response()->json(['error' => 'Failed to generate job ID'], 500);
         }
     }
-    public function submitQuoteRequest($id)
+    public function submitQuoteRequest(Request $request, $id)
     {
         $job = Job::findOrFail($id);
         
@@ -259,10 +275,21 @@ class ClientQuoteController extends Controller
         if (Auth::user()->id !== $job->client_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        // Validate the request
+        $validated = $request->validate([
+            'requested_from_date' => 'required|date',
+            'requested_to_date' => 'required|date|after_or_equal:requested_from_date',
+            'requested_time' => 'nullable|string|max:255'
+        ]);
     
-        // Update job status
-        $job->job_status = 'Quote Requested';
-        $job->save();
+        // Update job status and requested dates/time
+        $job->update([
+            'job_status' => 'Quote Requested',
+            'requested_from_date' => $validated['requested_from_date'],
+            'requested_to_date' => $validated['requested_to_date'],
+            'requested_time' => $validated['requested_time']
+        ]);
     
         // Add audit log
         JobAuditService::log($job->id, 'Quote Request submitted by customer', 'true');

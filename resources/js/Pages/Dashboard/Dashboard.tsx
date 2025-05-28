@@ -12,7 +12,8 @@ import {
   SidebarTrigger,
 } from "@/Components/ui/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card"
-import { CalendarDays, ClipboardList, PackageCheck, TrendingUp } from "lucide-react"
+// After imports, add AlertCircle icon
+import { AlertCircle, CalendarDays, ClipboardList, PackageCheck, TrendingUp } from "lucide-react"
 import { useState, useEffect } from "react"
 import axios from "axios"
 import UpcomingJobs from "./Jobs/UpcomingJobs"
@@ -35,6 +36,20 @@ interface DashboardMetrics {
     jobsThisYear: number
     jobsLastYear: number
   }
+}
+
+interface User {
+  id: number;
+  type: "Staff" | "Client";
+  name: string;
+  email: string;
+  active?: boolean;
+  sustainability: number;
+  staffDetails?: {
+    role?: {
+      name: string;
+    };
+  };
 }
 
 export default function Dashboard() {
@@ -118,6 +133,19 @@ export default function Dashboard() {
         </header>
 
         <div className="flex flex-1 flex-col gap-6 p-8 w-100">
+        {!user?.active && (
+  <Card className="border-red-200 bg-red-50">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium text-red-800">Account Disabled</CardTitle>
+      <AlertCircle className="h-4 w-4 text-red-800" />
+    </CardHeader>
+    <CardContent>
+      <p className="text-sm text-red-800">
+        This account is currently disabled. Please contact PC4 Recycling for further help and information.
+      </p>
+    </CardContent>
+  </Card>
+)}
           <StaffOnly>
             <Role role="Developer|Administrator|Employee|Manager|Director">
             <h1 className="text-3xl font-semibold text-gray-800">Staff Dashboard</h1>
@@ -126,6 +154,7 @@ export default function Dashboard() {
             <h1 className="text-3xl font-semibold text-gray-800">Driver Dashboard</h1>
             </Role>
             <Role role="Developer|Administrator|Employee|Manager|Director"> 
+
           {/* Metrics Cards */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Card>
@@ -193,21 +222,23 @@ export default function Dashboard() {
                   <PackageCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{metrics.clientMetrics?.lifetimeItemsRecycled || 312}</div>
-                  <p className="text-xs text-muted-foreground">Total items recycled with us this year.</p>
+                  <div className="text-2xl font-bold">{metrics.clientMetrics?.lifetimeItemsRecycled}</div>
+                  <p className="text-xs text-muted-foreground">Total items recycled with us.</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Carbon Savings</CardTitle>
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-emerald-500">{metrics.clientMetrics?.carbonSavings?.toLocaleString() || '58,603'}</div>
-                  <p className="text-xs text-muted-foreground">lbs CO₂ offset based on device weights and processing methods this year.</p>
-                </CardContent>
-              </Card>
+              {(user?.sustainability === 1) && (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Carbon Savings</CardTitle>
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-500">{metrics.clientMetrics?.carbonSavings?.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">lbs CO₂ offset based on device weights and processing methods this year.</p>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -215,9 +246,9 @@ export default function Dashboard() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{metrics.clientMetrics?.jobsThisYear || 10}</div>
+                  <div className="text-2xl font-bold">{metrics.clientMetrics?.jobsThisYear}</div>
                   <p className="text-xs text-muted-foreground">
-                    vs {metrics.clientMetrics?.jobsLastYear || 6} last year.
+                    vs {metrics.clientMetrics?.jobsLastYear} last year.
                   </p>
                 </CardContent>
               </Card>
@@ -232,3 +263,4 @@ export default function Dashboard() {
     </SidebarProvider>
   )
 }
+

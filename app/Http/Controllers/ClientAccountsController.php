@@ -42,6 +42,7 @@ class ClientAccountsController extends Controller
                     'customer_type' => $user->clientDetails->customerType->ct_name ?? null,
                     'lead_source' => $user->clientDetails->leadSource->ls_name ?? null,
                     'active' => $user->active,
+                    'sustainability' => $user->sustainability,
                     'jobs_count' => $user->jobs_count, // Add this line to include the count
                 ];
             });
@@ -66,7 +67,7 @@ class ClientAccountsController extends Controller
         }
 
         return Inertia::render('ClientAccounts/ClientAccountsEdit', [
-            'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active', 'contract']),
+            'user_edit' => $user->only(['id', 'name', 'email', 'landline', 'mobile', 'type', 'position', 'active','sustainability', 'contract']),
             'client_details' => $user->clientDetails ? $user->clientDetails->only([
                 'industry_id', 'lead_source_id', 'customer_type_id', 'address','address_2', 'town_city', 'county', 'postcode',
                 'contact_name', 'contact_position', 'sic_code', 'customer_notes',
@@ -113,6 +114,7 @@ class ClientAccountsController extends Controller
             'position' => 'nullable|string|max:255',
             'contract' => 'nullable|string|max:255',
             'active' => 'required|boolean',
+            'sustainability' => 'nullable|integer|in:0,1', // Add this line
             'type' => 'required|string',
             'industry_id' => 'nullable|exists:variable_industries,id',
             'lead_source_id' => 'nullable|exists:variable_lead_sources,id',
@@ -135,8 +137,9 @@ class ClientAccountsController extends Controller
             'email' => $validated['email'],
             'landline' => $validated['landline'],
             'mobile' => $validated['mobile'],
-            'contract' => $validated['contract'], // Add this line
+            'contract' => $validated['contract'],
             'active' => $validated['active'],
+            'sustainability' => $validated['sustainability'], // Add this line
             'type' => $validated['type'],
         ]);
     
@@ -254,7 +257,7 @@ public function getDefaultAddress($id)
 
     return response()->json([
         'address' => $userClient->address,
-        'address_2' => $userClient->address,
+        'address_2' => $userClient->address_2,
         'town_city' => $userClient->town_city,
         'county' => $userClient->county,
         'postcode' => $userClient->postcode,

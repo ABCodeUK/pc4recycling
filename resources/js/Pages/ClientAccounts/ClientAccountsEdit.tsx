@@ -59,6 +59,7 @@ export default function ClientAccountsEdit({
     position?: string;
     contract?: string;
     active?: boolean;
+    sustainability?: string;
   };
   client_details: {
     customer_type_id?: number | null;
@@ -91,6 +92,7 @@ export default function ClientAccountsEdit({
     mobile: user_edit.mobile || "",
     contract: user_edit.contract || "",
     active: user_edit.active || false,
+    sustainability: user_edit.sustainability === "1",
     type: "client", // Add this line
     address: client_details.address || "",
     address_2: client_details.address_2 || "",
@@ -135,6 +137,7 @@ export default function ClientAccountsEdit({
       setIsSubmitting(true);
       const payload = {
           ...formData,
+          sustainability: formData.sustainability ? 1 : 0,
           type: "Client",
           position: formData.position || null, // Explicitly include position
           customer_type_id: formData.customer_type_id === "null" ? null : formData.customer_type_id,
@@ -543,6 +546,19 @@ export default function ClientAccountsEdit({
             />
           </div>
         </div>
+        <Separator />
+<div className="grid grid-cols-3 items-center gap-4">
+  <Label htmlFor="sustainability" className="text-left">Sustainability</Label>
+  <div className="col-span-2 flex items-center">
+    <Switch
+      id="sustainability"
+      checked={!!formData.sustainability}
+      onCheckedChange={(checked) =>
+        setFormData((prev) => ({ ...prev, sustainability: checked }))
+      }
+    />
+  </div>
+</div>
       </div>
     </section>
   </div>
